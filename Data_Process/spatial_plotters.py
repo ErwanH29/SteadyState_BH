@@ -270,6 +270,8 @@ def global_properties():
 
         for ax_ in [ax, ax1, ax2]:
             plot_ini.tickers(ax_, 'plot')
+            ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+            ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
         ax2.set_xlim(0, 1.05)
         ax1.set_ylim(0, 1.05)
         ax2.legend() 
