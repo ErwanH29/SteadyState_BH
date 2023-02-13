@@ -1,0 +1,11 @@
+*.pdf
+*.pkl
+*.txt
+*.ipynb
+*.pyc
+*.npz
+*.npy
+*.dat
+SGWBProbe
+LISA_Curves
+*.png
