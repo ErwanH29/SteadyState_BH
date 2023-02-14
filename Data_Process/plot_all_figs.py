@@ -7,12 +7,16 @@ from spatial_plotters import *
 
 start_time = cpu_time.time()
 
-print('...spatial_plotters...')
-global_properties()
-spatial_plotter('GRX')
-
-STOP
+print('...sustainable_bintert_plotters...')
+cst = sustainable_sys()
+#cst.new_data_extractor()   
+cst.combine_data()
 cst.GW_emissions()
+cst.single_streak_plotter()
+#cst.sys_occupancy_plotter()
+#cst.sys_popul_plotter()
+STOP
+
 
 
 
@@ -36,9 +40,6 @@ print('...steady_plotter...')
 cst = stability_plotters()
 cst.overall_steady_plotter()
 
-print('...sustainable_bintert_plotters...')
-cst = sustainable_sys()
-#cst.new_data_extractor()   
-cst.combine_data()
-cst.sys_occupancy_plotter()
-cst.sys_popul_plotter()
+print('...spatial_plotters...')
+global_properties()
+spatial_plotter('GRX')

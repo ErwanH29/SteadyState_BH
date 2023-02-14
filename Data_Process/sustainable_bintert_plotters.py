@@ -19,6 +19,7 @@ class sustainable_sys(object):
         warnings.filterwarnings("ignore", category=RuntimeWarning)
         self.folders = ['rc_0.25', 'rc_0.5']
         self.colors = ['red', 'blue', 'lightcoral', 'cornflowerblue']
+        self.integrators = ['Hermite', 'GRX']
         self.labels = [r'$r_c = 0.25$ pc', r'$r_c = 0.50$ pc']
         self.legend_id = [3, 4]
 
@@ -714,93 +715,112 @@ class sustainable_sys(object):
 
         plt.clf()
 
-        integrators = ['Hermite', 'GRX']
         ####### PLOT FOR ALL ########
+
+        iterf = 0
+        for fold_ in self.folders:
+            for int_ in range(2):
+                sim_ = 2*iterf + int_
+                fig = plt.figure(figsize=(8, 6))
+                gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
+                                      left=0.1, right=0.9, bottom=0.1, top=0.9,
+                                      wspace=0.06, hspace=0.06)
+                ax = fig.add_subplot(gs[1, 0])
+                ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
+                ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]')
+                ax.set_ylabel(r'$\log_{10}h$')
+                
+                tertiary = False
+                if len(self.GWfreq_ter[sim_]) > 0:
+                    tertiary = True
+                GW_calcs.scatter_hist(self.GWfreq_bin[sim_], self.GWstra_bin[sim_],
+                                      self.GWfreq_ter[sim_], self.GWstra_ter[sim_],
+                                      ax, ax1, ax2, 'Binary', 'Hierarchical',
+                                      tertiary, False)
+
+                for ax_ in [ax1, ax2]:
+                    plot_ini.tickers(ax_, 'plot')
+                    ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+                    ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+                plot_ini.tickers(ax, 'plot')
+                ax.set_ylim(-35, -12.2)
+                ax.set_xlim(-15, 0.3)
+                plt.savefig('figures/binary_hierarchical/'+str(self.integrators[int_])+'_'+fold_+'GW_freq_strain_maximise_diagram.png', dpi = 500, bbox_inches='tight')
+                plt.clf()
+
+                # Reactivate with full data set
+                """vals = 0
+                for k in range(len(self.GWstra_ter[int_])):
+                    if np.asarray(self.pop_bin[int_][k]) <= 20:
+                        if self.GWstra_ter[int_][k] < 10**-30 or self.GWfreq_ter[int_][k] < 10**-12:
+                            vals += 1
+
+                print('Data ', int_, ' :', vals)"""
+            iterf += 1
+
+        iterf = 0
+        for fold_ in self.folders:
+            for int_ in range(2):
+                sim_ = 2*iterf + int_
+                fig = plt.figure(figsize=(8, 6))
+                gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
+                                      left=0.1, right=0.9, bottom=0.1, top=0.9,
+                                      wspace=0.06, hspace=0.06)
+                ax = fig.add_subplot(gs[1, 0])
+                ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
+                ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
+
+                GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[sim_], 'nested', False)
+                GWstra_binIMBH = self.array_rewrite(self.GWstra_binIMBH[sim_], 'nested', False)
+                GWfreq_terIMBH = self.array_rewrite(self.GWfreq_terIMBH[sim_], 'nested', False)
+                GWstra_terIMBH = self.array_rewrite(self.GWstra_terIMBH[sim_], 'nested', False)
+
+                tertiary = False
+                if len(GWstra_terIMBH) > 0:
+                    tertiary = True
+
+                GW_calcs.scatter_hist(GWfreq_binIMBH, GWstra_binIMBH,
+                                      GWfreq_terIMBH, GWstra_terIMBH,
+                                      ax, ax1, ax2, 'Hard Binary', 'Hierarchical',
+                                      tertiary, False)
+
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]')
+                ax.set_ylabel(r'$\log_{10}h$')
+                plot_ini.tickers(ax, 'plot')
+                plot_ini.tickers(ax1, 'plot')
+                plot_ini.tickers(ax2, 'plot')
+                ax.set_ylim(-35, -12.2)
+                ax.set_xlim(-15, 0.1)
+                plt.savefig('figures/binary_hierarchical/'+str(self.integrators[int_])+'_'+fold_+'_GW_freq_strain_hardbins_diagram.png', dpi = 500, bbox_inches='tight')
+                plt.clf()
+            iterf += 1
+
+    def single_streak_plotter(self):
+        """
+        Function to illustrate the streak-like characteristic emerging from the simulation
+        """
+
+        plot_ini = plotter_setup()
+        x_temp = np.linspace(10**-5, 1, 1000)
+
+        # LISA
+        lisa = li.LISA() 
+        Sn = lisa.Sn(x_temp)
+
+        # SKA
+        SKA = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/hc_SKA.npz'))
+        SKA_freq = SKA['x']
+        SKA_hc = SKA['y']
+        SKA_strain = SKA_hc**2/SKA_freq
+
+        # muAres 
+        Ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
+        Ares_freq = Ares['x']
+        Ares_strain = Ares['y']
+
         for int_ in range(2):
-            fig = plt.figure(figsize=(8, 6))
-            gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
-                                left=0.1, right=0.9, bottom=0.1, top=0.9,
-                                wspace=0.05, hspace=0.05)
-            ax = fig.add_subplot(gs[1, 0])
-            ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
-            ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
-           # int_ += 1
-            tertiary = False
-            if len(self.GWfreq_ter[int_]) > 0:
-                tertiary = True
-            GW_calcs.scatter_hist(self.GWfreq_bin[int_], self.GWstra_bin[int_],
-                                  self.GWfreq_ter[int_], self.GWstra_ter[int_],
-                                  ax, ax1, ax2, 'Binary', 'Hierarchical',
-                                  tertiary, False)
-            ax.set_xlabel(r'$\log_{10}f$ [Hz]')
-            ax.set_ylabel(r'$\log_{10}h$')
-            plot_ini.tickers(ax, 'plot')
-            plot_ini.tickers(ax1, 'plot')
-            plot_ini.tickers(ax2, 'plot')
-            ax.set_ylim(-35, -12.2)
-            ax.set_xlim(-15, 0.1)
-            plt.savefig('figures/binary_hierarchical/'+str(integrators[int_])+'GW_freq_strain_maximise_diagram.png', dpi = 500, bbox_inches='tight')
-            plt.clf()
-
-            vals = 0
-            for k in range(len(self.GWstra_ter[int_])):
-                if np.asarray(self.pop_bin[int_][k]) <= 20:
-                    if self.GWstra_ter[int_][k] < 10**-30 or self.GWfreq_ter[int_][k] < 10**-12:
-                        vals += 1
-
-            print('Data ', int_, ' :', vals)
-
-        for int_ in range(2):
-            fig = plt.figure(figsize=(8, 6))
-            gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
-                                left=0.1, right=0.9, bottom=0.1, top=0.9,
-                                wspace=0.05, hspace=0.05)
-            ax = fig.add_subplot(gs[1, 0])
-            ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
-            ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
-
-            GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[int_], 'nested', False)
-            GWstra_binIMBH = self.array_rewrite(self.GWstra_binIMBH[int_], 'nested', False)
-            GWfreq_terIMBH = self.array_rewrite(self.GWfreq_terIMBH[int_], 'nested', False)
-            GWstra_terIMBH = self.array_rewrite(self.GWstra_terIMBH[int_], 'nested', False)
-
-            tertiary = False
-            if len(GWstra_terIMBH) > 0:
-                tertiary = True
-
-            GW_calcs.scatter_hist(GWfreq_binIMBH, GWstra_binIMBH,
-                                  GWfreq_terIMBH, GWstra_terIMBH,
-                                  ax, ax1, ax2, 'Hard Binary', 'Hierarchical',
-                                  tertiary, False)
-
-            ax.set_xlabel(r'$\log_{10}f$ [Hz]')
-            ax.set_ylabel(r'$\log_{10}h$')
-            plot_ini.tickers(ax, 'plot')
-            plot_ini.tickers(ax1, 'plot')
-            plot_ini.tickers(ax2, 'plot')
-            ax.set_ylim(-35, -12.2)
-            ax.set_xlim(-15, 0.1)
-            plt.savefig('figures/binary_hierarchical/'+str(integrators[int_])+'GW_freq_strain_hardbins_diagram.png', dpi = 500, bbox_inches='tight')
-            plt.clf()
-
             fig, ax = plt.subplots()
-
-            # LISA
-            lisa = li.LISA() 
-            x_temp = np.linspace(10**-5, 1, 1000)
-            Sn = lisa.Sn(x_temp)
-
-            # SKA
-            SKA = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/hc_SKA.npz'))
-            SKA_freq = SKA['x']
-            SKA_hc = SKA['y']
-            SKA_strain = SKA_hc**2/SKA_freq
-
-            # muAres 
-            Ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
-            Ares_freq = Ares['x']
-            Ares_strain = Ares['y']
-
             ax.plot(np.log10(x_temp), np.log10(np.sqrt(x_temp*Sn)), color = 'slateblue', zorder = 1)
             ax.plot(np.log10(Ares_freq), np.log10(np.sqrt(Ares_freq*Ares_strain)), linewidth='1.5', color='red', zorder = 3)
             ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), linewidth='1.5', color='orangered', zorder = 4)
@@ -808,7 +828,7 @@ class sustainable_sys(object):
             ax.text(-4.28, -18.2, 'LISA', fontsize ='small', rotation = 308, color = 'slateblue')
             ax.text(-5.98, -19, r'$\mu$Ares', fontsize ='small', rotation = 306, color = 'red')
 
-            idx = [20, 70]
+            idx = [0, 0]
             GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[int_][idx[int_]], 'not', False)
             GWstra_binIMBH = self.array_rewrite(self.GWstra_binIMBH[int_][idx[int_]], 'not', False)
             GWfreq_terIMBH = self.array_rewrite(self.GWfreq_terIMBH[int_][idx[int_]], 'not', False)
@@ -824,9 +844,7 @@ class sustainable_sys(object):
             ax.set_xlabel(r'$\log_{10}f$ [Hz]')
             ax.set_ylabel(r'$\log_{10}h$')
             plot_ini.tickers(ax, 'plot')
-            plot_ini.tickers(ax1, 'plot')
-            plot_ini.tickers(ax2, 'plot')
             ax.set_ylim(-35, -12.2)
             ax.set_xlim(-15, 0.1)
-            plt.savefig('figures/binary_hierarchical/'+str(integrators[int_])+'GW_freq_strain_single_streak_diagram.pdf', dpi = 500, bbox_inches='tight')
+            plt.savefig('figures/binary_hierarchical/'+str(self.integrators[int_])+'GW_freq_strain_single_streak_diagram.pdf', dpi = 500, bbox_inches='tight')
             plt.clf()

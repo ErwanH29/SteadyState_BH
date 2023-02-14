@@ -670,24 +670,17 @@ class gw_calcs(object):
         SKA_hc = SKA['y']
         SKA_strain = SKA_hc**2/SKA_freq
 
-        # BBO 
-        BBO = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_BBO_STAR.npz'))
-        BBO_freq = BBO['x']
-        BBO_strain = BBO['y']
-
         # muAres 
         Ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
         Ares_freq = Ares['x']
         Ares_strain = Ares['y']
 
         ax.plot(np.log10(x_temp), np.log10(np.sqrt(x_temp*Sn)), color = 'slateblue')
-        ax.plot(np.log10(BBO_freq), np.log10(np.sqrt(BBO_freq*BBO_strain)), linewidth='1.5', color='blue')
         ax.plot(np.log10(Ares_freq), np.log10(np.sqrt(Ares_freq*Ares_strain)), linewidth='1.5', color='red')
         ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), linewidth='1.5', color='orangered')
         ax.text(-9.25, -15.8, 'SKA', fontsize ='small', rotation = 322, color = 'orangered')
         ax.text(-4.28, -18.2, 'LISA', fontsize ='small', rotation = 309, color = 'slateblue')
         ax.text(-6.13, -19, r'$\mu$Ares', fontsize ='small', rotation = 312, color = 'red')
-        ax.text(-1.32, -24, 'BBO', fontsize ='small', rotation = 321, color = 'blue')
         
     def orbital_hist_plotter(self):
         """
