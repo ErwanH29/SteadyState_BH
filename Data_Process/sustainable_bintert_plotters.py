@@ -36,10 +36,9 @@ class sustainable_sys(object):
 
         for fold_ in folders:
             print('Files for: ', fold_)
-            filenameH = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory_temp/*'))
-            filenameGRX = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
+            filenameH = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
+            filenameGRX = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
             filename = [natsort.natsorted(filenameH), natsort.natsorted(filenameGRX)]
-            count = 8080
 
             for int_ in range(2):
                 for file_ in range(len(filename[int_])):
@@ -202,7 +201,7 @@ class sustainable_sys(object):
                                         dedt.append(np.mean(temp_dedt))
                                         dadt.append(np.mean(temp_dadt))
 
-                                        path = '/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems_temp/'
+                                        path = '/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/'
                                         stab_tracker = pd.DataFrame()
                                         df_stabtime = pd.Series({'Integrator': integrator,
                                                                 'Population': pop,
@@ -302,7 +301,7 @@ class sustainable_sys(object):
 
         iter = 0
         for fold_ in self.folders:
-            system_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems_temp/*'))
+            system_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/*'))
             for file_ in range(len(system_data)):
                 with open(system_data[file_], 'rb') as input_file:
                     data_file = pkl.load(input_file)

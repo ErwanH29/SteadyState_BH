@@ -43,11 +43,11 @@ class gw_calcs(object):
 
         iterf = 0
         for fold_ in self.folders:
-            tcropH = 68 - iterf
-            tcropG = 64 - iterf
+            tcropH = 59 - iterf
+            tcropG = 55 - iterf
 
-            Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory_tGW_temp/*'))
-            GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_tGW_temp/*'))
+            Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
+            GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
             filename = [natsort.natsorted(Hermite_data), natsort.natsorted(GRX_data)] 
 
             chaoticH = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[tcropH:]) for i in Hermite_data]
@@ -178,7 +178,7 @@ class gw_calcs(object):
                                         mass_IMBH = np.asarray(mass_IMBH)
                                         Ntot_indiv = Nfbnn_indiv + Nfbt_indiv
 
-                                        path = '/media/erwanh/Elements/'+fold_+'/data/tGW_temp/'
+                                        path = '/media/erwanh/Elements/'+fold_+'/data/tGW/'
                                         stab_tracker = pd.DataFrame()
                                         df_stabtime = pd.Series({'Integrator': self.integrator[int_],
                                                                 'Simulation Time': 10**3*sim_time,
@@ -209,7 +209,7 @@ class gw_calcs(object):
                                                                 'Tertiary SMBH Event': SMBH_t_event,
                                                                 'Merger Boolean': merge_Bool})
                                         stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(self.integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(self.integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
 
             iterf += 1
 
@@ -261,7 +261,7 @@ class gw_calcs(object):
             int_idx = 1
 
         print('Extracting data for ', self.integrator[int_idx], ' and distance ', folder)
-        tGW_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+folder+'/data/tGW_temp/*'))
+        tGW_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+folder+'/data/tGW/*'))
         if filter == 'pop_filt':
             for file_ in range(len(tGW_data)):
                 with open(tGW_data[file_], 'rb') as input_file:
@@ -801,82 +801,67 @@ class gw_calcs(object):
         """
         
         plot_ini = plotter_setup()
-        data_idx = 0
-        self.combine_data('integrator', self.integrator[data_idx], True)
+        data_idx = 0                 #Hardcode (0 = Hermite) | (1 = GRX)
+        iterf = 0
         print('Plotting Strain Frequency Diagram')
+        for fold_ in self.folders:
+            self.combine_data('integrator', self.integrator[data_idx], fold_)
+            IMBH_strain = [ ]
+            IMBH_freq = [ ]
+            SMBH_strain = [ ]
+            SMBH_freq = [ ]
+            
+            for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
+                if self.pop[parti_] <= 40:                #Hardcode value
+                    for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
+                        semi_fb_nn = self.semi_flyby_nn[parti_][event_]
+                        if semi_fb_nn < 1 | units.parsec and self.strain_flyby_nn[parti_][event_] > 0:
+                            if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0:
+                                IMBH_strain.append(self.strain_flyby_nn[parti_][event_])
+                                IMBH_freq.append(self.freq_flyby_nn[parti_][event_])
+                            else:
+                                SMBH_strain.append(self.strain_flyby_nn[parti_][event_])
+                                SMBH_freq.append(self.freq_flyby_nn[parti_][event_])
 
-        IMBH_strain = [ ]
-        IMBH_strain_nn = [ ]
-        IMBH_strain_t = [ ]
-        IMBH_freq = [ ]
-        IMBH_freq_nn = [ ]
-        IMBH_freq_t = [ ]
+            for parti_ in range(len(self.semi_flyby_t)):
+                if self.pop[parti_] <= 40:
+                    for event_ in range(len(self.semi_flyby_t[parti_])):
+                        semi_fb_t = self.semi_flyby_t[parti_][event_]
+                        if semi_fb_t < 1 | units.parsec and self.strain_flyby_t[parti_][event_] > 0:
+                            if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0:
+                                IMBH_strain.append(self.strain_flyby_t[parti_][event_])
+                                IMBH_freq.append(self.freq_flyby_t[parti_][event_])
+                            else:
+                                SMBH_strain.append(self.strain_flyby_t[parti_][event_])
+                                SMBH_freq.append(self.freq_flyby_t[parti_][event_])
 
-        SMBH_strain = [ ]
-        SMBH_strain_nn = [ ]
-        SMBH_strain_t = [ ]
-        SMBH_freq = [ ]
-        SMBH_freq_nn = [ ]
-        SMBH_freq_t = [ ]
-        for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
-            if self.pop[parti_] <= 40:
-                for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
-                    semi_fb_nn = self.semi_flyby_nn[parti_][event_]
-                    if semi_fb_nn < 1 | units.parsec and self.strain_flyby_nn[parti_][event_] > 0:
-                        if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0:
-                            IMBH_strain.append(self.strain_flyby_nn[parti_][event_])
-                            IMBH_strain_nn.append(self.strain_flyby_nn[parti_][event_])
-                            IMBH_freq.append(self.freq_flyby_nn[parti_][event_])
-                            IMBH_freq_nn.append(self.freq_flyby_nn[parti_][event_])
-                        else:
-                            SMBH_strain.append(self.strain_flyby_nn[parti_][event_])
-                            SMBH_strain_nn.append(self.strain_flyby_nn[parti_][event_])
-                            SMBH_freq.append(self.freq_flyby_nn[parti_][event_])
-                            SMBH_freq_nn.append(self.freq_flyby_nn[parti_][event_])
+            for parti_ in range(len(self.semi_flyby_SMBH)):
+                if self.pop[parti_] <= 40:
+                    for event_ in range(len(self.semi_flyby_SMBH[parti_])):
+                        semi_fb_SMBH = self.semi_flyby_SMBH[parti_][event_]
+                        if semi_fb_SMBH < 1 | units.parsec:
+                            SMBH_strain.append(self.strain_flyby_SMBH[parti_][event_])
+                            SMBH_freq.append(self.freq_flyby_SMBH[parti_][event_])
 
-        for parti_ in range(len(self.semi_flyby_t)):
-            if self.pop[parti_] <= 40:
-                for event_ in range(len(self.semi_flyby_t[parti_])):
-                    semi_fb_t = self.semi_flyby_t[parti_][event_]
-                    if semi_fb_t < 1 | units.parsec and self.strain_flyby_t[parti_][event_] > 0:
-                        if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0:
-                            IMBH_strain.append(self.strain_flyby_t[parti_][event_])
-                            IMBH_strain_t.append(self.strain_flyby_t[parti_][event_])
-                            IMBH_freq.append(self.freq_flyby_t[parti_][event_])
-                            IMBH_freq_t.append(self.freq_flyby_t[parti_][event_])
-                        else:
-                            SMBH_strain.append(self.strain_flyby_t[parti_][event_])
-                            SMBH_strain_t.append(self.strain_flyby_t[parti_][event_])
-                            SMBH_freq.append(self.freq_flyby_t[parti_][event_])
-                            SMBH_freq_t.append(self.freq_flyby_t[parti_][event_])
-
-        for parti_ in range(len(self.semi_flyby_SMBH)):
-            if self.pop[parti_] <= 40:
-                for event_ in range(len(self.semi_flyby_SMBH[parti_])):
-                    semi_fb_SMBH = self.semi_flyby_SMBH[parti_][event_]
-                    if semi_fb_SMBH < 1 | units.parsec:
-                        SMBH_strain.append(self.strain_flyby_SMBH[parti_][event_])
-                        SMBH_freq.append(self.freq_flyby_SMBH[parti_][event_])
-
-        fig = plt.figure(figsize=(8, 6))
-        gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
-                              left=0.1, right=0.9, bottom=0.1, top=0.9,
-                              wspace=0.05, hspace=0.05)
-        ax = fig.add_subplot(gs[1, 0])
-        ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
-        ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
-        
-        self.scatter_hist(SMBH_freq, SMBH_strain,
-                          IMBH_freq, IMBH_strain, 
-                          ax, ax1, ax2, 'SMBH-IMBH', 'IMBH-IMBH',
-                          True, True)
-        ax.set_xlabel(r'$\log_{10}f$ [Hz]')
-        ax.set_ylabel(r'$\log_{10}h$')
-        ax1.set_title(str(self.integrator[data_idx]))
-        plot_ini.tickers(ax, 'plot')
-        plot_ini.tickers(ax1, 'plot')
-        plot_ini.tickers(ax2, 'plot')
-        ax.set_ylim(-30, -12.2)
-        ax.set_xlim(-12.5, 0.1)
-        plt.savefig('figures/gravitational_waves/'+str(self.integrator[data_idx])+'GW_freq_strain_maximise_diagram_N<=40.png', dpi = 500, bbox_inches='tight')
-        plt.clf()
+            fig = plt.figure(figsize=(8, 6))
+            gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
+                                left=0.1, right=0.9, bottom=0.1, top=0.9,
+                                wspace=0.05, hspace=0.05)
+            ax = fig.add_subplot(gs[1, 0])
+            ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
+            ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
+            
+            self.scatter_hist(SMBH_freq, SMBH_strain,
+                              IMBH_freq, IMBH_strain, 
+                              ax, ax1, ax2, 'SMBH-IMBH', 'IMBH-IMBH',
+                              True, True)
+            ax.set_xlabel(r'$\log_{10}f$ [Hz]')
+            ax.set_ylabel(r'$\log_{10}h$')
+            ax1.set_title(str(self.integrator[data_idx]))
+            plot_ini.tickers(ax, 'plot')
+            plot_ini.tickers(ax1, 'plot')
+            plot_ini.tickers(ax2, 'plot')
+            ax.set_ylim(-30, -12.2)
+            ax.set_xlim(-12.5, 0.1)
+            plt.savefig('figures/gravitational_waves/'+str(self.integrator[data_idx])+'GW_freq_strain_maximise_diagram_N<=40'+fold_+'.png', dpi = 500, bbox_inches='tight')
+            plt.clf()
