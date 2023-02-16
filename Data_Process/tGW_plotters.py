@@ -27,10 +27,10 @@ class gw_calcs(object):
         np.seterr(divide='ignore')
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=UserWarning) 
-        self.H0 = 67.4 #Taken from arXiv:1807.06209 in km/s/Mpc
-        self.tH = (self.H0*(3.2408*10**-20))**-1 * 1/(3600*365*24*10**6) | units.Myr
+        self.H0 = 67.4 | units.kms / units.Mpc #Taken from arXiv:1807.06209 in km/s/Mpc
+        self.tH = self.H0**-1 | units.Myr
         self.integrator = ['Hermite', 'GRX']
-        self.folders = ['rc_0.25', 'rc_0.5']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.5_4e6', 'rc_0.5_4e7']
         self.colors = ['red', 'blue', 'lightcoral', 'cornflowerblue']
         self.distance = [r'$\langle r_c = 0.25 \rangle$', r'$\langle r_c = 0.50 \rangle$']
         
@@ -46,15 +46,23 @@ class gw_calcs(object):
             tcropH = 59 - iterf
             tcropG = 55 - iterf
 
-            Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
-            filename = [natsort.natsorted(Hermite_data), natsort.natsorted(GRX_data)] 
-
-            chaoticH = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[tcropH:]) for i in Hermite_data]
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
-            filenameC = [natsort.natsorted(chaoticH), natsort.natsorted(chaoticG)]
 
-            for int_ in range(2):
+            if iterf == 0:
+                drange = 2
+                Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
+                chaoticH = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[tcropH:]) for i in Hermite_data]
+                filename = [natsort.natsorted(Hermite_data), natsort.natsorted(GRX_data)] 
+                filenameC = [natsort.natsorted(chaoticH), natsort.natsorted(chaoticG)]
+                integrator = ['Hermite', 'GRX']
+            else:
+                drange = 1
+                filename = [natsort.natsorted(GRX_data)] 
+                filenameC = [natsort.natsorted(chaoticG)]
+                integrator = ['GRX']
+
+            for int_ in range(drange):
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
@@ -180,7 +188,7 @@ class gw_calcs(object):
 
                                         path = '/media/erwanh/Elements/'+fold_+'/data/tGW/'
                                         stab_tracker = pd.DataFrame()
-                                        df_stabtime = pd.Series({'Integrator': self.integrator[int_],
+                                        df_stabtime = pd.Series({'Integrator': integrator[int_],
                                                                 'Simulation Time': 10**3*sim_time,
                                                                 'Population': 10*round(0.1*np.shape(data)[0]),
                                                                 'mass SMBH': SMBH_sys_mass,
@@ -209,7 +217,7 @@ class gw_calcs(object):
                                                                 'Tertiary SMBH Event': SMBH_t_event,
                                                                 'Merger Boolean': merge_Bool})
                                         stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(self.integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
+                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
 
             iterf += 1
 
@@ -267,6 +275,7 @@ class gw_calcs(object):
                 with open(tGW_data[file_], 'rb') as input_file:
                     data_file = pkl.load(input_file)
                     if data_file.iloc[0][0] == self.integrator[int_idx]:
+                        print('TRue')
                         self.sim_time.append(data_file.iloc[0][1])
                         self.pop.append(int(data_file.iloc[0][2]))
                         self.mass_SMBH.append(data_file.iloc[0][3])
@@ -441,9 +450,10 @@ class gw_calcs(object):
         Function to take into account the limited LISA observation time, T ~ 5yrs
         Based on equation (6) of Kremer et al. 2019.
         The redshift is calculated from Ned Wright's calculator with data from arXiv:1807.06209
+        (omegaM = 0.315, omegaL = 0.685, H0 = 67.4 km/s/Mpc)
         """
 
-        redshift = 0.0228
+        redshift = 0.1972
         nharm = self.gw_harmonic_mode(ecc)
         forb = np.sqrt(constants.G*(m1+m2))/(2*np.pi) * abs(semi)**-1.5 * (redshift+1)**-1
 
@@ -454,7 +464,7 @@ class gw_calcs(object):
         """
         Use of eqn (7) Kremer et al. 2018.
         Use of eqn (20) of Peters and Matthews (1963).
-        At 100Mpc, z ~ 0.0228 from cosmology calc.
+        At 1Gpc, z ~ 0.0228 from cosmology calc.
         
         Inputs:
         semi:   The semi-major axes of the system
@@ -462,7 +472,7 @@ class gw_calcs(object):
         m1/m2:  The individual mass components of the binary system
         """
 
-        dist = 100 | units.Mpc  # Taken from [https://imagine.gsfc.nasa.gov/features/cosmic/milkyway_info.html]
+        dist = 1 | units.Gpc  # Taken from [https://imagine.gsfc.nasa.gov/features/cosmic/milkyway_info.html]
         redshift = 0.0228
         ecc = abs(ecc)
 
@@ -609,6 +619,7 @@ class gw_calcs(object):
 
             for int_ in range(2):
                 self.combine_data('pop_filt', self.integrator[int_], fold_)
+                print(self.mass_parti)
 
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
                     if self.pop[parti_] <= 40:
@@ -656,8 +667,9 @@ class gw_calcs(object):
             
             ############### PLOTTING OF a vs. (1-e) FOR BIN ##############
             x_arr = np.linspace(-10, 0, 2000)
-            rmass_IMBH = (self.mass_parti[0][0]**2)*(2*self.mass_parti[0][0])
-            rmass_SMBH = (self.mass_parti[0][0]*self.mass_SMBH[0][0])*(self.mass_parti[0][0]+self.mass_SMBH[0][0])
+            print(np.shape(self.mass_parti))
+            rmass_IMBH = (self.mass_parti[0]**2)*(2*self.mass_parti[0])
+            rmass_SMBH = (self.mass_parti[0]*self.mass_SMBH[0])*(self.mass_parti[0]+self.mass_SMBH[0])
             const_tgw = [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_IMBH*(10**(i) * (1 | units.pc)) **-4))**(1/3.5))) for i in x_arr]
             const_tgw2 = [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_SMBH*(10**(i) * (1 | units.pc)) **-4))**(1/3.5))) for i in x_arr]
 
@@ -669,7 +681,7 @@ class gw_calcs(object):
             ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
             ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
 
-            self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_SMBH[0][0])
+            self.forecast_interferometer(ax, self.mass_parti[0], self.mass_SMBH[0])
             ax.text(-5, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
             ax.text(-5.7, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
                     
@@ -738,7 +750,7 @@ class gw_calcs(object):
             ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
             ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
 
-            self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_IMBH[0][0])
+            self.forecast_interferometer(ax, self.mass_parti[0], self.mass_IMBH[0][0])
             ax.text(-6.1, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
             ax.text(-6.8, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
 

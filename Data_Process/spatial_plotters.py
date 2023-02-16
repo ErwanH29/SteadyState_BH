@@ -33,7 +33,7 @@ def global_properties():
     plot_ini = plotter_setup()
     
     integrator = ['Hermite', 'GRX']
-    folders = ['rc_0.25', 'rc_0.5']
+    folders = ['rc_0.25_4e6']
 
     fold_iter = 0
     for fold_ in folders:

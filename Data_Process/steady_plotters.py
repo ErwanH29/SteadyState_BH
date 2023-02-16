@@ -59,10 +59,10 @@ class stability_plotters(object):
             return slope *(xval**0.5*np.log(log_c*xval))**beta
             
         plot_ini = plotter_setup()
+
+        folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.5_4e6', 'rc_0.5_4e7']
         dirH = 'data/Hermite/chaotic_simulation/*'
         dirG = 'data/GRX/chaotic_simulation/*'
-
-        folders = ['rc_0.25', 'rc_0.5']
         direc = [dirH, dirG]
 
         colors = ['red', 'blue', 'lightcoral', 'cornflowerblue']

@@ -17,9 +17,9 @@ class sustainable_sys(object):
 
     def __init__(self):
         warnings.filterwarnings("ignore", category=RuntimeWarning)
-        self.folders = ['rc_0.25', 'rc_0.5']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.5_4e6', 'rc_0.5_4e7']
         self.colors = ['red', 'blue', 'lightcoral', 'cornflowerblue']
-        self.integrators = ['Hermite', 'GRX']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.5_4e6', 'rc_0.5_4e7']
         self.labels = [r'$r_c = 0.25$ pc', r'$r_c = 0.50$ pc']
         self.legend_id = [3, 4]
 
@@ -31,16 +31,23 @@ class sustainable_sys(object):
         GW_calcs = gw_calcs()
 
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
-        folders = ['rc_0.25', 'rc_0.5']
-        ints = ['Hermite', 'GRX']
-
-        for fold_ in folders:
+        iterf = 0
+        for fold_ in self.folders:
             print('Files for: ', fold_)
-            filenameH = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
             filenameGRX = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
-            filename = [natsort.natsorted(filenameH), natsort.natsorted(filenameGRX)]
 
-            for int_ in range(2):
+            if iterf == 0:
+                drange = 2
+                filenameH = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
+                filename = [natsort.natsorted(filenameH), natsort.natsorted(filenameGRX)]
+                integrator = ['Hermite', 'GRX']
+                
+            else:
+                drange = 1
+                filename = [natsort.natsorted(filenameGRX)]
+                integrator = ['GRX']
+
+            for int_ in range(drange):
                 for file_ in range(len(filename[int_])):
                     with open(filename[int_][file_], 'rb') as input_file:
                         print('Reading file', file_, ':', input_file)
@@ -52,8 +59,6 @@ class sustainable_sys(object):
 
                             if pop > 5 and pop <= 40:
                                 for parti_ in range(np.shape(data)[0]):
-                                    integrator = ints[int_]
-
                                     pop_bin = [ ]
                                     pop_ter = [ ]
 
@@ -203,7 +208,7 @@ class sustainable_sys(object):
 
                                         path = '/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/'
                                         stab_tracker = pd.DataFrame()
-                                        df_stabtime = pd.Series({'Integrator': integrator,
+                                        df_stabtime = pd.Series({'Integrator': integrator[drange],
                                                                 'Population': pop,
                                                                 'Binary Pop.': pop_bin,
                                                                 '# Binary Sys.': bin_sys,
@@ -232,7 +237,8 @@ class sustainable_sys(object):
                                                                 'Total sim. length': col_ * 1000,
                                                                 })
                                         stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(ints[int_])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[drange])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+            iterf += 1
 
     def array_rewrite(self, arr, arr_type, filt):
         """

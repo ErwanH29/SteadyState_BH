@@ -7,14 +7,19 @@ from spatial_plotters import *
 
 start_time = cpu_time.time()
 
-print('...steady_plotter...')
-cst = stability_plotters()
-cst.overall_steady_plotter()
 
+print('... ejection_Stat_plotters ...')
+cst = event_tracker()
+cst = ejection_stats()
+cst.new_data_extractor()
+cst.vejec_plotters()
+end_ejec = cpu_time.time()
+
+STOP
 print('...tGW_plotters...')
 cst = gw_calcs()
 cst.new_data_extractor()
-#cst.orbital_hist_plotter()
+cst.orbital_hist_plotter()
 #cst.strain_freq_plotter()
 
 print('...sustainable_bintert_plotters...')
@@ -25,22 +30,11 @@ cst.new_data_extractor()
 #cst.single_streak_plotter()
 #cst.sys_occupancy_plotter()
 #cst.sys_popul_plotter()
-STOP
 
-STOP
+print('...steady_plotter...')
+cst = stability_plotters()
+cst.overall_steady_plotter()
 
-
-
-
-
-print('... ejection_Stat_plotters ...')
-cst = event_tracker()
-cst = ejection_stats()
-cst.new_data_extractor()
-cst.combine_data()
-cst.energy_plotters()
-cst.vejec_plotters()
-end_ejec = cpu_time.time()
 
 
 

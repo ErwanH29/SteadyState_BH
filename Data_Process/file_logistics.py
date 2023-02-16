@@ -90,7 +90,6 @@ def ejected_extract_final(set, ejected):
     ejected:    The ejected particle
     """
 
-    Nclose = 0
     for parti_ in range(len(set)):
         if set.iloc[parti_][0][0] == ejected.iloc[0][4]: 
             ejec_data = set.iloc[parti_]   #Make data set of only ejected particle
@@ -109,20 +108,8 @@ def ejected_extract_final(set, ejected):
             idx -= tot_steps
             ejec_vel = np.asarray(ejec_vel)
             esc_vel = ejec_vel[idx]
-
-            xpos = (ejec_data.iloc[idx][0][2][0]-set.iloc[0][idx][0][2][0]).value_in(units.pc)
-            ypos = (ejec_data.iloc[idx][0][2][1]-set.iloc[0][idx][0][2][1]).value_in(units.pc)
-            zpos = (ejec_data.iloc[idx][0][2][2]-set.iloc[0][idx][0][2][2]).value_in(units.pc)
-
-            KE = ejec_data.iloc[-1][4].value_in(units.J)
-            PE = ejec_data.iloc[-1][5].value_in(units.J)
-
-            for j in range(len(ejec_data)):
-                if abs(ejec_data.iloc[j][-1]) < 1e-2:
-                    Nclose += 1
-            Nmerge = ejected.iloc[0][10]
                         
-            return xpos, ypos, zpos, esc_vel, KE, PE, Nclose, Nmerge
+            return esc_vel
     
 def simulation_stats_checker(dist_dir, int_string):
     """
