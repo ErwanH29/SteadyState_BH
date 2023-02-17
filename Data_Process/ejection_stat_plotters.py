@@ -29,8 +29,8 @@ class ejection_stats(object):
             chaotic_G = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
             if iterf == 0:
                 drange = 2
-                Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory_ejec/*'))
-                chaotic_H = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[68:]) for i in Hermite_data]
+                Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
+                chaotic_H = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[63:]) for i in Hermite_data]
                 filest = [natsort.natsorted(Hermite_data), natsort.natsorted(GRX_data)] 
                 filesc = [natsort.natsorted(chaotic_H), natsort.natsorted(chaotic_G)]
                 integrator = ['Hermite', 'GRX']

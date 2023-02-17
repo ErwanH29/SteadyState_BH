@@ -156,21 +156,15 @@ def stats_chaos_extractor(dir):
     no_Data = len(steadytime_data)
 
     fin_parti_data = np.empty(no_Data)
-    init_dist_data = np.empty(no_Data)
-    init_mass_data = np.empty((no_Data, 2))
     stab_time_data = np.empty(no_Data)
 
     for i in range(no_Data):
         sim_data = steadytime_data[i]
-        
         if isinstance(sim_data.iloc[0][9], float):
             fin_parti_data[i] = sim_data.iloc[0][6] + sim_data.iloc[0][10]
-            init_dist_data[i] = sim_data.iloc[0][7].value_in(units.parsec)
-            init_mass_data[i] = [int(min(sim_data.iloc[0][8].value_in(units.MSun))), 
-                                 int(max(sim_data.iloc[0][8].value_in(units.MSun)))]
             stab_time_data[i] = sim_data.iloc[0][13].value_in(units.Myr)
         
-    return fin_parti_data, stab_time_data, init_dist_data, init_mass_data
+    return fin_parti_data, stab_time_data
 
 simulation_stats_checker('rc_0.25', 'GRX')
 simulation_stats_checker('rc_0.25', 'Hermite')
