@@ -8,7 +8,9 @@ from spatial_plotters import *
 
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
-global_properties()
+#global_properties()
+ecc_semi_histogram('GRX')
+ecc_semi_histogram('Hermite')
 spatial_plotter('GRX')
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')

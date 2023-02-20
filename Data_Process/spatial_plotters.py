@@ -22,6 +22,79 @@ def colour_picker():
 
     return colors
 
+def ecc_semi_histogram(integrator):
+    """
+    Function which plots the eccentricity and semi-major axis of the particles
+    """
+    
+    plot_ini = plotter_setup()
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
+
+    SMBH_ecca = [ ]
+    SMBH_sema = [ ]
+    IMBH_ecca = [ ]
+    IMBH_sema = [ ]
+       
+    data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+integrator+'/particle_trajectory/*'))
+
+    total_data = 0
+    ecc_data = 0
+    for file_ in range(len(data)):
+        with open(data[file_], 'rb') as input_file:
+            file_size = os.path.getsize(data[file_])
+            if file_size < 2.8e9:
+                print('Reading File :', input_file)
+                ptracker = pkl.load(input_file)
+                col_len = np.shape(ptracker)[1]
+
+                for parti_ in range(np.shape(ptracker)[0]):
+                    if parti_ != 0:
+                        particle = ptracker.iloc[parti_]
+
+                        for j in range(col_len-1):
+                            total_data += 1
+                            sim_snap = particle.iloc[j]
+
+                            if sim_snap[8][2] < 1:
+                                ecc_data += 1
+                            if sim_snap[8][1] < 1:
+                                ecc_data += 1
+
+                            SMBH_ecca.append(np.log10(sim_snap[8][0]))
+                            SMBH_sema.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
+
+                            IMBH_ecca.append(np.log10(sim_snap[8][1]))
+                            IMBH_sema.append(np.log10(abs(sim_snap[7][1]).value_in(units.pc)))
+                            IMBH_ecca.append(np.log10(sim_snap[8][2]))
+                            IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
+            
+    with open('figures/system_evolution/output/ecc_events_ALL.txt', 'w') as file:
+        file.write('For '+integrator+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
+
+    ##### All eccentricity vs. semimajor axis #####
+    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 40, range=([-8, 3], [-10, 8]))
+    plt.clf()
+    
+    fig, ax = plt.subplots()
+    ax.set_xlabel(r'$\log_{10}a$ [pc]')
+    ax.set_ylabel(r'$\log_{10}e$')
+    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 125, range=([-8, 3], [-10, 8]), cmap = 'viridis')
+    bin2d_sim /= np.max(bin2d_sim)
+    extent = [-7, 2, -2, 6]
+    contours = ax.imshow((bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
+    ax.scatter(SMBH_sema[0], SMBH_ecca[0], color = 'blueviolet', label = 'SMBH-IMBH')
+    ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3)
+    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=1.25, cmap='binary', levels = 4, label = 'IMBH-IMBH')
+    ax.axhline(0, linestyle = ':', color = 'white', )
+    ax.text(-6, 0.2, r'$e > 1$', color = 'white', va = 'center')
+    ax.text(-6, -0.22, r'$e < 1$', color = 'white', va = 'center')
+    plot_ini.tickers(ax, 'histogram')
+    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+    ax.legend() 
+    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
+    plt.clf()
+
 def global_properties():
     """
     Function which plots various Kepler elements of ALL particles simulated
@@ -227,31 +300,6 @@ def global_properties():
             file.write('\nIMBH semi-major axis 2 sample KS test:        pvalue = '+str(ks_sIMBH[1]))
             file.write('\nSMBH distance 2 sample KS test:               pvalue = '+str(ks_dSMBH[1]))
             file.write('\nIMBH distance 2 sample KS test:               pvalue = '+str(ks_dIMBH[1]))
-
-        ##### All eccentricity vs. semimajor axis #####
-        fig, ax = plt.subplots()
-        n, xbins, ybins, image = hist2d(semIMBHa_flat[1][::-1], eccIMBHa_flat[1][::-1], bins = 40, range=([-6.8, 2], [-1.8, 6]))
-        plt.clf()
-        
-        fig, ax = plt.subplots()
-        ax.set_xlabel(r'$\log_{10}a$ [pc]')
-        ax.set_ylabel(r'$\log_{10}e$')
-        bin2d_sim, xed, yed, image = ax.hist2d(semIMBHa_flat[1], eccIMBHa_flat[1], bins = 125, range=([-6.8, 2], [-1.8, 6]), cmap = 'viridis')
-        bin2d_sim /= np.max(bin2d_sim)
-        extent = [-7, 2, -2, 6]
-        contours = ax.imshow((bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
-        ax.scatter(semSMBHa_flat[1][0], eccSMBHa_flat[1][0], color = 'blueviolet', label = 'SMBH-IMBH')
-        ax.scatter(semSMBHa_flat[1], eccSMBHa_flat[1], color = 'blueviolet', s = 0.3)
-        ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=1.25, cmap='binary', levels = 3, label = 'IMBH-IMBH')
-        ax.axhline(0, linestyle = ':', color = 'white', )
-        ax.text(-6, 0.2, r'$e > 1$', color = 'white', va = 'center')
-        ax.text(-6, -0.22, r'$e < 1$', color = 'white', va = 'center')
-        plot_ini.tickers(ax, 'histogram')
-        ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-        ax.legend() 
-        plt.savefig('figures/system_evolution/GRX_all_ecc_sem_scatter_hist_contours_'+fold_+'.png', dpi=300, bbox_inches='tight')
-        plt.clf()
 
         ##### CDF Plots #####
         fig = plt.figure(figsize=(10, 6))
