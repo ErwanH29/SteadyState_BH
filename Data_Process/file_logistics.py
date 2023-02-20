@@ -27,7 +27,7 @@ class plotter_setup(object):
         Function to setup axis for population plots
         """
 
-        ax.set_xlabel(r'IMBH Population [$N$]')
+        ax.set_xlabel(r'$N_{\rm{IMBH}}$')
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
@@ -44,40 +44,23 @@ class plotter_setup(object):
         ax.set_xticks(xints)
 
         return ax
-def bulk_stat_extractor(file_string, rewrite):
+
+def bulk_stat_extractor(file_string):
     """
     Function which extracts all files in a given dir.
     
     Inputs:
     file_string: The directory wished to extract files from
-    rewrite:     (Y|N) string to dictate whether to compress the file based on needed data
     """
 
     filename = glob.glob(file_string)
     filename = natsort.natsorted(filename)
     data = [ ]
 
-    if rewrite == 'N':
-        for file_ in range(len(filename)):
-            with open(filename[file_], 'rb') as input_file:
-                print('Reading file: ', input_file)
-                data.append(pkl.load(input_file))
-                
-    else:
-        for file_ in range(len(filename)):
-            with open(filename[file_], 'rb') as input_file:
-                print('Reading file: ', input_file)
-                rewrite_file = pkl.load(input_file)
-            if np.shape(rewrite_file)[1] > 50 and np.shape(rewrite_file)[1] < 50:
-                data_pts = round((np.shape(rewrite_file)[1])/25)
-            elif np.shape(rewrite_file)[1] > 500 and np.shape(rewrite_file)[1] < 5000:
-                data_pts = round((np.shape(rewrite_file)[1])/250)
-            elif np.shape(rewrite_file)[1] > 5000:
-                data_pts = round((np.shape(rewrite_file)[1])/2500)
-            else:
-                data_pts = np.shape(rewrite_file)[1]
-            rewrite_file = rewrite_file.drop(rewrite_file.iloc[:, data_pts:-1*data_pts], axis = 1) 
-            data.append(rewrite_file)
+    for file_ in range(len(filename)):
+        with open(filename[file_], 'rb') as input_file:
+            print('Reading file: ', input_file)
+            data.append(pkl.load(input_file))
 
     return data
 
@@ -135,24 +118,23 @@ def simulation_stats_checker(dist_dir, int_string):
             data = [float(i) for i in data]
             if 4001000 in data:
                 SMBH_merger += 1
-            if 2000 in data:
+            elif 2000 in data:
                 IMBH_merger += 1
-            if 4001000 not in data and 2000 not in data and '100000000.0' not in data2:
-                ejection += 1
-            if '100000000.0' in data2:
+            elif '100000000.0' in data2:
                 complete += 1
+            else:
+                ejection += 1
 
     with open('figures/'+int_string+'_'+dist_dir+'_summary.txt', 'w') as file:
-        file.write('\nSimulation outcomes for '+str(int_string))
+        file.write('Simulation outcomes for '+str(int_string))
         file.write('\nTotal simulations:   '+str(tot_sims))
         file.write('\nSMBH merging events: '+str(SMBH_merger))
         file.write('\nIMBH merging events: '+str(IMBH_merger))
         file.write('\nEjection events:     '+str(ejection))
         file.write('\nCompleted sims:      '+str(complete))
-        file.write('\n========================================')
 
 def stats_chaos_extractor(dir):
-    steadytime_data = bulk_stat_extractor(dir, 'N')
+    steadytime_data = bulk_stat_extractor(dir)
     no_Data = len(steadytime_data)
 
     fin_parti_data = np.empty(no_Data)
@@ -166,7 +148,8 @@ def stats_chaos_extractor(dir):
         
     return fin_parti_data, stab_time_data
 
-simulation_stats_checker('rc_0.25', 'GRX')
-simulation_stats_checker('rc_0.25', 'Hermite')
-simulation_stats_checker('rc_0.5', 'GRX')
-simulation_stats_checker('rc_0.5', 'Hermite')
+print('...Gathering simulation outcomes...')
+folders = ['rc_0.25_4e6', 'rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
+integr = ['Hermite', 'GRX', 'GRX', 'GRX', 'GRX']
+for fold_, integ_ in zip(folders, integr):
+    simulation_stats_checker(fold_, integ_)

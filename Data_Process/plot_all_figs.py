@@ -5,7 +5,14 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
-start_time = cpu_time.time()
+
+print('...spatial_plotters...')
+start_spatial = cpu_time.time()
+global_properties()
+spatial_plotter('GRX')
+end_spatial = cpu_time.time()
+print('Plotting time: ', end_spatial - start_spatial, ' seconds')
+STOP
 
 print('...steady_plotter...')
 start_steady = cpu_time.time()
@@ -13,6 +20,15 @@ cls = stability_plotters()
 cls.overall_steady_plotter()
 end_steady = cpu_time.time()
 print('Plotting time: ', end_steady - start_steady, ' seconds')
+STOP
+print('...tGW_plotters...')
+start_tgw = cpu_time.time()
+cls = gw_calcs()
+#cls.new_data_extractor()
+#cls.orbital_hist_plotter()
+cls.strain_freq_plotter()
+end_tgw = cpu_time.time()
+print('Plotting time: ', end_tgw - start_tgw, ' seconds')
 STOP
 
 print('... ejection_stat_plotters ...')
@@ -25,22 +41,6 @@ end_ejec = cpu_time.time()
 print('Plotting time: ', end_ejec - start_ejec, ' seconds')
 STOP
 
-
-print('...tGW_plotters...')
-cls = gw_calcs()
-cls.new_data_extractor()
-cls.orbital_hist_plotter()
-#cls.strain_freq_plotter()
-
-print('...spatial_plotters...')
-start_spatial = cpu_time.time()
-global_properties()
-spatial_plotter('GRX')
-end_spatial = cpu_time.time()
-print('Plotting time: ', end_spatial - start_spatial, ' seconds')
-
-
-STOP
 
 print('...sustainable_bintert_plotters...')
 cls = sustainable_sys()

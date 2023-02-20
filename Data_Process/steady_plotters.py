@@ -38,7 +38,7 @@ class stability_plotters(object):
         plot_ini = plotter_setup()
 
         folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
-        colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue']
+        colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         dirH = '/data/Hermite/chaotic_simulation/*'
         dirG = '/data/GRX/chaotic_simulation/*'
         labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
@@ -59,10 +59,10 @@ class stability_plotters(object):
         std_max = [[ ], [ ], [ ], [ ], [ ]]
         std_min = [[ ], [ ], [ ], [ ], [ ]]
 
-        N_parti_avg_Nsims = [[ ], [ ], [ ]]
-        N_parti_std_Nsims = [[ ], [ ], [ ]]
-        stdmax_Nsims = [[ ], [ ], [ ]]
-        stdmin_Nsims = [[ ], [ ], [ ]]
+        N_parti_avg_Nsims = [[ ], [ ], [ ], [ ]]
+        N_parti_std_Nsims = [[ ], [ ], [ ], [ ]]
+        stdmax_Nsims = [[ ], [ ], [ ], [ ]]
+        stdmin_Nsims = [[ ], [ ], [ ], [ ]]
 
         temp_data = [ ]
 
@@ -87,23 +87,24 @@ class stability_plotters(object):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
         rng = np.random.default_rng()
-        rng_20 = rng.integers(low = 0, high = 40, size = 20)
-        rng_30 = rng.integers(low = 0, high = 40, size = 30)
-        rng_40 = rng.integers(low = 0, high = 40, size = 40)
-        rng = [rng_20, rng_30, rng_40]
-        xshift = [-0.35, 0, 0.35]
+        data_size = [20, 30, 40, 45]
+        xshift = [-0.75, -0.25, 0.25, 0.75]
 
         for int_ in range(5):
             for pop_, samp_ in zip(pop[int_], psamp[int_]):
                 N_parti = np.argwhere(fparti[int_] == pop_)
                 time_arr = stab_time[int_][N_parti]
                 if int_ == 1:
-                    for rng_ in range(len(rng)):
-                        time_arr_rng = stab_time[int_][N_parti][rng[rng_]]
-                        stability_rng = np.median(time_arr_rng)
+                    for rng_ in range(len(data_size)):
+                        stab_times_temp = [ ]
+                        for iter_ in range(8):
+                            rno = rng.integers(low = 0, high = 45, size = data_size[rng_])
+                            stab_times_temp.append(stab_time[int_][N_parti][rno])
+                            
+                        stability_rng = np.median(stab_times_temp)
                         N_parti_avg_Nsims[rng_].append(stability_rng)
-                        N_parti_std_Nsims[rng_].append(np.std(time_arr_rng))
-                        q1, q3 = np.percentile(time_arr_rng, [25, 75])
+                        N_parti_std_Nsims[rng_].append(np.std(stab_times_temp))
+                        q1, q3 = np.percentile(stab_times_temp, [25, 75])
                         stdmax_Nsims[rng_].append(q3)
                         stdmin_Nsims[rng_].append(q1)
                 stability = np.median(time_arr)
@@ -128,7 +129,7 @@ class stability_plotters(object):
             std_min[int_] = np.asarray(std_min[int_])
             avg_deviate[int_] = np.asarray(avg_deviate[int_])
             pop[int_] = np.array([float(i) for i in pop[int_]])
-
+            
         hist_tails = np.concatenate((temp_data[0], temp_data[1]))
 
         fig, ax = plt.subplots()
@@ -170,7 +171,6 @@ class stability_plotters(object):
         curve = [[ ], [ ], [ ], [ ]]
         params, cv = scipy.optimize.curve_fit(log_fit, pop[1], (N_parti_avg[1]), p0, maxfev = 10000, method = 'trf')
         slope[0], beta[0], log_c[0] = params
-        print(slope[0], beta[0], log_c[0])
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
         ax1.plot(xtemp, np.log10(curve[0]), zorder = 1, color = 'black', ls = '-.')
         ax1.legend()
@@ -186,38 +186,41 @@ class stability_plotters(object):
         ax1.set_xlim(5,105)
         for int_ in range(3):
             int_ += 2
-            for j, xpos in enumerate(pop[data_]):
-                N_parti_avg[data_] = np.array([float(i) for i in N_parti_avg[data_]])
+            for j, xpos in enumerate(pop[int_]):
+                pops = [i+1.1*xshift[int_-2] for i in pop[int_]]
+                N_parti_avg[int_] = np.array([float(i) for i in N_parti_avg[int_]])
                 if j == 0:
-                    ax1.scatter(pop[data_], np.log10(N_parti_avg[data_]), color = colors[int_], 
-                                edgecolor = 'black', zorder = 2, label = labelsD[int_-1])
+                    ax1.scatter(pops, np.log10(N_parti_avg[int_]), color = colors[int_], 
+                                edgecolor = 'black', zorder = 3, label = labelsD[int_-1])
                 else:
-                    ax1.scatter(pop[data_], np.log10(N_parti_avg[data_]), color = colors[int_], 
-                                edgecolor = 'black', zorder = 2)
-            ax1.scatter(pop[data_], np.log10(std_min[data_]), color = colors[int_], marker = '_')
-            ax1.scatter(pop[data_], np.log10(std_max[data_]), color = colors[int_], marker = '_')
-            ax1.plot([pop[data_], pop[data_]], [np.log10(std_min[data_]), 
-                        np.log10(std_max[data_])], color = colors[int_], zorder = 1)
+                    ax1.scatter(pops, np.log10(N_parti_avg[int_]), color = colors[int_], 
+                                edgecolor = 'black', zorder = 3)
+            ax1.scatter(pops, np.log10(std_min[int_]), color = colors[int_], marker = '_', zorder = 3)
+            ax1.scatter(pops, np.log10(std_max[int_]), color = colors[int_], marker = '_', zorder = 3)
+            ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colors[int_], zorder = 2)
             params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_avg[int_]), p0, maxfev = 10000, method = 'trf')
             slope[int_-1], beta[int_-1], log_c[int_-1] = params
 
         xtemp = np.linspace(10, 40)
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
-        ax1.plot(xtemp, np.log10(curve[0]), zorder = 1, color = 'black', ls = '-.')
+        ax1.plot(xtemp, np.log10(curve[0]), zorder = 1, color = 'black', ls = '-.', label = labelsD[0])
         ax1.legend()
         plot_ini.tickers_pop(ax1, pop[1], 'GRX')
         plt.savefig('figures/steady_time/stab_time_mean_GRX.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
         ##### GRX vs. Nsims #####
-        labels = [r'$N_{\rm{sims}} = 20$', r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$']
-        labels_diff = [r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 20$', r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 30$']
+        labels = [r'$N_{\rm{sims}} = 20$', r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$']
+        labels_diff = [r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 20$', 
+                       r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 30$',
+                       r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 40$',
+                       r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 50$']
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
         ax1.set_title(r'$\langle t_{\rm{dis}}\rangle$ vs. $N_{\rm{sims}}$')
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]') 
         ax1.set_xlim(5,45)
-        for rng_ in range(len(rng)):
+        for rng_ in range(len(data_size)):
             for j, xpos in enumerate(pop[1]):
                 pops = [i+xshift[rng_] for i in pop[1]]
                 N_parti_avg_Nsims[rng_] = np.array([float(i) for i in N_parti_avg_Nsims[rng_]])
@@ -239,21 +242,27 @@ class stability_plotters(object):
         plt.clf()
         
         ##### tdis vs. Nsims #####
+        diffs = [ ]
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_title(r'$\langle t_{\rm{dis}}\rangle$ vs. $N_{\rm{sims}}$')
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}(N_{{\rm{sims}}, i}) - t_{\rm{dis}}(N_{{\rm{sims}}, j})\rangle$ [Myr]')
+        #ax1.set_title(r'$\langle t_{\rm{dis}}\rangle$ vs. $N_{\rm{sims}}$')
+        ax1.set_title(r'$N_{\rm{IMBH}}$ vs. $\Delta_{{\rm{sims}},ij}$')
+        #ax1.set_ylabel(r'$\log_{10} \langle | t_{\rm{dis}}(N_{{\rm{sims}}, i}) - t_{\rm{dis}}(N_{{\rm{sims}}, j})|\rangle$ [Myr]')
+        ax1.set_ylabel(r'$\log_{10}\Delta_{{\rm{sims}},ij}$ [Myr]')
         ax1.yaxis.label.set_fontsize(10)
         ax1.set_xlim(5,45)
-        for rng_ in range(len(rng)-1):
-            pops = [i+xshift[rng_] for i in pop[1]]
-            N_parti_avg_Nsims[rng_] = np.array([abs(float(i)-float(j)) for i, j in zip(N_parti_avg_Nsims[2], N_parti_avg_Nsims[rng_])])
-            ax1.plot(pops, np.log10(N_parti_avg_Nsims[rng_]), color = colors[rng_+1], zorder = 2)
-            ax1.scatter(pops, np.log10(N_parti_avg_Nsims[rng_]), color = colors[rng_+1], edgecolors = 'black', zorder = 3, label = labels_diff[rng_])
+        for rng_ in range(len(data_size)):
+            if rng_ != 2:
+                pops = [i+xshift[rng_] for i in pop[1]]
+                N_parti_avg_Nsims[rng_] = np.array([abs(float(i)-float(j)) for i, j in zip(N_parti_avg_Nsims[2], N_parti_avg_Nsims[rng_])])
+                diffs.append((np.mean(N_parti_avg_Nsims[rng_])))
+                ax1.plot(pops, (N_parti_avg_Nsims[rng_]), alpha = 0.3, color = colors[rng_+1], zorder = 2)
+                ax1.scatter(pops, (N_parti_avg_Nsims[rng_]), color = colors[rng_+1], edgecolors = 'black', zorder = 3, label = labels_diff[rng_])
         ax1.legend()
         plot_ini.tickers_pop(ax1, pop[1], 'GRX')
         plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims_diff.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
+        print('Differences between {N=20, N=30, N=43} with N=40: ', diffs)
     
         ###### N vs. Residuals #####
         iterf = 0
@@ -271,7 +280,7 @@ class stability_plotters(object):
                 ax.set_xlim(6, 45)
                 if data_ > 1:
                     iterf += 1
-            ax.set_ylabel(r'$\langle (t_{\rm{dis}} - \sigma_{\rm{dis}}) \rangle$')
+            ax.set_ylabel(r'$\langle (t_{\rm{dis}} - \sigma_{\rm{dis}}) \rangle$ [Myr]')
             x_arr = np.linspace(10, max(pop[data_]), 100)
             smooth_curve = make_interp_spline(pop[data_], avg_deviate[data_])
             ax.plot(x_arr, smooth_curve(x_arr), color = colors[data_], zorder = 1)

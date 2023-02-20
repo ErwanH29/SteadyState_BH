@@ -1,7 +1,7 @@
 from amuse.lab import *
 from file_logistics import *
+from matplotlib.pyplot import *
 from scipy import stats
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 def colour_picker():
     """
-    Colour chooser for the various plots
+    Colour chooser for the configuration plotter
     """
 
     colors = ['red', 'blue', 'orange', 'purple', 'salmon', 'slateblue', 
@@ -25,26 +25,27 @@ def colour_picker():
 def global_properties():
     """
     Function which plots various Kepler elements of ALL particles simulated
-    
-    output: Plots of the inclination,semi-major axis, nearest neighbour and eccentricity of the 
-            merged/ejected particle relative to the SMBH, nearest neighbour and second-nearest neighbour
     """
     
     plot_ini = plotter_setup()
-    
+    pop_lower = int(input('What should be the lower limit of the population sampled? '))
+    pop_upper = int(input('What should be the upper limit of the population sampled? '))
     integrator = ['Hermite', 'GRX']
-    folders = ['rc_0.25_4e6']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
 
-    fold_iter = 0
+    iterf = 0
     for fold_ in folders:
-        print('Data for: ', fold_)
+        if iterf == 0:
+            integrator = ['Hermite', ' GRX']
+        else:
+            integrator = ['GRX']
 
+        print('Data for: ', fold_)
         SMBH_ecc = [[ ], [ ]]
         SMBH_sem = [[ ], [ ]]
         SMBH_ecca = [[ ], [ ]]
         SMBH_sema = [[ ], [ ]]
         SMBH_dist = [[ ], [ ]]
-
         IMBH_ecc = [[ ], [ ]]
         IMBH_sem = [[ ], [ ]]
         IMBH_ecca = [[ ], [ ]]
@@ -54,28 +55,22 @@ def global_properties():
         dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'.txt')
         with open(dir) as f:
             line = f.readlines()
-
-            popG = line[11][49:-2] 
-            avgG = line[17][48:-2]
-            avgG2 = line[18][3:-2] 
+            popG = line[12][54:-2] 
+            avgG = line[17][56:-2]
             popG_data = popG.split()
             avgG_data = avgG.split()
-            avgG2_data = avgG2.split()
-
             popG = np.asarray([float(i) for i in popG_data])
             avgG = np.asarray([float(i) for i in avgG_data])
-            avgG2 = np.asarray([float(i) for i in avgG2_data])
-            avgG = np.concatenate((avgG, avgG2))
 
         iter = 0
         for int_ in integrator:   
-            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+(int_)+'/particle_trajectory_temp/*'))
+            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+(int_)+'/particle_trajectory/*'))
             if int_ != 'GRX':
-                val = 64 - fold_iter
+                val = 63 - iterf
                 energy = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/energy/'+str(i[val:]) for i in data]
                 chaotic = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[val:]) for i in data]
             else:
-                val = 60 - fold_iter
+                val = 59 - iterf
                 energy = ['/media/erwanh/Elements/'+fold_+'/data/GRX/energy/'+str(i[val:]) for i in data]
                 chaotic = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
 
@@ -84,7 +79,7 @@ def global_properties():
             for file_ in range(len(data)):
                 with open(chaotic[file_], 'rb') as input_file:
                     chaotic_tracker = pkl.load(input_file)
-                    if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] >= 10:
+                    if chaotic_tracker.iloc[0][6] <= pop_upper and chaotic_tracker.iloc[0][6] >= pop_lower:
                         with open(data[file_], 'rb') as input_file:
                             file_size = os.path.getsize(data[file_])
                             if file_size < 2.8e9:
@@ -232,52 +227,33 @@ def global_properties():
             file.write('\nIMBH semi-major axis 2 sample KS test:        pvalue = '+str(ks_sIMBH[1]))
             file.write('\nSMBH distance 2 sample KS test:               pvalue = '+str(ks_dSMBH[1]))
             file.write('\nIMBH distance 2 sample KS test:               pvalue = '+str(ks_dIMBH[1]))
-        
-        labels = ['SMBH-IMBH', 'IMBH-IMBH']
-        colours = ['blueviolet', 'orange']
 
-        fig = plt.figure(figsize=(8, 6))
-        gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
-                              left=0.1, right=0.9, bottom=0.1, top=0.9,
-                              wspace=0.15, hspace=0.1)
-        ax = fig.add_subplot(gs[1, 0])
-        ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
-        ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
+        ##### All eccentricity vs. semimajor axis #####
+        fig, ax = plt.subplots()
+        n, xbins, ybins, image = hist2d(semIMBHa_flat[1][::-1], eccIMBHa_flat[1][::-1], bins = 40, range=([-6.8, 2], [-1.8, 6]))
+        plt.clf()
+        
+        fig, ax = plt.subplots()
         ax.set_xlabel(r'$\log_{10}a$ [pc]')
         ax.set_ylabel(r'$\log_{10}e$')
-        ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
-        ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$')
-        ax.scatter(semSMBHa_flat[1], eccSMBHa_flat[1], color = 'blueviolet', s = 0.75)
-        ax.scatter(semIMBHa_flat[1], eccIMBHa_flat[1], color = 'orange', s = 0.75)
-
-        iter = 0
-        for sdata_ in [semSMBHa_flat[1], semIMBHa_flat[1]]:
-            kde_sem = sm.nonparametric.KDEUnivariate(sdata_[:len(sdata_)])
-            kde_sem.fit()
-            kde_sem.density /= max(kde_sem.density)
-            ax1.plot(kde_sem.support, kde_sem.density, color = colours[iter])
-            ax1.fill_between(kde_sem.support, kde_sem.density, alpha = 0.35, color = colours[iter])
-            iter += 1
-           
-        iter = 0
-        for edata_ in [eccSMBHa_flat[1], eccIMBHa_flat[1]]:
-            kde_ecc = sm.nonparametric.KDEUnivariate(edata_[:len(edata_)])
-            kde_ecc.fit()
-            kde_ecc.density /= max(kde_ecc.density)
-            ax2.plot(kde_ecc.density, kde_ecc.support, color = colours[iter], label = labels[iter])
-            ax2.fill_between(kde_ecc.density, kde_ecc.support, alpha = 0.35, color = colours[iter])
-            iter += 1
-
-        for ax_ in [ax, ax1, ax2]:
-            plot_ini.tickers(ax_, 'plot')
-            ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-            ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-        ax2.set_xlim(0, 1.05)
-        ax1.set_ylim(0, 1.05)
-        ax2.legend() 
-        plt.savefig('figures/system_evolution/GRX_all_ecc_sem_scatter_hist'+fold_+'.png', dpi=300, bbox_inches='tight')
+        bin2d_sim, xed, yed, image = ax.hist2d(semIMBHa_flat[1], eccIMBHa_flat[1], bins = 125, range=([-6.8, 2], [-1.8, 6]), cmap = 'viridis')
+        bin2d_sim /= np.max(bin2d_sim)
+        extent = [-7, 2, -2, 6]
+        contours = ax.imshow((bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
+        ax.scatter(semSMBHa_flat[1][0], eccSMBHa_flat[1][0], color = 'blueviolet', label = 'SMBH-IMBH')
+        ax.scatter(semSMBHa_flat[1], eccSMBHa_flat[1], color = 'blueviolet', s = 0.3)
+        ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=1.25, cmap='binary', levels = 3, label = 'IMBH-IMBH')
+        ax.axhline(0, linestyle = ':', color = 'white', )
+        ax.text(-6, 0.2, r'$e > 1$', color = 'white', va = 'center')
+        ax.text(-6, -0.22, r'$e < 1$', color = 'white', va = 'center')
+        plot_ini.tickers(ax, 'histogram')
+        ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+        ax.legend() 
+        plt.savefig('figures/system_evolution/GRX_all_ecc_sem_scatter_hist_contours_'+fold_+'.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
+        ##### CDF Plots #####
         fig = plt.figure(figsize=(10, 6))
         gs = fig.add_gridspec(2, 4,  width_ratios=(2, 2, 2, 2), height_ratios=(2, 3), left=0.1, right=0.9, bottom=0.1, 
                               top=0.9, wspace=0.25, hspace=0.1)
@@ -319,7 +295,7 @@ def global_properties():
         plt.savefig('figures/system_evolution/ecc_cdf_histogram_'+fold_+'.png', dpi=300, bbox_inches='tight')
         plt.clf()
 
-        fold_iter += 1
+        iterf += 1
 
 def spatial_plotter(int_string):
     """
