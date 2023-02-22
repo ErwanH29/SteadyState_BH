@@ -33,7 +33,6 @@ class gw_calcs(object):
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
         self.colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         self.distance = [r'$\langle r_c = 0.25 \rangle$', r'$\langle r_c = 0.50 \rangle$']
-        self.pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
         
     def new_data_extractor(self):
         """
@@ -44,24 +43,10 @@ class gw_calcs(object):
 
         iterf = 0
         for fold_ in self.folders:
-            tcropH = 63 - iterf
-            tcropG = 59 - iterf
-
+            tcropG = 59
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
-
-            if iterf == 0:
-                drange = 2
-                Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
-                chaoticH = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[tcropH:]) for i in Hermite_data]
-                filename = [natsort.natsorted(Hermite_data), natsort.natsorted(GRX_data)[::-1]]
-                filenameC = [natsort.natsorted(chaoticH), natsort.natsorted(chaoticG)[::-1]]
-                integrator = ['Hermite', 'GRX']
-            else:
-                drange = 1
-                filename = [natsort.natsorted(GRX_data)] 
-                filenameC = [natsort.natsorted(chaoticG)]
-                integrator = ['GRX']
+            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG)
 
             for int_ in range(drange):
                 for file_ in range(len(filename[int_])):
@@ -601,6 +586,7 @@ class gw_calcs(object):
         """
 
         plot_init = plotter_setup()
+        pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
 
         xmax = 0
         xmin = -8
@@ -624,7 +610,7 @@ class gw_calcs(object):
             for int_ in range(drange):
                 self.combine_data('pop_filt', integrator[int_], fold_)
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
-                    if self.pop[parti_] <= self.pop_tracker:
+                    if self.pop[parti_] <= pop_tracker:
                         for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
                             semi_fb_nn = self.semi_flyby_nn[parti_][event_]
                             if semi_fb_nn < 1 | units.parsec:
@@ -639,7 +625,7 @@ class gw_calcs(object):
                                     SMBH_ecc[int_].append(np.log10(1-ecc_fb_nn))
 
                 for parti_ in range(len(self.semi_flyby_t)):
-                    if self.pop[parti_] <= self.pop_tracker:
+                    if self.pop[parti_] <= pop_tracker:
                         for event_ in range(len(self.semi_flyby_t[parti_])):
                             semi_fb_t = self.semi_flyby_t[parti_][event_]
                             if semi_fb_t < 1 | units.parsec:
@@ -654,7 +640,7 @@ class gw_calcs(object):
                                     SMBH_ecc[int_].append(np.log10(1-ecc_fb_t))
 
                 for parti_ in range(len(self.semi_flyby_SMBH)):
-                    if self.pop[parti_] <= self.pop_tracker:
+                    if self.pop[parti_] <= pop_tracker:
                         for event_ in range(len(self.semi_flyby_SMBH[parti_])):
                             semi_fb_SMBH = self.semi_flyby_SMBH[parti_][event_]
                             if semi_fb_SMBH < 1 | units.parsec:
@@ -779,9 +765,10 @@ class gw_calcs(object):
         """
         
         plot_ini = plotter_setup()
-        iterf = 0
+        pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
 
         print('Plotting Strain Frequency Diagram')
+        iterf = 0
         for fold_ in self.folders:
             if iterf == 0:
                 drange = 2
@@ -847,7 +834,7 @@ class gw_calcs(object):
                 for ax_ in [ax, ax1, ax2]:
                     plot_ini.tickers(ax_, 'plot')
                 ax.set_xlim(-12.5, 0.1)
-                plt.savefig('figures/gravitational_waves/'+integrator[int_]+'GW_freq_strain_maximise_diagram_'+str(self.pop_tracker)+'_'+fold_+'.png', dpi = 500, bbox_inches='tight')
+                plt.savefig('figures/gravitational_waves/'+integrator[int_]+'GW_freq_strain_maximise_diagram_'+str(pop_tracker)+'_'+fold_+'.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
 
             iterf += 1

@@ -1,6 +1,5 @@
 from file_logistics import *
 from amuse.ext.galactic_potentials import MWpotentialBovy2015
-
 import fnmatch
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -14,7 +13,7 @@ class ejection_stats(object):
 
     def __init__(self):
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
-        self.colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue']
+        self.colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
 
@@ -25,40 +24,28 @@ class ejection_stats(object):
 
         iterf = 0
         for fold_ in self.folders:
+            path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
-            chaotic_G = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
-            if iterf == 0:
-                drange = 2
-                Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
-                chaotic_H = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[63:]) for i in Hermite_data]
-                filest = [natsort.natsorted(Hermite_data), natsort.natsorted(GRX_data)] 
-                filesc = [natsort.natsorted(chaotic_H), natsort.natsorted(chaotic_G)]
-                integrator = ['Hermite', 'GRX']
-            else:
-                drange = 1
-                filest = [natsort.natsorted(GRX_data)] 
-                filesc = [natsort.natsorted(chaotic_G)]
-                integrator = ['GRX']
+            chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
+            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG)
 
             for int_ in range(drange):
-                for file_ in range(len(filest[int_])):
-                    with open(filesc[int_][file_], 'rb') as input_file:
+                for file_ in range(len(filename[int_])):
+                    with open(filenameC[int_][file_], 'rb') as input_file:
                         ctracker = pkl.load(input_file)
-                        if ctracker.iloc[0][5] > 0 and ctracker.iloc[0][6] > 5:
-                            with open(filest[int_][file_], 'rb') as input_file:
-                                print('Ejection detected. Reading File :', input_file)
-                                path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
-                                count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                ptracker = pkl.load(input_file)
-                                vesc = ejected_extract_final(ptracker, ctracker)
+                        with open(filename[int_][file_], 'rb') as input_file:
+                            print('Ejection detected. Reading File :', input_file)
+                            count = len(fnmatch.filter(os.listdir(path), '*.*'))
+                            ptracker = pkl.load(input_file)
+                            vesc = ejected_extract_final(ptracker, ctracker)
 
-                                stab_tracker = pd.DataFrame()
-                                df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                        'Population': np.shape(ptracker)[0],
-                                                        'Simulation Time': np.shape(ptracker)[1] * 10**-3,
-                                                        'vesc': vesc})
-                                stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                            stab_tracker = pd.DataFrame()
+                            df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                    'Population': np.shape(ptracker)[0],
+                                                    'Simulation Time': np.shape(ptracker)[1] * 10**-3,
+                                                    'vesc': vesc})
+                            stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
             iterf += 1
 
     def combine_data(self, folder):
@@ -66,16 +53,9 @@ class ejection_stats(object):
         Function to extract data
         """
         
-        if folder == self.folders[0]:
-            self.tot_pop = [[ ], [ ]]
-            self.sim_time = [[ ], [ ]]
-            self.vesc = [[ ], [ ]]
-            drange = 2
-        else:
-            self.tot_pop = [[ ]]
-            self.sim_time = [[ ]]
-            self.vesc = [[ ]]
-            drange = 1
+        self.tot_pop = [[ ], [ ]]
+        self.sim_time = [[ ], [ ]]
+        self.vesc = [[ ], [ ]]
 
         ejec_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+folder+'/data/ejection_stats/*'))
         for file_ in range(len(ejec_data)):
@@ -89,7 +69,7 @@ class ejection_stats(object):
                 self.sim_time[int_idx].append(data_file.iloc[0][2])
                 self.vesc[int_idx].append(data_file.iloc[0][3])
 
-        for int_ in range(drange):
+        for int_ in range(2):
             self.vesc[int_] = np.asarray(self.vesc[int_], dtype = 'float')
 
     def vejec_plotters(self):
@@ -109,16 +89,9 @@ class ejection_stats(object):
         for fold_ in self.folders:
             print('Plotting data for: ', fold_)
             self.combine_data(fold_)
-            vels = []
+            vels = [ ]
             avg_surv = [ ]
-            if iterf == 0:
-                drange = 2
-                integrator = ['Hermite', 'GRX']
-                cfactor = 0
-            else:
-                drange = 1
-                integrator = ['GRX']
-                cfactor = 1
+            integrator, drange = folder_loop(iterf)
 
             for int_ in range(drange):
                 tot_pop = np.asarray([5*round(i/5) for i in self.tot_pop[int_]]) 
@@ -133,6 +106,7 @@ class ejection_stats(object):
 
             with open('figures/ejection_stats/output/ejec_stats_'+fold_+'.txt', 'w') as file:
                 for int_ in range(drange):
+                    sim_ = folder_data_loop(iterf, int_)
                     sim_time = np.asarray(self.sim_time[int_])
                     vesc = np.asarray(self.vesc[int_])
 
@@ -159,13 +133,6 @@ class ejection_stats(object):
                     pops = np.asarray(pops)
                     avg_vesc = np.asarray(avg_vesc)
 
-                    file.write('\nData for '+str(integrator[int_]))
-                    file.write('\nPopulations counts                           ' + str(in_pop) + ' : ' + str(samples))
-                    file.write('\nPopulations average escape velocity          ' + str(in_pop) + ' : ' + str(avg_vesc) + ' kms')
-                    file.write('\nPopulations min. escape velocity             ' + str(in_pop) + ' : ' + str(minvel) + ' kms')
-                    file.write('\nPopulations max. escape velocity             ' + str(in_pop) + ' : ' + str(maxvel) + ' kms')
-                    file.write('\nPopulations average escape time              ' + str(in_pop) + ' : ' + str(avg_surv) + ' Myr')
-                    file.write('\n========================================================================')
 
                     fig = plt.figure(figsize=(5, 8))
                     ax1 = fig.add_subplot(211)
@@ -181,12 +148,21 @@ class ejection_stats(object):
                     cbar = plt.colorbar(colour_axes, ax=ax1, label = r'$\log_{10} \langle t_{\rm{ejec}}\rangle$ [Myr]')
                     n1, bins, patches = ax2.hist(vesc, 20)
                     ax2.clear()
-                    n, bins, patches = ax2.hist(vesc, 20, histtype = 'step', color=self.colours[int_+iterf+cfactor], weights=[1/n1.max()]*len(vesc))
-                    n, bins, patches = ax2.hist(vesc, 20, color=self.colours[int_+iterf+cfactor], alpha = 0.4, weights=[1/n1.max()]*len(vesc))
+                    n, bins, patches = ax2.hist(vesc, 20, histtype = 'step', color=self.colours[sim_], weights=[1/n1.max()]*len(vesc))
+                    n, bins, patches = ax2.hist(vesc, 20, color=self.colours[int_+iterf+sim_], alpha = 0.4, weights=[1/n1.max()]*len(vesc))
                     
                     plot_ini.tickers_pop(ax1, self.tot_pop[int_], integrator[int_])
                     plot_ini.tickers(ax2, 'plot')
                     plt.savefig('figures/ejection_stats/vejection_'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
+
+
+                    file.write('\nData for '+str(integrator[int_]))
+                    file.write('\nPopulations counts                           ' + str(in_pop) + ' : ' + str(samples))
+                    file.write('\nPopulations average escape velocity          ' + str(in_pop) + ' : ' + str(avg_vesc) + ' kms')
+                    file.write('\nPopulations min. escape velocity             ' + str(in_pop) + ' : ' + str(minvel) + ' kms')
+                    file.write('\nPopulations max. escape velocity             ' + str(in_pop) + ' : ' + str(maxvel) + ' kms')
+                    file.write('\nPopulations average escape time              ' + str(in_pop) + ' : ' + str(avg_surv) + ' Myr')
+                    file.write('\n========================================================================')
             iterf += 1
 
 class event_tracker(object):
@@ -197,7 +173,7 @@ class event_tracker(object):
     def __init__(self):
 
         plot_ini = plotter_setup()
-        colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue']
+        colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
         labelsI = ['Hermite', 'GRX']
         labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 

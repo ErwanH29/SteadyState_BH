@@ -17,11 +17,15 @@ class sustainable_sys(object):
 
     def __init__(self):
         warnings.filterwarnings("ignore", category=RuntimeWarning)
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.5_4e6', 'rc_0.5_4e7']
-        self.colors = ['red', 'blue', 'lightcoral', 'cornflowerblue']
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.5_4e6', 'rc_0.5_4e7']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
+        self.colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         self.labels = [r'$r_c = 0.25$ pc', r'$r_c = 0.50$ pc']
+        self.labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
+                        r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
+                        r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$',
+                        r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
         self.legend_id = [3, 4]
+        self.vdisp = 150000
 
     def new_data_extractor(self):
         """
@@ -29,35 +33,28 @@ class sustainable_sys(object):
         """
         
         GW_calcs = gw_calcs()
+        pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
 
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
         iterf = 0
+        count = 0
         for fold_ in self.folders:
             print('Files for: ', fold_)
-            filenameGRX = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
-
-            if iterf == 0:
-                drange = 2
-                filenameH = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
-                filename = [natsort.natsorted(filenameH), natsort.natsorted(filenameGRX)]
-                integrator = ['Hermite', 'GRX']
-                
-            else:
-                drange = 1
-                filename = [natsort.natsorted(filenameGRX)]
-                integrator = ['GRX']
+            tcropG = 59
+            GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
+            chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
+            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG)
 
             for int_ in range(drange):
                 for file_ in range(len(filename[int_])):
                     with open(filename[int_][file_], 'rb') as input_file:
-                        print('Reading file', file_, ':', input_file)
                         file_size = os.path.getsize(filename[int_][file_])
                         if file_size < 2.8e9:
-                            count += 1
                             data = pkl.load(input_file)
                             pop = 5*round(0.2*np.shape(data)[0])
-
-                            if pop > 5 and pop <= 40:
+                            count += 1
+                            if pop <= pop_tracker:
+                                print('Reading file', file_, ':', input_file)
                                 for parti_ in range(np.shape(data)[0]):
                                     pop_bin = [ ]
                                     pop_ter = [ ]
@@ -107,18 +104,18 @@ class sustainable_sys(object):
                                             nn_ecc = data.iloc[parti_][col_][8][1]
                                             mass1 = data.iloc[parti_][0][1]
 
-                                            for part_ in range(np.shape(data)[0]):                                #If changing MB initialisation, change the conditions here
+                                            for part_ in range(np.shape(data)[0]):
                                                 if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][1]:
                                                     mass2 = data.iloc[part_][0][1]
                                                     mass = max(mass1, mass2)
                                                     hard = False
                                                     bin = False
-                                                    if nn_semi < (constants.G*mass)/(4*(150000*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
+                                                    if nn_semi < (constants.G*mass)/(4*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
                                                         hard = True
                                                         bin = True
                                                         hard_bin.append(1)
                                                         
-                                                    if not (hard) and nn_semi < (constants.G*mass)/(4*(15000*(1 | units.ms))**2) and abs(nn_ecc) < 1:  #Value chosen for a < 1000AU
+                                                    if not (hard) and nn_semi < (constants.G*mass)/(4*(0.1*self.vdisp*(1 | units.ms))**2) and abs(nn_ecc) < 1:  #Value chosen for a < 1000AU
                                                         hard_bin.append(-5)
                                                         bin = True
 
@@ -208,7 +205,7 @@ class sustainable_sys(object):
 
                                         path = '/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/'
                                         stab_tracker = pd.DataFrame()
-                                        df_stabtime = pd.Series({'Integrator': integrator[drange],
+                                        df_stabtime = pd.Series({'Integrator': integrator[int_],
                                                                 'Population': pop,
                                                                 'Binary Pop.': pop_bin,
                                                                 '# Binary Sys.': bin_sys,
@@ -237,7 +234,7 @@ class sustainable_sys(object):
                                                                 'Total sim. length': col_ * 1000,
                                                                 })
                                         stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[drange])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
             iterf += 1
 
     def array_rewrite(self, arr, arr_type, filt):
@@ -279,42 +276,42 @@ class sustainable_sys(object):
         GW_calcs = gw_calcs()
         integrator = ['Hermite', 'GRX']
 
-        self.integrator = [[ ], [ ], [ ], [ ]]
-        self.pop = [[ ], [ ], [ ], [ ]]
-        self.pop_bin = [[ ], [ ], [ ], [ ]]
-        self.bin_sys = [[ ], [ ], [ ], [ ]]
-        self.bform_time = [[ ], [ ], [ ], [ ]]
-        self.new_bin_sys = [[ ], [ ], [ ], [ ]]
-        self.pop_ter = [[ ], [ ], [ ], [ ]]
-        self.ter_sys = [[ ], [ ], [ ], [ ]]
-        self.tform_time = [[ ], [ ], [ ], [ ]]
-        self.new_ter_sys = [[ ], [ ], [ ], [ ]]
-        self.hard_bin = [[ ], [ ], [ ], [ ]]
-        self.hard_ter = [[ ], [ ], [ ], [ ]]
-        self.GW_freqbin = [[ ], [ ], [ ], [ ]]
-        self.GW_strainbin = [[ ], [ ], [ ], [ ]]
-        self.GW_timeb = [[ ], [ ], [ ], [ ]]
-        self.GW_bmass = [[ ], [ ], [ ], [ ]]
-        self.GW_freqter = [[ ], [ ], [ ], [ ]]
-        self.GW_strainter = [[ ], [ ], [ ], [ ]]
-        self.GW_timet = [[ ], [ ], [ ], [ ]]
-        self.GW_tmass = [[ ], [ ], [ ], [ ]]
-        self.semi_NN_avg = [[ ], [ ], [ ], [ ]]
-        self.semi_NN_min = [[ ], [ ], [ ], [ ]]
-        self.semi_t_avg = [[ ], [ ], [ ], [ ]]
-        self.semi_t_min = [[ ], [ ], [ ], [ ]]
-        self.tot_sim = [[ ], [ ], [ ], [ ]]
+        self.integrator = [[ ], [ ], [ ], [ ], [ ]]
+        self.pop = [[ ], [ ], [ ], [ ], [ ]]
+        self.pop_bin = [[ ], [ ], [ ], [ ], [ ]]
+        self.bin_sys = [[ ], [ ], [ ], [ ], [ ]]
+        self.bform_time = [[ ], [ ], [ ], [ ], [ ]]
+        self.new_bin_sys = [[ ], [ ], [ ], [ ], [ ]]
+        self.pop_ter = [[ ], [ ], [ ], [ ], [ ]]
+        self.ter_sys = [[ ], [ ], [ ], [ ], [ ]]
+        self.tform_time = [[ ], [ ], [ ], [ ], [ ]]
+        self.new_ter_sys = [[ ], [ ], [ ], [ ], [ ]]
+        self.hard_bin = [[ ], [ ], [ ], [ ], [ ]]
+        self.hard_ter = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_freqbin = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_strainbin = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_timeb = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_bmass = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_freqter = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_strainter = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_timet = [[ ], [ ], [ ], [ ], [ ]]
+        self.GW_tmass = [[ ], [ ], [ ], [ ], [ ]]
+        self.semi_NN_avg = [[ ], [ ], [ ], [ ], [ ]]
+        self.semi_NN_min = [[ ], [ ], [ ], [ ], [ ]]
+        self.semi_t_avg = [[ ], [ ], [ ], [ ], [ ]]
+        self.semi_t_min = [[ ], [ ], [ ], [ ], [ ]]
+        self.tot_sim = [[ ], [ ], [ ], [ ], [ ]]
 
-        iter = 0
+        iterf = 0
         for fold_ in self.folders:
             system_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/*'))
             for file_ in range(len(system_data)):
                 with open(system_data[file_], 'rb') as input_file:
                     data_file = pkl.load(input_file)
                     if data_file.iloc[0][0] == 'Hermite':
-                        int_ = 2*iter
+                        int_ = 0
                     else:
-                        int_ = 2*iter + 1
+                        int_ = iterf + 1
                     self.integrator[int_].append(data_file.iloc[0][0][0])
                     self.pop[int_].append(int(data_file.iloc[0][1]))
                     self.pop_bin[int_].append(data_file.iloc[0][2])
@@ -340,54 +337,59 @@ class sustainable_sys(object):
                     self.semi_t_avg[int_].append(data_file.iloc[0][24])
                     self.semi_t_min[int_].append(data_file.iloc[0][25])
                     self.tot_sim[int_].append(data_file.iloc[0][26])
-            iter += 1
-
-        self.GWfreq_bin = [[ ], [ ], [ ], [ ]]
-        self.GWstra_bin = [[ ], [ ], [ ], [ ]]
-        self.GWfreq_ter = [[ ], [ ], [ ], [ ]]
-        self.GWstra_ter = [[ ], [ ], [ ], [ ]]
-
-        for int_ in range(4):
+            iterf += 1
+            
+        self.GWfreq_bin = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWstra_bin = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWfreq_ter = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWstra_ter = [[ ], [ ], [ ], [ ], [ ]]
+        for int_ in range(5):
             self.GWfreq_bin[int_] = self.array_rewrite(self.GW_freqbin[int_], 'nested', False)
             self.GWstra_bin[int_] = self.array_rewrite(self.GW_strainbin[int_], 'nested', False)
             self.GWfreq_ter[int_] = self.array_rewrite(self.GW_freqter[int_], 'nested', False)
             self.GWstra_ter[int_] = self.array_rewrite(self.GW_strainter[int_], 'nested', False) 
 
-        self.unique_pops = [[ ], [ ], [ ], [ ]]
-        self.binary_systems = [[ ], [ ], [ ], [ ]]
-        self.binary_total = [[ ], [ ], [ ], [ ]]
-        self.binary_occupation = [[ ], [ ], [ ], [ ]]
-        self.binary_init = [[ ], [ ], [ ], [ ]]
-        self.binary_IMBH = [[ ], [ ], [ ], [ ]]
-        self.binary_hard = [[ ], [ ], [ ], [ ]]
-        self.GWb_mergers = [[ ], [ ], [ ], [ ]]
+        self.unique_pops = [[ ], [ ], [ ], [ ], [ ]]
+        self.binary_systems = [[ ], [ ], [ ], [ ], [ ]]
+        self.binary_total = [[ ], [ ], [ ], [ ], [ ]]
+        self.binary_occupation = [[ ], [ ], [ ], [ ], [ ]]
+        self.binary_init = [[ ], [ ], [ ], [ ], [ ]]
+        self.binary_IMBH = [[ ], [ ], [ ], [ ], [ ]]
+        self.binary_hard = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWb_mergers = [[ ], [ ], [ ], [ ], [ ]]
 
-        self.tertiary_systems = [[ ], [ ], [ ], [ ]]
-        self.tertiary_total = [[ ], [ ], [ ], [ ]]
-        self.tertiary_occupation = [[ ], [ ], [ ], [ ]]
-        self.tertiary_init = [[ ], [ ], [ ], [ ]]
-        self.tertiary_IMBH = [[ ], [ ], [ ], [ ]]
-        self.tertiary_hard = [[ ], [ ], [ ], [ ]]
-        self.GWt_mergers = [[ ], [ ], [ ], [ ]]
+        self.tertiary_systems = [[ ], [ ], [ ], [ ], [ ]]
+        self.tertiary_total = [[ ], [ ], [ ], [ ], [ ]]
+        self.tertiary_occupation = [[ ], [ ], [ ], [ ], [ ]]
+        self.tertiary_init = [[ ], [ ], [ ], [ ], [ ]]
+        self.tertiary_IMBH = [[ ], [ ], [ ], [ ], [ ]]
+        self.tertiary_hard = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWt_mergers = [[ ], [ ], [ ], [ ], [ ]]
 
-        self.GWfreq_binIMBH = [[ ], [ ], [ ], [ ]]
-        self.GWstra_binIMBH = [[ ], [ ], [ ], [ ]]
-        self.GWfreq_terIMBH = [[ ], [ ], [ ], [ ]]
-        self.GWstra_terIMBH = [[ ], [ ], [ ], [ ]]
+        self.GWfreq_binIMBH = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWstra_binIMBH = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWfreq_terIMBH = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWstra_terIMBH = [[ ], [ ], [ ], [ ], [ ]]
 
-        self.GWfreq_binHard = [[ ], [ ], [ ], [ ]]
-        self.GWstra_binHard = [[ ], [ ], [ ], [ ]]
-        self.GWfreq_binHardIMBH = [[ ], [ ], [ ], [ ]]
-        self.GWstra_binHardIMBH = [[ ], [ ], [ ], [ ]]
-
-        sims = [[10, 19, 20, 20], [40, 40, 40, 40, 40, 40, 40], [10, 19, 20, 20],[10, 19, 20, 20]]   #TO CHANGE
+        self.GWfreq_binHard = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWstra_binHard = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWfreq_binHardIMBH = [[ ], [ ], [ ], [ ], [ ]]
+        self.GWstra_binHardIMBH = [[ ], [ ], [ ], [ ], [ ]]
+        
+        sims = [[40, 40, 40, 40], 
+                [40, 40, 40, 40, 40, 40, 40], 
+                [40, 40, 40, 40, 40, 40, 40],
+                [40, 40, 40, 40, 40, 40, 40],
+                [40, 40, 40, 40, 40, 40, 40]]   #TO CHANGE
 
         iterf = 0
         for fold_ in self.folders:
+            integrator, drange = folder_loop(iterf)
             with open('figures/binary_hierarchical/output/system_summary_'+fold_+'.txt', 'w') as file:
-                for int_ in range(2):
+                for int_ in range(drange):
                     print('Collecting data for: ', fold_, integrator[int_])
-                    sim_ = int_ + 2*iterf
+                    sim_ = folder_data_loop(iterf, int_)
+                        
                     bform_stat = [ ]
                     tform_stat = [ ]
                     minGWtime = [ ]
@@ -537,9 +539,13 @@ class sustainable_sys(object):
                     file.write('\nMinimum binary semi-major axis per population:   '+str(pop_arr)+' : '+str(semi_NN_mstat))
                     file.write('\nAverage tertiary semi-major axis per population: '+str(pop_arr)+' : '+str(semi_t_astat))
                     file.write('\nMinimum tertiary semi-major axis per population: '+str(pop_arr)+' : '+str(semi_t_mstat)+'\n\n')
-                    
-            for int_ in range(2):
-                sim_ = 2*iterf + int_
+            iterf += 1
+
+        iterf = 0
+        for fold_ in self.folders:
+            integrator, drange = folder_loop(iterf)
+            for int_ in range(drange):
+                sim_ = folder_data_loop(iterf, int_)
                 self.GW_bmass[sim_] = np.asarray(self.GW_bmass[sim_])
                 with open('figures/binary_hierarchical/output/'+str(integrator[int_])+'bin_ter_systems_'+fold_+'.txt', 'w') as file:
                     file.write(str(integrator[int_])+'\nBINARY DATA')
@@ -553,164 +559,6 @@ class sustainable_sys(object):
                     file.write('\nFraction of IMBH-IMBH tertiaries:               '+str(self.unique_pops[sim_])+' : '+str(self.tertiary_IMBH[sim_])+' / '+str(self.tertiary_total[sim_]))
                     file.write('\nFraction of hard tertiaries:                    '+str(self.unique_pops[sim_])+' : '+str(self.tertiary_hard[sim_])+' / '+str(self.tertiary_total[sim_]))
                     file.write('\nFraction of mergers within Hubble time:         '+str(self.unique_pops[sim_])+' : '+str(self.GWt_mergers[sim_])+' / '+str(self.tertiary_total[sim_]))
-
-            iterf += 1
-    
-    def sys_occupancy_plotter(self):
-        """
-        Function to plot how long a system is present within the simulation
-        """
-
-        plot_ini = plotter_setup()
-        iterf = 0
-
-        fig, ax1 = plt.subplots()
-        ax2 = ax1.twinx()
-        ax1.set_title('System Presence')
-        for int_ in range(4):
-            ini_pop = np.unique(self.pop[int_])
-            ax1.set_xlabel(r'IMBH Population [$N$]')
-            ax1.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})_{\rm{H}}$', color = 'red')
-            ax2.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})_{\rm{G}}$', color = 'blue')
-            ax1.set_ylim(-7, 0)
-            ax2.set_ylim(-7, 0)
-            if int_%2 == 0:
-                ax1.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], label = self.labels[round(int_/2)], zorder = 2)
-                ax1.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-            elif int_ == 1:
-                ax2.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], label = 'Binary', zorder = 2)
-                ax2.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], marker = 's', label = 'Hierarchical', zorder = 3)
-            else:
-                ax2.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], zorder = 2)
-                ax2.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-
-            print('Number of tertiary: ', self.tertiary_systems[int_])
-        
-        itera = 0
-        for ax_ in [ax1, ax2]:
-            ax_.tick_params(axis='y', labelcolor = self.colors[itera])
-            ax_.xaxis.set_ticks_position('both')
-            ax_.yaxis.set_minor_locator(mtick.AutoMinorLocator())
-            ax_.tick_params(axis="y", which = 'both', direction="in")
-            ax_.tick_params(axis="x", which = 'both', direction="in")
-            ax_.legend(loc = self.legend_id[itera])
-            itera += 1
-        plt.savefig('figures/binary_hierarchical/sys_formation_N_plot.pdf', dpi=300, bbox_inches='tight')
-
-        fig, ax = plt.subplots()
-        ax.set_title('System Presence GRX')
-        for int_ in range(4):
-            if int_%2 == 1:
-                ini_pop = np.unique(self.pop[int_])
-                ax.set_xlabel(r'IMBH Population [$N$]')
-                ax.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$')
-                ax.set_ylim(-7, 0)
-                if int_ == 1:
-                    ax.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], label = r'Binary', zorder = 2)
-                    ax.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], marker = 's', label = 'Tertiary', zorder = 3)
-                    ax.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], label = r'$\langle r_c\rangle \approx 0.4$', zorder = 2)
-                else:
-                    ax.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], label = r'$\langle r_c\rangle \approx 0.5$', zorder = 2)
-                    ax.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-        ax.legend(loc = 4)
-        plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-        plt.savefig('figures/binary_hierarchical/sys_formation_N_plot_GRX.pdf', dpi=300, bbox_inches='tight')
-
-        iterf = 0
-        for fold_ in self.folders:
-            fig, ax = plt.subplots()
-            ax.set_title('System Presence\n'+self.labels[iterf])
-            for int_ in range(2):
-                sim_ = 2*iterf + int_
-                ini_pop = np.unique(self.pop[sim_])
-                ax.set_xlabel(r'IMBH Population [$N$]')
-                ax.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$')
-                ax.set_ylim(-7, 0)
-                if sim_ == 0 or sim_ == 2:
-                    ax.scatter(ini_pop, np.log10(self.binary_occupation[sim_]), edgecolors  = 'black', c = self.colors[sim_], label = 'Binary', zorder = 2)
-                    ax.scatter(ini_pop, np.log10(self.tertiary_occupation[sim_]), edgecolors  = 'black', c = self.colors[sim_], marker = 's', label = 'Tertiary', zorder = 3)
-                else:
-                    ax.scatter(ini_pop, np.log10(self.binary_occupation[sim_]), edgecolors  = 'black', c = self.colors[sim_], zorder = 2)
-                    ax.scatter(ini_pop, np.log10(self.tertiary_occupation[sim_]), edgecolors  = 'black', c = self.colors[sim_], marker = 's', zorder = 3)
-            ax.legend(loc = 4)
-            plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-            plt.savefig('figures/binary_hierarchical/sys_formation_N_plot_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
-            iterf += 1
-
-    def sys_popul_plotter(self):
-        """
-        Function to plot the avg. population counts of various systems
-        """
-
-        plot_ini = plotter_setup()
-
-        fig, ax1 = plt.subplots()
-        ax2 = ax1.twinx()
-        ax1.set_title('Average System Counts')
-        for int_ in range(4):
-            ini_pop = np.unique(self.pop[int_])
-            ax1.set_xlabel(r'IMBH Population [$N$]')
-            ax1.set_ylabel(r'$\langle N\rangle_{\rm{H}}$', color = 'red')
-            ax2.set_ylabel(r'$\langle N\rangle_{\rm{G}}$', color = 'blue')
-            if int_%2 == 0:
-                ax1.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = self.labels[round(int_/2)], zorder = 2)
-                ax1.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-            elif int_ == 1:
-                ax2.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = 'Binary', zorder = 2)
-                ax2.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', label = 'Hierarchical', zorder = 3)
-            else:
-                ax2.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], zorder = 2)
-                ax2.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-        
-        itera = 0
-        for ax_ in [ax1, ax2]:
-            ax_.tick_params(axis='y', labelcolor = self.colors[itera])
-            ax_.xaxis.set_ticks_position('both')
-            ax_.yaxis.set_minor_locator(mtick.AutoMinorLocator())
-            ax_.tick_params(axis="y", which = 'both', direction="in")
-            ax_.tick_params(axis="x", which = 'both', direction="in")
-            ax_.legend(loc = self.legend_id[itera])
-            ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-            itera += 1
-        plt.savefig('figures/binary_hierarchical/sys_pop_N_plot.pdf', dpi=300, bbox_inches='tight')
-
-        fig, ax = plt.subplots()
-        ax.set_title('Average System Counts \nGRX')
-        for int_ in range(4):
-            if int_%2 == 1:
-                ini_pop = np.unique(self.pop[int_])
-                ax.set_xlabel(r'IMBH Population [$N$]')
-                ax.set_ylabel(r'$\langle N\rangle$')
-                if int_ == 1:
-                    ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = r'Binary', zorder = 2)
-                    ax.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', label = 'Tertiary', zorder = 3)
-                    ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = r'$\langle r_c\rangle \approx 0.4$', zorder = 2)
-                else:
-                    ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = r'$\langle r_c\rangle \approx 0.5$', zorder = 2)
-                    ax.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-        ax.legend(loc = 1)
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-        plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-        plt.savefig('figures/binary_hierarchical/sys_pop_N_plot_GRX.pdf', dpi=300, bbox_inches='tight')
-
-        iterf = 0
-        for fold_ in self.folders:
-            fig, ax = plt.subplots()
-            ax.set_title('Average System Counts\n'+self.labels[iterf])
-            for int_ in range(2):
-                sim_ = 2*iterf + int_
-                ini_pop = np.unique(self.pop[sim_])
-                ax.set_xlabel(r'IMBH Population [$N$]')
-                ax.set_ylabel(r'$\langle N\rangle$')
-                if sim_ == 0 or sim_ == 2:
-                    ax.scatter(ini_pop, self.binary_occupation[sim_], edgecolors  = 'black', c = self.colors[sim_], label = 'Binary', zorder = 2)
-                    ax.scatter(ini_pop, self.tertiary_systems[sim_], edgecolors  = 'black', c = self.colors[sim_], marker = 's', label = 'Tertiary', zorder = 3)
-                else:
-                    ax.scatter(ini_pop, self.binary_occupation[sim_], edgecolors  = 'black', c = self.colors[sim_], zorder = 2)
-                    ax.scatter(ini_pop, self.tertiary_systems[sim_], edgecolors  = 'black', c = self.colors[sim_], marker = 's', zorder = 3)
-            ax.legend(loc = 4)
-            plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-            plt.savefig('figures/binary_hierarchical/sys_pop_N_plot_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
             iterf += 1
 
     def GW_emissions(self):
@@ -721,11 +569,12 @@ class sustainable_sys(object):
         plt.clf()
 
         ####### PLOT FOR ALL ########
-
         iterf = 0
         for fold_ in self.folders:
-            for int_ in range(2):
-                sim_ = 2*iterf + int_
+            integrator, drange = folder_loop(iterf)
+
+            for int_ in range(drange):
+                sim_ = folder_data_loop(iterf, int_)
                 fig = plt.figure(figsize=(8, 6))
                 gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
                                       left=0.1, right=0.9, bottom=0.1, top=0.9,
@@ -748,10 +597,9 @@ class sustainable_sys(object):
                     plot_ini.tickers(ax_, 'plot')
                     ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
                     ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-                plot_ini.tickers(ax, 'plot')
                 ax.set_ylim(-35, -12.2)
                 ax.set_xlim(-15, 0.3)
-                plt.savefig('figures/binary_hierarchical/'+str(self.integrators[int_])+'_'+fold_+'GW_freq_strain_maximise_diagram.png', dpi = 500, bbox_inches='tight')
+                plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'GW_scatter_diagram.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
 
                 # Reactivate with full data set
@@ -762,12 +610,7 @@ class sustainable_sys(object):
                             vals += 1
 
                 print('Data ', int_, ' :', vals)"""
-            iterf += 1
-
-        iterf = 0
-        for fold_ in self.folders:
-            for int_ in range(2):
-                sim_ = 2*iterf + int_
+                
                 fig = plt.figure(figsize=(8, 6))
                 gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
                                       left=0.1, right=0.9, bottom=0.1, top=0.9,
@@ -792,12 +635,11 @@ class sustainable_sys(object):
 
                 ax.set_xlabel(r'$\log_{10}f$ [Hz]')
                 ax.set_ylabel(r'$\log_{10}h$')
-                plot_ini.tickers(ax, 'plot')
-                plot_ini.tickers(ax1, 'plot')
-                plot_ini.tickers(ax2, 'plot')
+                for ax_ in [ax, ax1, ax2]:
+                    plot_ini.tickers(ax_, 'plot')
                 ax.set_ylim(-35, -12.2)
                 ax.set_xlim(-15, 0.1)
-                plt.savefig('figures/binary_hierarchical/'+str(self.integrators[int_])+'_'+fold_+'_GW_freq_strain_hardbins_diagram.png', dpi = 500, bbox_inches='tight')
+                plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'_GW_hardbins_diagram.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
             iterf += 1
 
@@ -807,19 +649,16 @@ class sustainable_sys(object):
         """
 
         plot_ini = plotter_setup()
+        integrators = ['Hermite', 'GRX']
+
         x_temp = np.linspace(10**-5, 1, 1000)
 
-        # LISA
         lisa = li.LISA() 
         Sn = lisa.Sn(x_temp)
-
-        # SKA
         SKA = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/hc_SKA.npz'))
         SKA_freq = SKA['x']
         SKA_hc = SKA['y']
         SKA_strain = SKA_hc**2/SKA_freq
-
-        # muAres 
         Ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
         Ares_freq = Ares['x']
         Ares_strain = Ares['y']
@@ -833,7 +672,7 @@ class sustainable_sys(object):
             ax.text(-4.28, -18.2, 'LISA', fontsize ='small', rotation = 308, color = 'slateblue')
             ax.text(-5.98, -19, r'$\mu$Ares', fontsize ='small', rotation = 306, color = 'red')
 
-            idx = [0, 0]
+            idx = [0, 0]  #Hardcoded values
             GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[int_][idx[int_]], 'not', False)
             GWstra_binIMBH = self.array_rewrite(self.GWstra_binIMBH[int_][idx[int_]], 'not', False)
             GWfreq_terIMBH = self.array_rewrite(self.GWfreq_terIMBH[int_][idx[int_]], 'not', False)
@@ -851,5 +690,108 @@ class sustainable_sys(object):
             plot_ini.tickers(ax, 'plot')
             ax.set_ylim(-35, -12.2)
             ax.set_xlim(-15, 0.1)
-            plt.savefig('figures/binary_hierarchical/'+str(self.integrators[int_])+'GW_freq_strain_single_streak_diagram.pdf', dpi = 500, bbox_inches='tight')
+            plt.savefig('figures/binary_hierarchical/'+str(integrators[int_])+'GW_single_streak_diagram.pdf', dpi = 500, bbox_inches='tight')
             plt.clf()
+    
+    def sys_occupancy_plotter(self):
+        """
+        Function to plot various 'sustainable system' plots
+        """
+        def log_fit(xval, slope):
+            return slope * (xval)
+
+        plot_ini = plotter_setup()
+        mtick_formatter = mtick.FormatStrFormatter('%0.3f')
+        integrator = ['Hermite', 'GRX']
+
+        normalise_p1 = plt.Normalize(0, (max(self.binary_systems[0])))#, max(self.binary_systems[1])))
+        normalise_p2 = plt.Normalize(10, 40)
+    
+        iterf = 0
+        for fold_ in self.folders:
+            if iterf == 0:
+                fig = plt.figure(figsize=(11, 4))
+                ax1 = fig.add_subplot(121)
+                ax2 = fig.add_subplot(122)
+                axes = [ax1, ax2]
+            else:
+                fig, ax = plt.subplots()
+                axes = [ax]
+
+            integrator, drange = folder_loop(iterf)
+            for int_ in range(drange):
+                if iterf == 0:
+                    sim_ = int_
+                else:
+                    sim_ = int_ + (1+iterf)
+                ini_pop = np.unique(self.pop[sim_])
+
+                xtemp = np.linspace(10, 40, 1000)
+                best_fit = np.polyfit(ini_pop, np.log10(self.binary_occupation[sim_]), 1)
+                curve = np.poly1d(best_fit)
+                print('Factor:       ', best_fit[0])
+                print('y-intercept:  ', best_fit[1])
+
+                params = curve_fit(log_fit, ini_pop, np.log10(self.binary_occupation[sim_]))
+                [a] = params[0]
+                y_fit = [(a)*i for i in xtemp]
+                print(a)
+
+                axes[int_].set_title(integrator[int_])
+                axes[int_].set_xlabel(r'IMBH Population [$N$]')
+                axes[int_].set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$')
+                axes[int_].set_ylim(-7, 0)
+                #axes[int_].plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
+                axes[int_].plot(xtemp, y_fit, color = 'black', linestyle = '-.', zorder = 1)
+                colour_axes = axes[int_].scatter(ini_pop, np.log10(self.binary_occupation[sim_]), edgecolors  = 'black', c = (self.binary_systems[sim_]), norm = (normalise_p1), label = 'Stable Binary', zorder = 2)
+                axes[int_].scatter(ini_pop, np.log10(self.tertiary_occupation[sim_]), edgecolors  = 'black', c = (self.tertiary_systems[sim_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
+                print('Number of tertiary: ', self.tertiary_systems[sim_])
+                plot_ini.tickers_pop(axes[int_], self.pop[1], 'GRX')
+            ax2.legend()
+            plt.colorbar(colour_axes, ax=axes[int_], label = r'$\langle N_{\rm{sys}} \rangle$ ')
+            plt.savefig('figures/binary_hierarchical/sys_formation_N_plot_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
+
+            iterf += 1
+
+    def sys_popul_plotter(self):
+        """
+        Function to plot the avg. population counts of various systems
+        """
+
+        plot_ini = plotter_setup()
+        integrators = ['Hermite', 'GRX']
+
+        fig, ax = plt.subplots()
+        ax.set_title('Average System Counts')
+        ax.set_xlabel(r'IMBH Population [$N$]')
+        ax.set_ylabel(r'$\langle N\rangle$')
+        for int_ in range(2):
+            ini_pop = np.unique(self.pop[int_])
+            ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = integrators[int_], zorder = 2)
+            ax.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
+        plot_ini.tickers_pop(ax, ini_pop[ini_pop <= 40], ' GRX')
+        ax.legend()
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+        plt.savefig('figures/binary_hierarchical/sys_pop_N_plot_HermGRX.pdf', dpi=300, bbox_inches='tight')
+        plt.clf() 
+
+        fig, ax = plt.subplots()
+        ax.set_title('Average System Counts')
+        ax.set_xlabel(r'IMBH Population [$N$]')
+        ax.set_ylabel(r'$\langle N\rangle$')
+        iterf = 0
+        for fold_ in self.folders:
+            integrator, drange = folder_loop(iterf)
+            for int_ in range(drange):
+                sim_ = folder_data_loop(iterf, int_)
+                if sim_ == 0:
+                    pass
+                else:
+                    ini_pop = np.unique(self.pop[sim_])
+                    ax.scatter(ini_pop, self.binary_systems[sim_], edgecolors  = 'black', c = self.colors[sim_], label = self.labelsD[sim_-1], zorder = 2)
+                    ax.scatter(ini_pop, self.tertiary_systems[sim_], edgecolors  = 'black', c = self.colors[sim_], marker = 's', zorder = 3)
+            iterf += 1
+        plot_ini.tickers_pop(ax, ini_pop[ini_pop <= 40], ' GRX')
+        ax.legend()
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+        plt.savefig('figures/binary_hierarchical/sys_pop_N_plot_GRX.pdf', dpi=300, bbox_inches='tight')

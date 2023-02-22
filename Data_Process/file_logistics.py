@@ -93,7 +93,55 @@ def ejected_extract_final(set, ejected):
             esc_vel = ejec_vel[idx]
                         
             return esc_vel
-    
+
+def folder_loop(iterf):
+    """
+    Function to organise arrays.
+    """
+
+    if iterf == 0:
+        drange = 2
+        integrator = ['Hermite', 'GRX']
+    else:
+        drange = 1
+        integrator = ['GRX']
+
+    return integrator, drange
+
+def folder_data_loop(iterf, int):
+    """
+    Function to get right iteration for plotters.
+    """
+
+    if iterf == 0:
+        sim_ = int
+    else:
+        sim_ = int + (1 + iterf)
+
+    return sim_
+
+def ndata_chaos(iterf, dataG, chaosG):
+    """
+    Function to organise data files for a given directory before extracting
+    them to make new, compressed files.
+    """
+
+    tcropH = 63
+    if iterf == 0:
+        drange = 2
+        Hermite_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/Hermite/particle_trajectory/*'))
+        chaoticH = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[tcropH:]) for i in Hermite_data]
+        filename = [natsort.natsorted(Hermite_data), natsort.natsorted(dataG)]
+        filenameC = [natsort.natsorted(chaoticH), natsort.natsorted(chaosG)]
+        integrator = ['Hermite', 'GRX']
+    else:
+        drange = 1
+        filename = [natsort.natsorted(dataG)] 
+        filenameC = [natsort.natsorted(chaosG)]
+        integrator = ['GRX']
+
+    return filename, filenameC, integrator, drange
+
 def simulation_stats_checker(dist_dir, int_string):
     """
     Function to check the final outcomes of all the simulations

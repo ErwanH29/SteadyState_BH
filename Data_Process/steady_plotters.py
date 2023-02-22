@@ -290,15 +290,10 @@ class stability_plotters(object):
 
         for data_ in range(4):
             with open('figures/steady_time/Sim_summary_'+folders[data_]+'.txt', 'w') as file:
-                if data_ == 0:
-                    drange = 2
-                    integrators = ['Hermite', 'GRX']
-                else:
-                    drange = 1
-                    integrators = ['GRX']
+                integrator, drange = folder_loop(data_)
 
                 for int_ in range(drange):
-                    file.write('For '+str(integrators[int_])+', # of full simulations per population:       '+str(pop[data_+int_].flatten()))
+                    file.write('For '+str(integrator[int_])+', # of full simulations per population:       '+str(pop[data_+int_].flatten()))
                     file.write('\n                                                     '+str(full_simul[data_+int_]))
                     file.write('\nNumber of samples:                                   '+str(psamp[data_+int_].flatten()))
                     file.write('\nThe slope of the curve goes as:                      '+str(slope[data_+int_]))

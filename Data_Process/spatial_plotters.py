@@ -28,15 +28,12 @@ def ecc_semi_histogram(integrator):
     """
     
     plot_ini = plotter_setup()
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
+    data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+integrator+'/particle_trajectory/*'))
 
     SMBH_ecca = [ ]
     SMBH_sema = [ ]
     IMBH_ecca = [ ]
     IMBH_sema = [ ]
-       
-    data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+integrator+'/particle_trajectory/*'))
-
     total_data = 0
     ecc_data = 0
     for file_ in range(len(data)):
@@ -47,47 +44,53 @@ def ecc_semi_histogram(integrator):
                 ptracker = pkl.load(input_file)
                 col_len = np.shape(ptracker)[1]
 
-                for parti_ in range(np.shape(ptracker)[0]):
-                    if parti_ != 0:
-                        particle = ptracker.iloc[parti_]
+                if np.shape(ptracker)[0] <= 45:
+                    for parti_ in range(np.shape(ptracker)[0]):
+                        if parti_ != 0:
+                            particle = ptracker.iloc[parti_]
 
-                        for j in range(col_len-1):
-                            total_data += 1
-                            sim_snap = particle.iloc[j]
+                            for j in range(col_len-1):
+                                total_data += 1
+                                sim_snap = particle.iloc[j]
 
-                            if sim_snap[8][2] < 1:
-                                ecc_data += 1
-                            if sim_snap[8][1] < 1:
-                                ecc_data += 1
+                                if sim_snap[8][2] < 1:
+                                    ecc_data += 1
+                                if sim_snap[8][1] < 1:
+                                    ecc_data += 1
 
-                            SMBH_ecca.append(np.log10(sim_snap[8][0]))
-                            SMBH_sema.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
+                                SMBH_ecca.append(np.log10(sim_snap[8][0]))
+                                SMBH_sema.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
 
-                            IMBH_ecca.append(np.log10(sim_snap[8][1]))
-                            IMBH_sema.append(np.log10(abs(sim_snap[7][1]).value_in(units.pc)))
-                            IMBH_ecca.append(np.log10(sim_snap[8][2]))
-                            IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
-            
+                                if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
+                                    pass
+                                elif sim_snap[8][0] == sim_snap[8][2] or sim_snap[7][0] == sim_snap[7][2]:
+                                    pass
+                                else: 
+                                    IMBH_ecca.append(np.log10(sim_snap[8][1]))
+                                    IMBH_sema.append(np.log10(abs(sim_snap[7][1]).value_in(units.pc)))
+                                    IMBH_ecca.append(np.log10(sim_snap[8][2]))
+                                    IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
+                
     with open('figures/system_evolution/output/ecc_events_ALL.txt', 'w') as file:
         file.write('For '+integrator+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
 
     ##### All eccentricity vs. semimajor axis #####
-    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 40, range=([-8, 3], [-10, 8]))
+    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 50, range=([-7.88, 2.5], [-4.3, 8]))
     plt.clf()
     
     fig, ax = plt.subplots()
     ax.set_xlabel(r'$\log_{10}a$ [pc]')
     ax.set_ylabel(r'$\log_{10}e$')
-    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 125, range=([-8, 3], [-10, 8]), cmap = 'viridis')
+    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
-    contours = ax.imshow((bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
-    ax.scatter(SMBH_sema[0], SMBH_ecca[0], color = 'blueviolet', label = 'SMBH-IMBH')
-    ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3)
-    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=1.25, cmap='binary', levels = 4, label = 'IMBH-IMBH')
-    ax.axhline(0, linestyle = ':', color = 'white', )
-    ax.text(-6, 0.2, r'$e > 1$', color = 'white', va = 'center')
-    ax.text(-6, -0.22, r'$e < 1$', color = 'white', va = 'center')
+    contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
+    ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
+    ax.scatter(SMBH_sema[25], SMBH_ecca[25], color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
+    ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
+    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=1.25, cmap='binary', levels = 6, label = 'IMBH-IMBH', zorder = 2)
+    ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center')
+    ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center')
     plot_ini.tickers(ax, 'histogram')
     ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
     ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
@@ -116,13 +119,9 @@ def global_properties():
         print('Data for: ', fold_)
         SMBH_ecc = [[ ], [ ]]
         SMBH_sem = [[ ], [ ]]
-        SMBH_ecca = [[ ], [ ]]
-        SMBH_sema = [[ ], [ ]]
         SMBH_dist = [[ ], [ ]]
         IMBH_ecc = [[ ], [ ]]
         IMBH_sem = [[ ], [ ]]
-        IMBH_ecca = [[ ], [ ]]
-        IMBH_sema = [[ ], [ ]]
         IMBH_dist = [[ ], [ ]]
 
         dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'.txt')
@@ -177,12 +176,8 @@ def global_properties():
                                         NN = [ ]
                                         ecc_SMBH = [ ]
                                         sem_SMBH = [ ]
-                                        ecc_SMBHa = [ ]
-                                        sem_SMBHa = [ ]
                                         ecc_IMBH = [ ]
                                         sem_IMBH = [ ]
-                                        ecc_IMBHa = [ ]
-                                        sem_IMBHa = [ ]
                                         dist_SMBH = [ ]
                                         dist_IMBH = [ ]
 
@@ -201,17 +196,14 @@ def global_properties():
                                             NN.append(np.log10(sim_snap[-1]))
                                             sem_SMBH.append(np.log10(sim_snap[7][0].value_in(units.pc)))
                                             ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
-                                            ecc_SMBHa.append(np.log10(sim_snap[8][0]))
-                                            sem_SMBHa.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
 
-                                            sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
-                                            sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
-                                            ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
-                                            ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
-                                            ecc_IMBHa.append(np.log10(sim_snap[8][1]))
-                                            sem_IMBHa.append(np.log10(abs(sim_snap[7][1]).value_in(units.pc)))
-                                            ecc_IMBHa.append(np.log10(sim_snap[8][2]))
-                                            sem_IMBHa.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
+                                            if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
+                                                pass
+                                            else: 
+                                                sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
+                                                sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
+                                                ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
+                                                ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
                                             
                                             line_x = (sim_snap[2][0] - SMBH_coords[2][0])
                                             line_y = (sim_snap[2][1] - SMBH_coords[2][1])
@@ -221,12 +213,8 @@ def global_properties():
                                             
                                         SMBH_ecc[iter].append(ecc_SMBH)
                                         SMBH_sem[iter].append(sem_SMBH)
-                                        SMBH_ecca[iter].append(ecc_SMBHa)
-                                        SMBH_sema[iter].append(sem_SMBHa)
                                         IMBH_ecc[iter].append(ecc_IMBH)
                                         IMBH_sem[iter].append(sem_IMBH)
-                                        IMBH_ecca[iter].append(ecc_IMBHa)
-                                        IMBH_sema[iter].append(sem_IMBHa)
                                         SMBH_dist[iter].append(dist_SMBH)
                                         IMBH_dist[iter].append(dist_IMBH)
 
@@ -242,12 +230,8 @@ def global_properties():
 
         eccSMBH_flat = [[ ], [ ]]
         semSMBH_flat = [[ ], [ ]]
-        eccSMBHa_flat = [[ ], [ ]]
-        semSMBHa_flat = [[ ], [ ]]
         eccIMBH_flat = [[ ], [ ]]
         semIMBH_flat = [[ ], [ ]]
-        eccIMBHa_flat = [[ ], [ ]]
-        semIMBHa_flat = [[ ], [ ]]
         distSMBH_flat = [[ ], [ ]]
         distIMBH_flat = [[ ], [ ]]
         for j in range(2):
@@ -257,12 +241,6 @@ def global_properties():
             for sublist in SMBH_sem[j]:
                 for item in sublist:
                     semSMBH_flat[j].append(item)
-            for sublist in SMBH_ecca[j]:
-                for item in sublist:
-                    eccSMBHa_flat[j].append(item)
-            for sublist in SMBH_sema[j]:
-                for item in sublist:
-                    semSMBHa_flat[j].append(item)
 
             for sublist in IMBH_ecc[j]:
                 for item in sublist:
@@ -270,12 +248,6 @@ def global_properties():
             for sublist in IMBH_sem[j]:
                 for item in sublist:
                     semIMBH_flat[j].append(item)
-            for sublist in IMBH_ecca[j]:
-                for item in sublist:
-                    eccIMBHa_flat[j].append(item)
-            for sublist in IMBH_sema[j]:
-                for item in sublist:
-                    semIMBHa_flat[j].append(item)
 
             for sublist in SMBH_dist[j]:
                 for item in sublist:
