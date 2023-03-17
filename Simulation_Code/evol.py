@@ -31,12 +31,12 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set):
     init_dist:   The initial distance between IMBH and SMBH
     converter:   Variable used to convert between nbody units and SI
     int_string:  String to dictate whether using Hermite or Hermite GRX
-    GRX_set:     String to dictate the integrator used
+    GRX_set:     SMBH particle set (needed for GRX)
     """
     
     np.seterr(divide='ignore', invalid='ignore')
     set_printing_strategy("custom", preferred_units = [units.MSun, units.pc, units.kyr, units.AU/units.yr, units.J],
-                                                       precision = 20, prefix = "", separator = " ", suffix = "")
+                          precision = 20, prefix = "", separator = " ", suffix = "")
 
     comp_start = cpu_time.time()
     initial_set = parti.copy()
@@ -72,8 +72,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set):
                     code.particles.new_channel_to(parti,
                     attributes=["x", "y", "z", "vx", "vy", "vz", "mass"],
                     target_names=["x", "y", "z", "vx", "vy", "vz", "mass"]),
-                    "to_gravity": 
-                    parti.new_channel_to(code.particles,
+                    "to_gravity": parti.new_channel_to(code.particles,
                     attributes=["mass", "collision_radius"],
                     target_names=["mass", "radius"])} 
 
@@ -114,7 +113,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set):
 
             dist_vect = np.sqrt(np.dot(dist_core, dist_core))
             vel_vect  = np.sqrt(np.dot(rel_vel, rel_vel))
-            curr_traj = (np.dot(dist_core, rel_vel))/(dist_vect * vel_vect) #Movement towards SMBH
+            curr_traj = (np.dot(dist_core, rel_vel))/(dist_vect * vel_vect)
 
             parti_KE = 0.5*particle.mass*(rel_vel.length())**2
             parti_BE = np.sum(indiv_PE_all(particle, parti))

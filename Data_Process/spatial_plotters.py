@@ -34,6 +34,7 @@ def ecc_semi_histogram(integrator):
     SMBH_sema = [ ]
     IMBH_ecca = [ ]
     IMBH_sema = [ ]
+    
     total_data = 0
     ecc_data = 0
     for file_ in range(len(data)):
@@ -44,7 +45,7 @@ def ecc_semi_histogram(integrator):
                 ptracker = pkl.load(input_file)
                 col_len = np.shape(ptracker)[1]
 
-                if np.shape(ptracker)[0] <= 45:
+                if np.shape(ptracker)[0] <= 40:
                     for parti_ in range(np.shape(ptracker)[0]):
                         if parti_ != 0:
                             particle = ptracker.iloc[parti_]
@@ -88,7 +89,8 @@ def ecc_semi_histogram(integrator):
     ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
     ax.scatter(SMBH_sema[25], SMBH_ecca[25], color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
     ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
-    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],linewidths=1.25, cmap='binary', levels = 6, label = 'IMBH-IMBH', zorder = 2)
+    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
+               linewidths=1.25, cmap='binary', levels = 6, label = 'IMBH-IMBH', zorder = 2)
     ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center')
     ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center')
     plot_ini.tickers(ax, 'histogram')
@@ -281,11 +283,11 @@ def global_properties():
         axL1 = fig.add_subplot(gs[0, 0:2], sharex=axL)
         axR = fig.add_subplot(gs[1, 2:])
         axR1 = fig.add_subplot(gs[0, 2:], sharex=axR)
-
         axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$')
         axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]')
         axL.set_ylabel(r'$\log_{10}$(CDF)')
         axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
+
         for int_ in range(2):
             ecc_sort = np.sort(eccSMBH_flat[int_])
             ecc_index = np.asarray([i for i in enumerate(ecc_sort)])
@@ -329,6 +331,7 @@ def spatial_plotter(int_string):
     ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+(int_string)+'/particle_trajectory/*'))
     etracker_files = natsort.natsorted(glob.glob('data/'+str(int_string)+'/energy/*'))
     ctracker_files = natsort.natsorted(glob.glob('data/'+str(int_string)+'/no_addition/chaotic_simulation/*'))
+    
     iter_file = -1
     for file_ in range(len(ptracker_files)):
         iter_file += 1

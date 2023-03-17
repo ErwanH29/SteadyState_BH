@@ -1,4 +1,3 @@
-from amuse.lab import *
 import glob
 import fnmatch
 import os

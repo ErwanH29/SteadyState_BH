@@ -5,6 +5,15 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
+STOP
+
 print('...tGW_plotters...')
 start_tgw = cpu_time.time()
 cls = gw_calcs()
@@ -41,10 +50,3 @@ cls.combine_data()
 #cls.single_streak_plotter()
 cls.sys_occupancy_plotter()
 cls.sys_popul_plotter()
-
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')

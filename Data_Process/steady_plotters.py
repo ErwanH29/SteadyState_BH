@@ -87,18 +87,19 @@ class stability_plotters(object):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
         rng = np.random.default_rng()
-        data_size = [20, 30, 40, 45]
+        data_size = [30, 40, 50, 60]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
         for int_ in range(5):
             for pop_, samp_ in zip(pop[int_], psamp[int_]):
                 N_parti = np.argwhere(fparti[int_] == pop_)
                 time_arr = stab_time[int_][N_parti]
+                
                 if int_ == 1:
                     for rng_ in range(len(data_size)):
                         stab_times_temp = [ ]
-                        for iter_ in range(8):
-                            rno = rng.integers(low = 0, high = 45, size = data_size[rng_])
+                        for iter_ in range(100):
+                            rno = rng.integers(low = 0, high = data_size[rng_], size = data_size[rng_])
                             stab_times_temp.append(stab_time[int_][N_parti][rno])
                             
                         stability_rng = np.median(stab_times_temp)
@@ -107,7 +108,7 @@ class stability_plotters(object):
                         q1, q3 = np.percentile(stab_times_temp, [25, 75])
                         stdmax_Nsims[rng_].append(q3)
                         stdmin_Nsims[rng_].append(q1)
-                stability = np.median(time_arr)
+                stability = np.median(time_arr[:40])
 
                 if int_ == 0 and pop_ == 60 or pop_ == 70:
                     temp_data.append(stab_time[int_][N_parti])
@@ -210,15 +211,15 @@ class stability_plotters(object):
         plt.clf()
 
         ##### GRX vs. Nsims #####
-        labels = [r'$N_{\rm{sims}} = 20$', r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$']
+        labels = [r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$', r'$N_{\rm{sims}} = 60$']
         labels_diff = [r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 20$', 
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 30$',
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 40$',
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 50$']
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_title(r'$\langle t_{\rm{dis}}\rangle$ vs. $N_{\rm{sims}}$')
-        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]') 
+        ax1.set_title(r'$N_{\rm{sims}}$ vs. $\langle t_{\rm{dis}}\rangle$')
+        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}} \rangle$ [Myr]') 
         ax1.set_xlim(5,45)
         for rng_ in range(len(data_size)):
             for j, xpos in enumerate(pop[1]):
@@ -240,29 +241,6 @@ class stability_plotters(object):
         plot_ini.tickers_pop(ax1, pop[1], 'GRX')
         plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
-        
-        ##### tdis vs. Nsims #####
-        diffs = [ ]
-        fig = plt.figure(figsize=(8, 6))
-        ax1 = fig.add_subplot(111)
-        #ax1.set_title(r'$\langle t_{\rm{dis}}\rangle$ vs. $N_{\rm{sims}}$')
-        ax1.set_title(r'$N_{\rm{IMBH}}$ vs. $\Delta_{{\rm{sims}},ij}$')
-        #ax1.set_ylabel(r'$\log_{10} \langle | t_{\rm{dis}}(N_{{\rm{sims}}, i}) - t_{\rm{dis}}(N_{{\rm{sims}}, j})|\rangle$ [Myr]')
-        ax1.set_ylabel(r'$\log_{10}\Delta_{{\rm{sims}},ij}$ [Myr]')
-        ax1.yaxis.label.set_fontsize(10)
-        ax1.set_xlim(5,45)
-        for rng_ in range(len(data_size)):
-            if rng_ != 2:
-                pops = [i+xshift[rng_] for i in pop[1]]
-                N_parti_avg_Nsims[rng_] = np.array([abs(float(i)-float(j)) for i, j in zip(N_parti_avg_Nsims[2], N_parti_avg_Nsims[rng_])])
-                diffs.append((np.mean(N_parti_avg_Nsims[rng_])))
-                ax1.plot(pops, (N_parti_avg_Nsims[rng_]), alpha = 0.3, color = colors[rng_+1], zorder = 2)
-                ax1.scatter(pops, (N_parti_avg_Nsims[rng_]), color = colors[rng_+1], edgecolors = 'black', zorder = 3, label = labels_diff[rng_])
-        ax1.legend()
-        plot_ini.tickers_pop(ax1, pop[1], 'GRX')
-        plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims_diff.pdf', dpi = 300, bbox_inches='tight')
-        plt.clf()
-        print('Differences between {N=20, N=30, N=43} with N=40: ', diffs)
     
         ###### N vs. Residuals #####
         iterf = 0

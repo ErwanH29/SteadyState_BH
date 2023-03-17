@@ -9,13 +9,13 @@ eta  = 1e-5
 tend = 100 | units.Myr
 int_string = 'GRX'
 
+no_sims = 20
 pops = [10]
 seeds = [888888]
 code_conv = nbody_system.nbody_to_si((pops[0]*IMBH_code.mass + SMBH_code.mass), SMBH_code.distance)
-iter = -1
-for k in range(20):
-    iter += 1
-    print('=========== Simulation '+str(iter)+'/20 Running ===========')
+iter = 0
+for k in range(no_sims):
+    print('=========== Simulation '+str(iter)+'/'+str(no_sims)+' Running ===========')
     IMBH_parti, rhmass = IMBH_code.IMBH_first(pops[0], seeds[0])
     
     if int_string == 'GRX':
@@ -29,8 +29,9 @@ for k in range(20):
         SMBH.ejection = 0
         SMBH.collision_events = 0
         failed_simul = evolve_system(IMBH_parti, tend, eta, SMBH_code.distance, 
-                                        code_conv, int_string, SMBH)
+                                     code_conv, int_string, SMBH)
 
     else:
         failed_simul = evolve_system(IMBH_parti, tend, eta, SMBH_code.distance, 
-                                        code_conv, int_string, SMBH)
+                                     code_conv, int_string, None)
+    iter += 1
