@@ -16,7 +16,7 @@ class gw_calcs(object):
     """
     Class which forms plots of the sustainable hierarchical and binaries 
     along with final time-step binary/hierarchical data.
-    Sustainable condition: If same partner for iter > 5, or roughly 5000 years
+    Sustainable condition: If same partner for iter > 5 (5000 years)
     """
 
     def __init__(self):
@@ -27,7 +27,7 @@ class gw_calcs(object):
         np.seterr(divide='ignore')
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=UserWarning) 
-        self.H0 = 73.04 #Taken from arXiv:2112.04510 in km/s/Mpc
+        self.H0 = 67.4 #From arXiv:1807.06209
         self.tH = (self.H0*(3.2408*10**-20))**-1 * 1/(3600*365*24*10**6) | units.Myr
         self.integrator = ['Hermite', 'GRX']
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
@@ -42,172 +42,160 @@ class gw_calcs(object):
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
 
         iterf = 0
+        no_files = 40
         for fold_ in self.folders:
             tcropG = 59
-            GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
+            GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')) #HARDCODED - CHANGE DEPENDING ON DATA PROCESSED
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG)
 
+            pop_checker = [0]
+            no_samples = 0
             for int_ in range(drange):
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
                         if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] > 5:
-                            with open(filename[int_][file_], 'rb') as input_file:
-                                print('Reading file', file_, ': ', filename[int_][file_])
-                                data = pkl.load(input_file)
-                                sim_time = np.shape(data)[1]-1
-                                SMBH_sys_mass = data.iloc[0][0][1]
+                            pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
+                            no_samples, process = no_file_tracker(pop_checker[0], pop, no_files, no_samples)
 
-                                for parti_ in range(np.shape(data)[0]):
-                                    count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*')) + 2
-                                    mass1 = data.iloc[parti_][0][1]
-                                    tot_mass = SMBH_sys_mass + mass1
-                                    if not (isinstance(data.iloc[parti_][-1][0], np.uint64)) or data.iloc[parti_][-1][1] == tot_mass:
-                                        merge_Bool = 1
-                                    else: 
-                                        merge_Bool = 0
+                            if (process):
+                                with open(filename[int_][file_], 'rb') as input_file:
+                                    print('Reading file', file_, ': ', filename[int_][file_])
+                                    data = pkl.load(input_file)
+                                    sim_time = np.shape(data)[1]-1
+                                    SMBH_sys_mass = data.iloc[0][0][1]
 
-                                    mass_IMBH = []
-                                    semi_SMBH_GW_indiv = []
-                                    semi_NN_GW_indiv = []
-                                    semi_t_GW_indiv = []
-                                    ecc_SMBH_GW_indiv = []
-                                    ecc_NN_GW_indiv = []
-                                    ecc_t_GW_indiv = []
-                                    nharm_SMBH_GW_indiv = []
-                                    nharm_NN_GW_indiv = []
-                                    nharm_t_GW_indiv = []
+                                    for parti_ in range(np.shape(data)[0]):
+                                        count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*'))
+                                        mass1 = data.iloc[parti_][0][1]
+                                        tot_mass = SMBH_sys_mass + mass1
 
-                                    Nclose_indiv = 0
-                                    Nfbnn_indiv = 0
-                                    Nfbt_indiv = 0
+                                        mass_IMBH = []
+                                        semi_SMBH_GW_indiv = []
+                                        semi_NN_GW_indiv = []
+                                        semi_t_GW_indiv = []
+                                        ecc_SMBH_GW_indiv = []
+                                        ecc_NN_GW_indiv = []
+                                        ecc_t_GW_indiv = []
+                                        nharm_SMBH_GW_indiv = []
+                                        nharm_NN_GW_indiv = []
+                                        nharm_t_GW_indiv = []
 
-                                    freq_SMBH_GW_indiv = [-5]
-                                    freq_NN_GW_indiv = [-5]
-                                    freq_t_GW_indiv = [-5]
-                                    strain_SMBH_GW_indiv = [-5]
-                                    strain_NN_GW_indiv = [-5]
-                                    strain_t_GW_indiv = [-5]
-                                    time_SMBH_GW_indiv = [-5]
-                                    time_NN_GW_indiv = [-5]
-                                    time_t_GW_indiv = [-5]
-                                    SMBH_NN_event = [-5]
-                                    SMBH_t_event = [-5]
+                                        Nfbnn_indiv = 0
+                                        Nfbt_indiv = 0
 
-                                    if parti_ != 0:
-                                        for col_ in range(np.shape(data)[1]-1):
-                                            sem_SMBH = abs(data.iloc[parti_][col_][7][0])
-                                            ecc_SMBH = data.iloc[parti_][col_][8][0]
+                                        freq_SMBH_GW_indiv = [-5]
+                                        freq_NN_GW_indiv = [-5]
+                                        freq_t_GW_indiv = [-5]
+                                        strain_SMBH_GW_indiv = [-5]
+                                        strain_NN_GW_indiv = [-5]
+                                        strain_t_GW_indiv = [-5]
+                                        SMBH_NN_event = [-5]
+                                        SMBH_t_event = [-5]
 
-                                            strain_SMBH = self.gw_strain(sem_SMBH, ecc_SMBH, mass1, SMBH_sys_mass)
-                                            freq_SMBH = self.gw_freq(sem_SMBH, ecc_SMBH, mass1, SMBH_sys_mass)
-                                            nharm_SMBH = self.gw_harmonic_mode(ecc_SMBH)
-                                            if freq_SMBH > 10**-12:
-                                                strain_SMBH_GW_indiv.append(strain_SMBH)
-                                                freq_SMBH_GW_indiv.append(freq_SMBH)
-                                                nharm_SMBH_GW_indiv.append(nharm_SMBH)
-                                                time_SMBH_GW_indiv.append(10**-3 * col_)
-                                                semi_SMBH_GW_indiv.append(sem_SMBH)
-                                                ecc_SMBH_GW_indiv.append(ecc_SMBH)
-                                            
-                                            semi_major_nn = abs(data.iloc[parti_][col_][7][1])
-                                            semi_major_t = abs(data.iloc[parti_][col_][7][2])
-                                            ecc_nn = (data.iloc[parti_][col_][8][1])
-                                            ecc_t = (data.iloc[parti_][col_][8][2])
-                                            for part_ in range(np.shape(data)[0]):
-                                                if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][1]:
-                                                    mass2 = data.iloc[part_][0][1]
+                                        if parti_ != 0:
+                                            for col_ in range(np.shape(data)[1]-1):
+                                                sem_SMBH = abs(data.iloc[parti_][col_][7][0])
+                                                ecc_SMBH = data.iloc[parti_][col_][8][0]
 
-                                            strain_nn = self.gw_strain(semi_major_nn, ecc_nn, mass1, mass2)
-                                            freq_nn = self.gw_freq(semi_major_nn, ecc_nn, mass1, mass2)
-                                            nharm_nn = self.gw_harmonic_mode(ecc_nn)
-                                            if freq_nn > 10**-12:
-                                                strain_NN_GW_indiv.append(strain_nn)
-                                                freq_NN_GW_indiv.append(freq_nn)
-                                                nharm_NN_GW_indiv.append(nharm_nn)
-                                                time_NN_GW_indiv.append(10**-3 * col_)
-                                                semi_NN_GW_indiv.append(semi_major_nn)
-                                                ecc_NN_GW_indiv.append(ecc_nn)
+                                                strain_SMBH = self.gw_strain(sem_SMBH, ecc_SMBH, mass1, SMBH_sys_mass)
+                                                freq_SMBH = self.gw_freq(sem_SMBH, ecc_SMBH, mass1, SMBH_sys_mass)
+                                                nharm_SMBH = self.gw_harmonic_mode(ecc_SMBH)
+                                                if freq_SMBH > 10**-12:
+                                                    strain_SMBH_GW_indiv.append(strain_SMBH)
+                                                    freq_SMBH_GW_indiv.append(freq_SMBH)
+                                                    nharm_SMBH_GW_indiv.append(nharm_SMBH)
+                                                    semi_SMBH_GW_indiv.append(sem_SMBH)
+                                                    ecc_SMBH_GW_indiv.append(ecc_SMBH)
+                                                
+                                                semi_major_nn = abs(data.iloc[parti_][col_][7][1])
+                                                semi_major_t = abs(data.iloc[parti_][col_][7][2])
+                                                ecc_nn = (data.iloc[parti_][col_][8][1])
+                                                ecc_t = (data.iloc[parti_][col_][8][2])
+                                                for part_ in range(np.shape(data)[0]):
+                                                    if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][1]:
+                                                        mass2 = data.iloc[part_][0][1]
 
-                                                linex = data.iloc[parti_][col_][2][0] - data.iloc[0][col_][2][0]
-                                                liney = data.iloc[parti_][col_][2][1] - data.iloc[0][col_][2][1]
-                                                linez = data.iloc[parti_][col_][2][2] - data.iloc[0][col_][2][2]
-                                                dist_SMBH = (linex**2+liney**2+linez**2).sqrt()
-                                                dist_NN = data.iloc[parti_][col_][-1]
+                                                strain_nn = self.gw_strain(semi_major_nn, ecc_nn, mass1, mass2)
+                                                freq_nn = self.gw_freq(semi_major_nn, ecc_nn, mass1, mass2)
+                                                nharm_nn = self.gw_harmonic_mode(ecc_nn)
+                                                if freq_nn > 10**-12:
+                                                    strain_NN_GW_indiv.append(strain_nn)
+                                                    freq_NN_GW_indiv.append(freq_nn)
+                                                    nharm_NN_GW_indiv.append(nharm_nn)
+                                                    semi_NN_GW_indiv.append(semi_major_nn)
+                                                    ecc_NN_GW_indiv.append(ecc_nn)
 
-                                                if dist_SMBH.value_in(units.pc) == dist_NN or mass2 > 10**5 | units.MSun:
-                                                    Nfbnn_indiv += 1
-                                                    SMBH_NN_event.append(1)
-                                                else:
-                                                    Nfbnn_indiv += 0.5
-                                                    SMBH_NN_event.append(-5)
-                                                    
-                                            tSMBH = False
-                                            if sem_SMBH == semi_major_t or ecc_SMBH == ecc_t:
-                                                mass2 = SMBH_sys_mass
-                                                tSMBH = True
+                                                    linex = data.iloc[parti_][col_][2][0] - data.iloc[0][col_][2][0]
+                                                    liney = data.iloc[parti_][col_][2][1] - data.iloc[0][col_][2][1]
+                                                    linez = data.iloc[parti_][col_][2][2] - data.iloc[0][col_][2][2]
+                                                    dist_SMBH = (linex**2+liney**2+linez**2).sqrt()
+                                                    dist_NN = data.iloc[parti_][col_][-1]
 
-                                            strain_t = self.gw_strain(semi_major_t, ecc_t, mass1, mass2)
-                                            freq_t = self.gw_freq(semi_major_t, ecc_t, mass1, mass2)
-                                            nharm_t = self.gw_harmonic_mode(ecc_t)
-                                            if freq_t > 10**-12:
-                                                strain_t_GW_indiv.append(strain_t)
-                                                freq_t_GW_indiv.append(freq_t)
-                                                nharm_t_GW_indiv.append(nharm_t)
-                                                time_t_GW_indiv.append(10**-3 * col_) 
-                                                semi_t_GW_indiv.append(semi_major_t)
-                                                ecc_t_GW_indiv.append(ecc_t)    
+                                                    if dist_SMBH.value_in(units.pc) == dist_NN or mass2 > 10**5 | units.MSun:
+                                                        Nfbnn_indiv += 1
+                                                        SMBH_NN_event.append(1)
+                                                    else:
+                                                        Nfbnn_indiv += 0.5
+                                                        SMBH_NN_event.append(-5)
+                                                        
+                                                tSMBH = False
+                                                if sem_SMBH == semi_major_t or ecc_SMBH == ecc_t:
+                                                    mass2 = SMBH_sys_mass
+                                                    tSMBH = True
 
-                                                if (tSMBH):
-                                                    Nfbt_indiv += 1
-                                                    SMBH_t_event.append(1)
-                                                else:
-                                                    Nfbt_indiv += 0.5
-                                                    SMBH_t_event.append(-5)
+                                                strain_t = self.gw_strain(semi_major_t, ecc_t, mass1, mass2)
+                                                freq_t = self.gw_freq(semi_major_t, ecc_t, mass1, mass2)
+                                                nharm_t = self.gw_harmonic_mode(ecc_t)
+                                                if freq_t > 10**-12:
+                                                    strain_t_GW_indiv.append(strain_t)
+                                                    freq_t_GW_indiv.append(freq_t)
+                                                    nharm_t_GW_indiv.append(nharm_t)
+                                                    semi_t_GW_indiv.append(semi_major_t)
+                                                    ecc_t_GW_indiv.append(ecc_t)    
 
-                                            if data.iloc[parti_][col_][-1] < 5e-3:
-                                                Nclose_indiv += 1
+                                                    if (tSMBH):
+                                                        Nfbt_indiv += 1
+                                                        SMBH_t_event.append(1)
+                                                    else:
+                                                        Nfbt_indiv += 0.5
+                                                        SMBH_t_event.append(-5)
 
-                                        mass_IMBH = np.asarray(mass_IMBH)
-                                        Ntot_indiv = Nfbnn_indiv + Nfbt_indiv
+                                            mass_IMBH = np.asarray(mass_IMBH)
+                                            Ntot_indiv = Nfbnn_indiv + Nfbt_indiv
 
-                                        path = '/media/erwanh/Elements/'+fold_+'/data/tGW/'
-                                        stab_tracker = pd.DataFrame()
-                                        df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                                'Simulation Time': 10**3*sim_time,
-                                                                'Population': 10*round(0.1*np.shape(data)[0]),
-                                                                'mass SMBH': SMBH_sys_mass,
-                                                                'mass IMBH1': mass1,
-                                                                'mass IMBH2': mass2,
-                                                                'No. Binary Events': Nfbnn_indiv,
-                                                                'No. Tertiary Events': Nfbt_indiv,
-                                                                'No. Total Events': Ntot_indiv,
-                                                                'No. Close Encounter': Nclose_indiv,
-                                                                'SMBH Binary Frequencies': freq_SMBH_GW_indiv,
-                                                                'SMBH Binary Strain': strain_SMBH_GW_indiv,
-                                                                'SMBH Binary Time': time_SMBH_GW_indiv,
-                                                                'SMBH Binary Semi major': semi_SMBH_GW_indiv,
-                                                                'SMBH Binary Eccentricity': ecc_SMBH_GW_indiv,
-                                                                'FlyBy Binary Frequencies': freq_NN_GW_indiv,
-                                                                'Flyby Binary Strain': strain_NN_GW_indiv,
-                                                                'Flyby Binary Time': time_NN_GW_indiv,
-                                                                'Flyby Binary Semi major': semi_NN_GW_indiv,
-                                                                'Flyby Binary Eccentricity': ecc_NN_GW_indiv,
-                                                                'Flyby SMBH Event': SMBH_NN_event,                 #Boolean (1 = SMBH events, -5 = IMBH-IMBH)
-                                                                'Flyby Tertiary Frequencies': freq_t_GW_indiv,
-                                                                'Flyby Tertiary Strain': strain_t_GW_indiv,
-                                                                'Flyby Tertiary Time': time_t_GW_indiv,
-                                                                'Flyby Tertiary Semi major': semi_t_GW_indiv,
-                                                                'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
-                                                                'Tertiary SMBH Event': SMBH_t_event,
-                                                                'Merger Boolean': merge_Bool})
-                                        stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                            path = '/media/erwanh/Elements/'+fold_+'/data/tGW/'
+                                            stab_tracker = pd.DataFrame()
+                                            df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                                     'Simulation Time': 10**3*sim_time,
+                                                                     'Population': 5*round(0.2*np.shape(data)[0]),
+                                                                     'mass SMBH': SMBH_sys_mass,
+                                                                     'mass IMBH1': mass1,
+                                                                     'mass IMBH2': mass2,
+                                                                     'No. Binary Events': Nfbnn_indiv,
+                                                                     'No. Tertiary Events': Nfbt_indiv,
+                                                                     'No. Total Events': Ntot_indiv,
+                                                                     'SMBH Binary Frequencies': freq_SMBH_GW_indiv,
+                                                                     'SMBH Binary Strain': strain_SMBH_GW_indiv,
+                                                                     'SMBH Binary Semi major': semi_SMBH_GW_indiv,
+                                                                     'SMBH Binary Eccentricity': ecc_SMBH_GW_indiv,
+                                                                     'FlyBy Binary Frequencies': freq_NN_GW_indiv,
+                                                                     'Flyby Binary Strain': strain_NN_GW_indiv,
+                                                                     'Flyby Binary Semi major': semi_NN_GW_indiv,
+                                                                     'Flyby Binary Eccentricity': ecc_NN_GW_indiv,
+                                                                     'Flyby SMBH Event': SMBH_NN_event,                 #Boolean (1 = SMBH events, -5 = IMBH-IMBH)
+                                                                     'Flyby Tertiary Frequencies': freq_t_GW_indiv,
+                                                                     'Flyby Tertiary Strain': strain_t_GW_indiv,
+                                                                     'Flyby Tertiary Semi major': semi_t_GW_indiv,
+                                                                     'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
+                                                                     'Tertiary SMBH Event': SMBH_t_event})
+                                            stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
 
             iterf += 1
 
-    def combine_data(self, filter, integ, folder):
+    def combine_data(self, integ, folder):
         """
         Function which extracts ALL data.
 
@@ -219,26 +207,22 @@ class gw_calcs(object):
 
         self.sim_time = [ ]
         self.pop = [ ]
-        self.close_enc = [ ]
         self.mass_SMBH = [ ]
         self.mass_parti = [ ]
         self.mass_IMBH = [ ]
 
         self.freq_flyby_SMBH = [ ]
         self.strain_flyby_SMBH = [ ]
-        self.time_flyby_SMBH = [ ]
         self.semi_flyby_SMBH = [ ]
         self.ecc_flyby_SMBH = [ ]
 
         self.freq_flyby_nn = [ ]
         self.strain_flyby_nn = [ ]
-        self.time_flyby_nn = [ ]
         self.semi_flyby_nn = [ ]
         self.ecc_flyby_nn = [ ]
 
         self.freq_flyby_t = [ ]
         self.strain_flyby_t = [ ]
-        self.time_flyby_t = [ ]
         self.semi_flyby_t = [ ]
         self.ecc_flyby_t = [ ]
 
@@ -256,75 +240,36 @@ class gw_calcs(object):
 
         print('Extracting data for ', self.integrator[int_idx], ' and distance ', folder)
         tGW_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+folder+'/data/tGW/*'))
-        if filter == 'pop_filt':
-            for file_ in range(len(tGW_data)):
-                with open(tGW_data[file_], 'rb') as input_file:
-                    data_file = pkl.load(input_file)
-                    if data_file.iloc[0][0] == self.integrator[int_idx]:
-                        self.sim_time.append(data_file.iloc[0][1])
-                        self.pop.append(int(data_file.iloc[0][2]))
-                        self.mass_SMBH.append(data_file.iloc[0][3])
-                        self.mass_parti.append(data_file.iloc[0][4])
-                        self.mass_IMBH.append(data_file.iloc[0][5])
-                        self.fb_nn_events.append(data_file.iloc[0][6])
-                        self.fb_t_events.append(data_file.iloc[0][7])
-                        self.tot_events.append(data_file.iloc[0][8])
-                        self.close_enc.append(data_file.iloc[0][9])
+        
+        for file_ in range(len(tGW_data)):
+            with open(tGW_data[file_], 'rb') as input_file:
+                data_file = pkl.load(input_file)
+                if data_file.iloc[0][0] == integ:
+                    self.sim_time.append(data_file.iloc[0][1])
+                    self.pop.append(int(data_file.iloc[0][2]))
+                    self.mass_SMBH.append(data_file.iloc[0][3])
+                    self.mass_parti.append(data_file.iloc[0][4])
+                    self.mass_IMBH.append(data_file.iloc[0][5])
+                    self.fb_nn_events.append(data_file.iloc[0][6])
+                    self.fb_t_events.append(data_file.iloc[0][7])
+                    self.tot_events.append(data_file.iloc[0][8])
 
-                        self.freq_flyby_SMBH.append(data_file.iloc[0][10])
-                        self.strain_flyby_SMBH.append(data_file.iloc[0][11])
-                        self.time_flyby_SMBH.append(data_file.iloc[0][12])
-                        self.semi_flyby_SMBH.append(data_file.iloc[0][13])
-                        self.ecc_flyby_SMBH.append(data_file.iloc[0][14])
+                    self.freq_flyby_SMBH.append(data_file.iloc[0][9])
+                    self.strain_flyby_SMBH.append(data_file.iloc[0][10])
+                    self.semi_flyby_SMBH.append(data_file.iloc[0][11])
+                    self.ecc_flyby_SMBH.append(data_file.iloc[0][12])
 
-                        self.freq_flyby_nn.append(data_file.iloc[0][15])
-                        self.strain_flyby_nn.append(data_file.iloc[0][16])
-                        self.time_flyby_nn.append(data_file.iloc[0][17])
-                        self.semi_flyby_nn.append(data_file.iloc[0][18])
-                        self.ecc_flyby_nn.append(data_file.iloc[0][19])
-                        self.fb_nn_SMBH.append(data_file.iloc[0][20])
+                    self.freq_flyby_nn.append(data_file.iloc[0][13])
+                    self.strain_flyby_nn.append(data_file.iloc[0][14])
+                    self.semi_flyby_nn.append(data_file.iloc[0][15])
+                    self.ecc_flyby_nn.append(data_file.iloc[0][16])
+                    self.fb_nn_SMBH.append(data_file.iloc[0][17])
 
-                        self.freq_flyby_t.append(data_file.iloc[0][21])
-                        self.strain_flyby_t.append(data_file.iloc[0][22])
-                        self.time_flyby_t.append(data_file.iloc[0][23])
-                        self.semi_flyby_t.append(data_file.iloc[0][24])
-                        self.ecc_flyby_t.append(data_file.iloc[0][25])
-                        self.fb_t_SMBH.append(data_file.iloc[0][26])
-
-        if filter == 'integrator':
-            for file_ in range(len(tGW_data)):
-                with open(tGW_data[file_], 'rb') as input_file:
-                    data_file = pkl.load(input_file)
-                    if data_file.iloc[0][0] == integ:
-                        self.sim_time.append(data_file.iloc[0][1])
-                        self.pop.append(int(data_file.iloc[0][2]))
-                        self.mass_SMBH.append(data_file.iloc[0][3])
-                        self.mass_parti.append(data_file.iloc[0][4])
-                        self.mass_IMBH.append(data_file.iloc[0][5])
-                        self.fb_nn_events.append(data_file.iloc[0][6])
-                        self.fb_t_events.append(data_file.iloc[0][7])
-                        self.tot_events.append(data_file.iloc[0][8])
-                        self.close_enc.append(data_file.iloc[0][9])
-
-                        self.freq_flyby_SMBH.append(data_file.iloc[0][10])
-                        self.strain_flyby_SMBH.append(data_file.iloc[0][11])
-                        self.time_flyby_SMBH.append(data_file.iloc[0][12])
-                        self.semi_flyby_SMBH.append(data_file.iloc[0][13])
-                        self.ecc_flyby_SMBH.append(data_file.iloc[0][14])
-
-                        self.freq_flyby_nn.append(data_file.iloc[0][15])
-                        self.strain_flyby_nn.append(data_file.iloc[0][16])
-                        self.time_flyby_nn.append(data_file.iloc[0][17])
-                        self.semi_flyby_nn.append(data_file.iloc[0][18])
-                        self.ecc_flyby_nn.append(data_file.iloc[0][19])
-                        self.fb_nn_SMBH.append(data_file.iloc[0][20])
-
-                        self.freq_flyby_t.append(data_file.iloc[0][21])
-                        self.strain_flyby_t.append(data_file.iloc[0][22])
-                        self.time_flyby_t.append(data_file.iloc[0][23])
-                        self.semi_flyby_t.append(data_file.iloc[0][24])
-                        self.ecc_flyby_t.append(data_file.iloc[0][25])
-                        self.fb_t_SMBH.append(data_file.iloc[0][26])
+                    self.freq_flyby_t.append(data_file.iloc[0][18])
+                    self.strain_flyby_t.append(data_file.iloc[0][19])
+                    self.semi_flyby_t.append(data_file.iloc[0][20])
+                    self.ecc_flyby_t.append(data_file.iloc[0][21])
+                    self.fb_t_SMBH.append(data_file.iloc[0][22])
 
         self.sim_time = np.asarray(self.sim_time, dtype = 'object')
         self.pop = np.asarray(self.pop, dtype = 'object')
@@ -334,21 +279,17 @@ class gw_calcs(object):
         self.fb_nn_events = np.asarray(self.fb_nn_events, dtype = 'object')
         self.fb_t_events = np.asarray(self.fb_t_events, dtype = 'object')
         self.tot_events = np.asarray(self.tot_events, dtype = 'object')
-        self.close_enc = np.asarray(self.close_enc, dtype = 'object')
         self.freq_flyby_SMBH = np.asarray(self.freq_flyby_SMBH, dtype = 'object')
         self.strain_flyby_SMBH = np.asarray(self.strain_flyby_SMBH, dtype = 'object')
-        self.time_flyby_SMBH = np.asarray(self.time_flyby_SMBH, dtype = 'object')
         self.semi_flyby_SMBH = np.asarray(self.semi_flyby_SMBH, dtype = 'object')
         self.ecc_flyby_SMBH = np.asarray(self.ecc_flyby_SMBH, dtype = 'object')
         self.freq_flyby_nn = np.asarray(self.freq_flyby_nn, dtype = 'object')
         self.strain_flyby_nn = np.asarray(self.strain_flyby_nn, dtype = 'object')
-        self.time_flyby_nn = np.asarray(self.time_flyby_nn, dtype = 'object')
         self.semi_flyby_nn = np.asarray(self.semi_flyby_nn, dtype = 'object')
         self.ecc_flyby_nn = np.asarray(self.ecc_flyby_nn, dtype = 'object')
         self.fb_nn_SMBH = np.asarray(self.fb_nn_SMBH, dtype = 'object')
         self.freq_flyby_t = np.asarray(self.freq_flyby_t, dtype = 'object')
         self.strain_flyby_t = np.asarray(self.strain_flyby_t, dtype = 'object')
-        self.time_flyby_t = np.asarray(self.time_flyby_t, dtype = 'object')
         self.semi_flyby_t = np.asarray(self.semi_flyby_t, dtype = 'object')
         self.ecc_flyby_t = np.asarray(self.ecc_flyby_t, dtype = 'object')
         self.fb_t_SMBH = np.asarray(self.fb_t_SMBH, dtype = 'object')
@@ -389,15 +330,15 @@ class gw_calcs(object):
 
     def gfunc(self, ecc):
         nharm = self.gw_harmonic_mode(ecc)
-        return nharm**4/32 * ((jv(nharm-2, nharm*ecc)-2*ecc*jv(nharm-1, nharm*ecc) + 2/nharm * jv(nharm, nharm*ecc) + 2*ecc*jv(nharm+1, nharm*ecc) \
-               - jv(nharm+2, nharm*ecc))**2 + (1-ecc**2)*(jv(nharm-2, nharm*ecc) - 2*jv(nharm, nharm*ecc) + jv(nharm+2, nharm*ecc))**2 \
-               + 4/(3*nharm**2)*(jv(nharm, nharm*ecc)**2))
+        return nharm**4/32 * ((jv(nharm-2, nharm*ecc)-2*ecc*jv(nharm-1, nharm*ecc) + 2/nharm * jv(nharm, nharm*ecc) \
+               + 2*ecc*jv(nharm+1, nharm*ecc) - jv(nharm+2, nharm*ecc))**2 + (1-ecc**2)*(jv(nharm-2, nharm*ecc) \
+               - 2*jv(nharm, nharm*ecc) + jv(nharm+2, nharm*ecc))**2 + 4/(3*nharm**2)*(jv(nharm, nharm*ecc)**2))
     
     def gw_cfreq_semi(self, ecc_arr, freq_val, m1, m2):
         """
         Function to get constant frequency curves based on eqn. 43 of Samsing et al. 2014.
-        Frequency values are based on Samsing et al. 2014 and correspond to LIGO (200 Hz) with range 10 < f < 10 000 [https://link.aps.org/doi/10.1103/PhysRevD.93.112004]
-        LISA (1e-2 Hz) peak sensitivity with range 1e-4 < f < 1 [https://lisa.nasa.gov/]
+        LISA (1e-2 Hz) peak sensitivity with range 1e-5 < f < 1 [https://lisa.nasa.gov/]
+        muAres (1e-3 Hz) peak sensitivity with range 1e-7 < f < 1 [arXiv:1908.11391]
         
         Inputs:
         ecc_arr:  The eccentricity array
@@ -520,7 +461,7 @@ class gw_calcs(object):
 
         if (data_filt):
             no_data = round(len(x1)**0.9)
-            no_data2 = round(len(x2)**0.5)
+            no_data2 = round(len(x2)**0.9)
         else:
             no_data = len(x1)
             no_data2 = len(x2)
@@ -556,9 +497,9 @@ class gw_calcs(object):
         ax_histh.set_xlim(0, 1.05) 
         ax_histh.set_xlabel(r'$\rho/\rho_{\rm{max}}$')
 
-        x_temp = np.linspace(10**-5, 1, 1000)
         # LISA
         lisa = li.LISA() 
+        x_temp = np.linspace(10**-5, 1, 1000)
         Sn = lisa.Sn(x_temp)
 
         # SKA
@@ -587,12 +528,12 @@ class gw_calcs(object):
 
         plot_init = plotter_setup()
         pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
+        print('Plotting Orbital Parameter Diagram')
 
         xmax = 0
         xmin = -8
         ymin = -8
 
-        print('Plotting Orbital Parameter Diagram')
         iterf = 0
         for fold_ in self.folders:
             if iterf == 0:
@@ -608,7 +549,7 @@ class gw_calcs(object):
             SMBH_sem = [[ ], [ ]]
             SMBH_ecc = [[ ], [ ]]
             for int_ in range(drange):
-                self.combine_data('pop_filt', integrator[int_], fold_)
+                self.combine_data(integrator[int_], fold_)
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
                     if self.pop[parti_] <= pop_tracker:
                         for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
@@ -778,7 +719,7 @@ class gw_calcs(object):
                 integrator = ['GRX']
 
             for int_ in range(drange):
-                self.combine_data('integrator', integrator[int_], fold_)
+                self.combine_data(integrator[int_], fold_)
                 IMBH_strain = [ ]
                 IMBH_freq = [ ]
                 SMBH_strain = [ ]
@@ -825,16 +766,16 @@ class gw_calcs(object):
                 ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
                 
                 self.scatter_hist(SMBH_freq, SMBH_strain,
-                                IMBH_freq, IMBH_strain, 
-                                ax, ax1, ax2, 'SMBH-IMBH', 'IMBH-IMBH',
-                                True, True)
+                                  IMBH_freq, IMBH_strain, 
+                                  ax, ax1, ax2, 'SMBH-IMBH', 'IMBH-IMBH',
+                                  True, True)
                 ax.set_xlabel(r'$\log_{10}f$ [Hz]')
                 ax.set_ylabel(r'$\log_{10}h$')
                 ax1.set_title(integrator[int_])
                 for ax_ in [ax, ax1, ax2]:
                     plot_ini.tickers(ax_, 'plot')
                 ax.set_xlim(-12.5, 0.1)
-                plt.savefig('figures/gravitational_waves/'+integrator[int_]+'GW_freq_strain_maximise_diagram_'+str(pop_tracker)+'_'+fold_+'.png', dpi = 500, bbox_inches='tight')
+                plt.savefig('figures/gravitational_waves/'+integrator[int_]+'_GW_freq_strain_maximise_diagram_'+str(pop_tracker)+'_'+fold_+'.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
 
             iterf += 1

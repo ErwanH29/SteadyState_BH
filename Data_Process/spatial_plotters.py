@@ -129,7 +129,7 @@ def global_properties():
         dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'.txt')
         with open(dir) as f:
             line = f.readlines()
-            popG = line[12][54:-2] 
+            popG = line[10][54:-2] 
             avgG = line[17][56:-2]
             popG_data = popG.split()
             avgG_data = avgG.split()
@@ -137,6 +137,7 @@ def global_properties():
             avgG = np.asarray([float(i) for i in avgG_data])
 
         iter = 0
+        no_files = 40
         for int_ in integrator:   
             data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+(int_)+'/particle_trajectory/*'))
             if int_ != 'GRX':
@@ -150,75 +151,85 @@ def global_properties():
 
             total_data = 0
             ecc_data = 0
+            pop_checker = [0]
+            no_samples = 0
+            print('test1')
             for file_ in range(len(data)):
                 with open(chaotic[file_], 'rb') as input_file:
                     chaotic_tracker = pkl.load(input_file)
+                    pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
                     if chaotic_tracker.iloc[0][6] <= pop_upper and chaotic_tracker.iloc[0][6] >= pop_lower:
+                        print('test2')
                         with open(data[file_], 'rb') as input_file:
                             file_size = os.path.getsize(data[file_])
-                            if file_size < 2.8e9:
-                                print('Reading File :', input_file)
-                                ptracker = pkl.load(input_file)
+                            if file_size < 2.9e9:
+                                print('test3')
+                                print('Reading File', file_, ': ', input_file)
+                                no_samples, process = no_file_tracker(pop_checker[0], pop, no_files, no_samples)
 
-                                with open(energy[file_], 'rb') as input_file:
-                                    etracker = pkl.load(input_file)
+                                if (process):
+                                    print('test4')
+                                    ptracker = pkl.load(input_file)
 
-                                if 10*round(0.1*chaotic_tracker.iloc[0][6]) in popG:
-                                    idx = np.where(popG[popG > 5] == 10*round(0.1*chaotic_tracker.iloc[0][6]))
-                                    col_len = int(min(np.round((avgG[idx])*10**3), np.shape(ptracker)[1])-1)
-                                else:
-                                    col_len = np.shape(ptracker)[1]
+                                    with open(energy[file_], 'rb') as input_file:
+                                        etracker = pkl.load(input_file)
 
-                                for parti_ in range(np.shape(ptracker)[0]):
-                                    if parti_ != 0:
-                                        particle = ptracker.iloc[parti_]
-                                        SMBH_data = ptracker.iloc[0]
+                                    if pop in popG:
+                                        idx = np.where(popG[popG > 5] == pop)
+                                        col_len = int(min(np.round((avgG[idx])*10**3), np.shape(ptracker)[1])-1)
+                                    else:
+                                        col_len = np.shape(ptracker)[1]
 
-                                        time = [ ]
-                                        NN = [ ]
-                                        ecc_SMBH = [ ]
-                                        sem_SMBH = [ ]
-                                        ecc_IMBH = [ ]
-                                        sem_IMBH = [ ]
-                                        dist_SMBH = [ ]
-                                        dist_IMBH = [ ]
+                                    for parti_ in range(np.shape(ptracker)[0]):
+                                        if parti_ != 0:
+                                            particle = ptracker.iloc[parti_]
+                                            SMBH_data = ptracker.iloc[0]
 
-                                        for j in range(col_len-1):
-                                            total_data += 1
-                                            sim_snap = particle.iloc[j]
-                                            ene_snap = etracker.iloc[j]
-                                            SMBH_coords = SMBH_data.iloc[j]
-                                            time.append(ene_snap[6].value_in(units.Myr))
+                                            time = [ ]
+                                            NN = [ ]
+                                            ecc_SMBH = [ ]
+                                            sem_SMBH = [ ]
+                                            ecc_IMBH = [ ]
+                                            sem_IMBH = [ ]
+                                            dist_SMBH = [ ]
+                                            dist_IMBH = [ ]
 
-                                            if sim_snap[8][2] < 1:
-                                                ecc_data += 1
-                                            if sim_snap[8][1] < 1:
-                                                ecc_data += 1
+                                            for j in range(col_len-1):
+                                                total_data += 1
+                                                sim_snap = particle.iloc[j]
+                                                ene_snap = etracker.iloc[j]
+                                                SMBH_coords = SMBH_data.iloc[j]
+                                                time.append(ene_snap[6].value_in(units.Myr))
 
-                                            NN.append(np.log10(sim_snap[-1]))
-                                            sem_SMBH.append(np.log10(sim_snap[7][0].value_in(units.pc)))
-                                            ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
+                                                if sim_snap[8][2] < 1:
+                                                    ecc_data += 1
+                                                if sim_snap[8][1] < 1:
+                                                    ecc_data += 1
 
-                                            if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
-                                                pass
-                                            else: 
-                                                sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
-                                                sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
-                                                ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
-                                                ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
-                                            
-                                            line_x = (sim_snap[2][0] - SMBH_coords[2][0])
-                                            line_y = (sim_snap[2][1] - SMBH_coords[2][1])
-                                            line_z = (sim_snap[2][2] - SMBH_coords[2][2])
-                                            dist_SMBH.append(np.log10(np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)))
-                                            dist_IMBH.append(np.log10(sim_snap[-1]))
-                                            
-                                        SMBH_ecc[iter].append(ecc_SMBH)
-                                        SMBH_sem[iter].append(sem_SMBH)
-                                        IMBH_ecc[iter].append(ecc_IMBH)
-                                        IMBH_sem[iter].append(sem_IMBH)
-                                        SMBH_dist[iter].append(dist_SMBH)
-                                        IMBH_dist[iter].append(dist_IMBH)
+                                                NN.append(np.log10(sim_snap[-1]))
+                                                sem_SMBH.append(np.log10(sim_snap[7][0].value_in(units.pc)))
+                                                ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
+
+                                                if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
+                                                    pass
+                                                else: 
+                                                    sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
+                                                    sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
+                                                    ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
+                                                    ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
+                                                
+                                                line_x = (sim_snap[2][0] - SMBH_coords[2][0])
+                                                line_y = (sim_snap[2][1] - SMBH_coords[2][1])
+                                                line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                                                dist_SMBH.append(np.log10(np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)))
+                                                dist_IMBH.append(np.log10(sim_snap[-1]))
+                                                
+                                            SMBH_ecc[iter].append(ecc_SMBH)
+                                            SMBH_sem[iter].append(sem_SMBH)
+                                            IMBH_ecc[iter].append(ecc_IMBH)
+                                            IMBH_sem[iter].append(sem_IMBH)
+                                            SMBH_dist[iter].append(dist_SMBH)
+                                            IMBH_dist[iter].append(dist_IMBH)
 
             if fold_ == 'rc_0.25' and iter == 0:
                 with open('figures/system_evolution/output/ecc_events.txt', 'w') as file:

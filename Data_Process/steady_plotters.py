@@ -258,6 +258,8 @@ class stability_plotters(object):
                 ax.set_xlim(6, 45)
                 if data_ > 1:
                     iterf += 1
+            print(folders[iterf])
+            print(pop[data_], avg_deviate[data_])
             ax.set_ylabel(r'$\langle (t_{\rm{dis}} - \sigma_{\rm{dis}}) \rangle$ [Myr]')
             x_arr = np.linspace(10, max(pop[data_]), 100)
             smooth_curve = make_interp_spline(pop[data_], avg_deviate[data_])

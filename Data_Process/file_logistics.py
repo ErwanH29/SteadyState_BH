@@ -94,6 +94,32 @@ def ejected_extract_final(set, ejected):
                         
             return esc_vel
 
+def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
+    """
+    Function to ensure same # of files are used during data extraction
+    comparing algorithms.
+
+    Input:
+    pop_arr:     Array consisting of previous data files' population
+    pop_data:    Population of data file
+    no_files:    Maximum number of files allowed to analyse
+    no_samples:  Number of files already extracted data from
+    """
+
+    if pop_arr == pop_data:
+        no_samples += 1
+        pop_arr = pop_data
+        if no_samples > no_files:
+            process = False
+        else:
+            process = True
+    else:
+        pop_arr = pop_data
+        no_samples = 1
+        process = True
+    
+    return no_samples, process
+
 def folder_loop(iterf):
     """
     Function to organise arrays.

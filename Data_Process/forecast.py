@@ -1,19 +1,19 @@
-#from amuse.lab import *
-#from file_logistics import *
-#from spatial_plotters import *
+from amuse.lab import *
+from file_logistics import *
+from spatial_plotters import *
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.integrate import quad
 
-#warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 def PS_function(zmass, phi0, mc, alpha):
     """
-    The Press-Schecter stellar mass function (Press, Schechter 1974).
+    The Press-Schecter stellar mass function (Press & Schechter 1974).
     Value is in (Mpc)^-3
     
     Inputs:
-    zmass:  The redshift-dependent mass integrating over
+    zmass:  The redshift-dependent mass integrated over
     phi0:   The redshift-dependent normalisation factor
     mc:     The redshift-dependent characteristic mass. Describes the knee
     alpha:  The redshift-dependent power-law mass slope
@@ -26,19 +26,20 @@ def cmove_dist(z):
     """
     The distance based on redshift. The constants are taken from Planck 2018.
     Value is in Mpc.
+    
     Inputs:
     z:      The redshift to integrate over
     """
 
-    H0 = 67.4
-    c = 3e5#constants.c.value_in(units.kms)
+    H0 = 67.4 #From arXiv:1807.06209
+    c = constants.c.value_in(units.kms)
     omegaL = 0.685
     omegaM = 0.315
     return c/H0 * (np.sqrt(omegaL+omegaM*(1+z)**3))**-1
 
 def plotter():
 
-    #plot_init = plotter_setup()
+    plot_init = plotter_setup()
 
     # Data from Furlong et al. (2015)
     merger_rate = np.linspace(10**-3, 1, 100) #0.9/7 -> 7 / 0.9 merge per Myr
@@ -65,7 +66,7 @@ def plotter():
     ax.set_xlabel(r'$\log_{10}$'+xtext)
     ax.tick_params(axis="y", direction="in", labelcolor='black')
     ax.set_ylim(0.1,4.4)
-    #plot_init.tickers(ax, 'plot')
+    plot_init.tickers(ax, 'plot')
 
     cum_merger = [ ]
     for rate_ in merger_rate:
@@ -91,9 +92,8 @@ def plotter():
                     xtext+' = '+"{0:.3g}".format(rate_)+'\n'+ytext+' = '+"{0:.4g}".format(mergerval_temp), 
                     horizontalalignment='right')
         itert += 1
+
     ax.scatter(np.log10(mrate_fixed), np.log10(cum_merger_fixed), color = 'black')
-
-    #plt.savefig('figures/forecast/merger_rate.pdf', dpi=300, bbox_inches='tight')
-    plt.show()
-
+    plt.savefig('figures/forecast/merger_rate.pdf', dpi=300, bbox_inches='tight')
+    
 plotter()
