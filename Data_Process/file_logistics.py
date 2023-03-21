@@ -146,7 +146,7 @@ def folder_data_loop(iterf, int):
 
     return sim_
 
-def ndata_chaos(iterf, dataG, chaosG):
+def ndata_chaos(iterf, dataG, chaosG, fold_):
     """
     Function to organise data files for a given directory before extracting
     them to make new, compressed files.
@@ -175,7 +175,7 @@ def simulation_stats_checker(dist_dir, int_string):
 
     filename = glob.glob('/media/erwanh/Elements/'+dist_dir+'/data/'+int_string+'/simulation_stats/*')
     filename = natsort.natsorted(filename)
-    SMBH_merger = 0
+    SMBH_merger = 0 
     IMBH_merger = 0
     ejection = 0
     tot_sims = 0

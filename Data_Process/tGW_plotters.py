@@ -47,8 +47,11 @@ class gw_calcs(object):
             tcropG = 59
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')) #HARDCODED - CHANGE DEPENDING ON DATA PROCESSED
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
-            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG)
-
+            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
+            filename[0] = filename[0][::-1]
+            filenameC[0] = filenameC[0][::-1]
+            filename[0] = filename[0][227:]
+            filenameC[0] = filenameC[0][227:]
             pop_checker = [0]
             no_samples = 0
             for int_ in range(drange):
@@ -548,6 +551,7 @@ class gw_calcs(object):
 
             SMBH_sem = [[ ], [ ]]
             SMBH_ecc = [[ ], [ ]]
+
             for int_ in range(drange):
                 self.combine_data(integrator[int_], fold_)
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
@@ -618,9 +622,9 @@ class gw_calcs(object):
             ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
             ax2.set_xlim(0,1.05)
             ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$')
+            self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_SMBH[0][0])
             ax.text(-5, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
             ax.text(-5.7, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
-            self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_SMBH[0][0])
             
             for int_ in range(drange):
                 ax.scatter(np.log10(SMBH_sem[int_]), SMBH_ecc[int_], color = self.colors[int_+iterf], s = 0.75, zorder = 5)
@@ -642,11 +646,11 @@ class gw_calcs(object):
                 plot_init.tickers(ax_, 'plot')
             ax1.legend()
             ax.plot(x_arr, const_tgw2, color = 'black', zorder = 6)
-            ax.text(-0.75, -3, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+27, color = 'white', 
+            ax.text(-2.5, -1, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = 'medium', rotation=self.text_angle+27, color = 'white', 
                     path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
-            ax.text(-0.95, -3.5, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+27, color = 'white', 
+            ax.text(-3, -1.4, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = 'medium', rotation=self.text_angle+27, color = 'white', 
                     path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
-            plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_SMBH_'+fold_+'.png', dpi=300, bbox_inches='tight')
+            plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_SMBH_'+fold_+'.png', dpi=700, bbox_inches='tight')
             plt.clf()
 
             fig = plt.figure(figsize=(8, 6))
@@ -695,7 +699,7 @@ class gw_calcs(object):
                     path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
             ax.text(-3.08, -3.1, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+27, color = 'white', 
                     path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
-            plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_IMBH_'+fold_+'.png', dpi=300, bbox_inches='tight')
+            plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_IMBH_'+fold_+'.png', dpi=700, bbox_inches='tight')
             plt.clf()
 
             iterf += 1
@@ -717,7 +721,7 @@ class gw_calcs(object):
             else:
                 drange = 1
                 integrator = ['GRX']
-
+            drange = 1
             for int_ in range(drange):
                 self.combine_data(integrator[int_], fold_)
                 IMBH_strain = [ ]

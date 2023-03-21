@@ -87,7 +87,7 @@ class stability_plotters(object):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
         rng = np.random.default_rng()
-        data_size = [30, 40, 50, 60]
+        data_size = [30, 40, 50, 58]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
         for int_ in range(5):
@@ -146,7 +146,7 @@ class stability_plotters(object):
         plt.clf()
 
         ##### GRX vs. Hermite #####
-        fig = plt.figure(figsize=(7, 6))
+        fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
         ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]') 
         ax1.set_xlim(5,105)
