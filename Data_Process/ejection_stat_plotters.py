@@ -137,10 +137,10 @@ class ejection_stats(object):
                     fig = plt.figure(figsize=(5, 8))
                     ax1 = fig.add_subplot(211)
                     ax2 = fig.add_subplot(212)
-                    ax1.set_title(integrator[int_]+'\n'+configD[iterf])
-                    ax1.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]')
-                    ax2.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
-                    ax1.set_ylabel(r'$\langle v_{\rm{ejec}} \rangle$ [km s$^{-1}$]')
+                    ax1.set_title(integrator[int_]+'\n'+configD[iterf], fontsize = plot_ini.tilabel_size)
+                    ax1.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = plot_ini.axlabel_size)
+                    ax2.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
+                    ax1.set_ylabel(r'$\langle v_{\rm{ejec}} \rangle$ [km s$^{-1}$]', fontsize = plot_ini.axlabel_size)
                     ax2.axvline(vesc_MW, linestyle = ':', color = 'black')
                     ax2.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270)
 
@@ -191,8 +191,8 @@ class event_tracker(object):
         frac_merge = [[ ], [ ]]
 
         fig, ax = plt.subplots()
-        ax.set_title(r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6} M_{\odot}$')
-        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$')
+        ax.set_title(r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6} M_{\odot}$', fontsize = plot_ini.tilabel_size)
+        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = plot_ini.axlabel_size)
         ax.set_ylim(0, 1.05)
         for int_ in range(2):
             for file_ in range(len(chaos_data[int_])):
@@ -211,7 +211,7 @@ class event_tracker(object):
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_HermGRX.pdf', dpi=300, bbox_inches='tight')
 
         fig, ax = plt.subplots()
-        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$')
+        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = plot_ini.axlabel_size)
         ax.set_ylim(0,1.05)
         init_pop = [[ ], [ ], [ ], [ ]]
         merger = [[ ], [ ], [ ], [ ]]

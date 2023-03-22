@@ -1,24 +1,30 @@
 from amuse.lab import *
 import numpy as np
 import glob
+import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import natsort
 import os
 import pickle as pkl
 
 class plotter_setup(object):
+    def init(self):
+        self.axlabel_size = 13
+        self.tilabel_size = 16
+        self.tick_size = 11
+
     def tickers(self, ax, plot_type):
         """
         Function to setup axis
         """
-
+        
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.xaxis.set_minor_locator(mtick.AutoMinorLocator())
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
         if plot_type == 'plot':
-            ax.tick_params(axis="y", which = 'both', direction="in")
-            ax.tick_params(axis="x", which = 'both', direction="in")
+            ax.tick_params(axis="y", which = 'both', direction="in", fontsize = self.tick_size)
+            ax.tick_params(axis="x", which = 'both', direction="in", fontsize = self.tick_size)
 
         return ax
 
@@ -27,12 +33,12 @@ class plotter_setup(object):
         Function to setup axis for population plots
         """
 
-        ax.set_xlabel(r'$N_{\rm{IMBH}}$')
+        ax.set_xlabel(r'$N_{\rm{IMBH}}$', fontsize = 13)
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
-        ax.tick_params(axis="y", which = 'both', direction="in")
-        ax.tick_params(axis="x", which = 'both', direction="in")    
+        ax.tick_params(axis="y", which = 'both', direction="in", fontsize = self.tick_size)
+        ax.tick_params(axis="x", which = 'both', direction="in", fontsize = self.tick_size)    
         
         if int_str == 'Hermite':
             xints = [i for i in range(1+int(max(pop))) if i % 10 == 0 and i > 5]

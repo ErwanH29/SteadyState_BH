@@ -61,9 +61,9 @@ def plotter():
     xtext = r'$\Gamma_{\rm{infall}}$ [Myr$^{-1}$]'
     
     fig, ax = plt.subplots()
-    plt.title(r'IMBH Infall rate vs. Cumulative Merger Rate ($z \leq 3$) ')
-    ax.set_ylabel(r'$\log_{10}$'+ytext)
-    ax.set_xlabel(r'$\log_{10}$'+xtext)
+    ax.set_title(r'IMBH Infall rate vs. Cumulative Merger Rate ($z \leq 3$)', fontsize = plot_init.tilabel_size)
+    ax.set_ylabel(r'$\log_{10}$'+ytext, fontsize = plot_init.axlabel_size)
+    ax.set_xlabel(r'$\log_{10}$'+xtext, fontsize = plot_init.axlabel_size)
     ax.tick_params(axis="y", direction="in", labelcolor='black')
     ax.set_ylim(0.1,4.4)
     plot_init.tickers(ax, 'plot')

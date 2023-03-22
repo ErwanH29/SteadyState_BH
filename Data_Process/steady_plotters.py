@@ -36,7 +36,7 @@ class stability_plotters(object):
             return slope*(xval**0.5*np.log(log_c*xval))**beta
             
         plot_ini = plotter_setup()
-
+        
         folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
         colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         dirH = '/data/Hermite/chaotic_simulation/*'
@@ -87,7 +87,7 @@ class stability_plotters(object):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
         rng = np.random.default_rng()
-        data_size = [30, 40, 50, 58]
+        data_size = [30, 40, 50, 55]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
         for int_ in range(5):
@@ -134,9 +134,9 @@ class stability_plotters(object):
         hist_tails = np.concatenate((temp_data[0], temp_data[1]))
 
         fig, ax = plt.subplots()
-        ax.set_title(r'$\langle t_{\rm{dis}} \rangle$ for $N = 60, N = 70$')
-        ax.set_xlabel(r'Time [Myr]')
-        ax.set_ylabel(r'Counts')
+        ax.set_title(r'$\langle t_{\rm{dis}} \rangle$ for $N = 60, N = 70$', fontsize = plot_ini.tilabel_size)
+        ax.set_xlabel(r'Time [Myr]', fontsize = plot_ini.axlabel_size)
+        ax.set_ylabel(r'Counts', fontsize = plot_ini.axlabel_size)
         ax.text((N_parti_avg[0][5]+N_parti_avg[0][6])/2 + 0.3, 17, r'$\langle t_{\rm{dis}}\rangle$', rotation = 270)
         ax.axvline((N_parti_avg[0][5]+N_parti_avg[0][6])/2, color = 'black', linestyle = ':')
         n1, bins, patches = ax.hist(hist_tails, 30, histtype='step', color = 'black')
@@ -148,7 +148,7 @@ class stability_plotters(object):
         ##### GRX vs. Hermite #####
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]') 
+        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]', fontsize = plot_ini.axlabel_size) 
         ax1.set_xlim(5,105)
         for int_ in range(2):
             for j, xpos in enumerate(pop[int_][pop[int_] % 10 == 0]):
@@ -183,7 +183,7 @@ class stability_plotters(object):
         ##### Make sure to fix y lims to be the same as Hermite vs. GRX plot
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]') 
+        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]', fontsize = plot_ini.axlabel_size)
         ax1.set_xlim(5,105)
         for int_ in range(3):
             int_ += 2
@@ -218,8 +218,8 @@ class stability_plotters(object):
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 50$']
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_title(r'$N_{\rm{sims}}$ vs. $\langle t_{\rm{dis}}\rangle$')
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}} \rangle$ [Myr]') 
+        ax1.set_title(r'$N_{\rm{sims}}$ vs. $\langle t_{\rm{dis}}\rangle$', fontsize = plot_ini.tilabel_size)
+        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}} \rangle$ [Myr]', fontsize = plot_ini.axlabel_size) 
         ax1.set_xlim(5,45)
         for rng_ in range(len(data_size)):
             for j, xpos in enumerate(pop[1]):
@@ -248,19 +248,19 @@ class stability_plotters(object):
             fig, ax = plt.subplots()
             if data_ == 0:
                 title_string = 'Hermite'
-                ax.set_title(title_string+str('\n')+labelsD[0])
+                ax.set_title(title_string+str('\n')+labelsD[0], fontsize = plot_ini.tilabel_size)
                 plot_ini.tickers_pop(ax, pop[0], 'Hermite')
                 ax.set_xlim(6, 105)
             else:
                 title_string = 'GRX'
-                ax.set_title(title_string+str('\n')+labelsD[iterf+1])
+                ax.set_title(title_string+str('\n')+labelsD[iterf+1], plot_ini.tilabel_size)
                 plot_ini.tickers_pop(ax, pop[0], 'GRX')
                 ax.set_xlim(6, 45)
                 if data_ > 1:
                     iterf += 1
             print(folders[iterf])
             print(pop[data_], avg_deviate[data_])
-            ax.set_ylabel(r'$\langle (t_{\rm{dis}} - \sigma_{\rm{dis}}) \rangle$ [Myr]')
+            ax.set_ylabel(r'$\langle (t_{\rm{dis}} - \sigma_{\rm{dis}}) \rangle$ [Myr]', fontsize = plot_ini.axlabel_size)
             x_arr = np.linspace(10, max(pop[data_]), 100)
             smooth_curve = make_interp_spline(pop[data_], avg_deviate[data_])
             ax.plot(x_arr, smooth_curve(x_arr), color = colors[data_], zorder = 1)

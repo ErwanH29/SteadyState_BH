@@ -582,8 +582,8 @@ class sustainable_sys(object):
                 ax = fig.add_subplot(gs[1, 0])
                 ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
                 ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
-                ax.set_xlabel(r'$\log_{10}f$ [Hz]')
-                ax.set_ylabel(r'$\log_{10}h$')
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
+                ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
                 
                 tertiary = False
                 if len(self.GWfreq_ter[sim_]) > 0:
@@ -633,8 +633,8 @@ class sustainable_sys(object):
                                       ax, ax1, ax2, 'Hard Binary', 'Hierarchical',
                                       tertiary, False)
 
-                ax.set_xlabel(r'$\log_{10}f$ [Hz]')
-                ax.set_ylabel(r'$\log_{10}h$')
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
+                ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
                 for ax_ in [ax, ax1, ax2]:
                     plot_ini.tickers(ax_, 'plot')
                 ax.set_ylim(-35, -12.2)
@@ -685,8 +685,8 @@ class sustainable_sys(object):
                 ax.scatter(np.log10(GWfreq_terIMBH), np.log10(GWstra_terIMBH), c = GWtime_terIMBH)
             plt.colorbar(colour_axes, ax=ax, label = r'$t_{\rm{sys}}$ [Myr]')
             
-            ax.set_xlabel(r'$\log_{10}f$ [Hz]')
-            ax.set_ylabel(r'$\log_{10}h$')
+            ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
+            ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
             plot_ini.tickers(ax, 'plot')
             ax.set_ylim(-35, -12.2)
             ax.set_xlim(-15, 0.1)
@@ -737,9 +737,9 @@ class sustainable_sys(object):
                 y_fit = [(a)*i for i in xtemp]
                 print(a)
 
-                axes[int_].set_title(integrator[int_])
-                axes[int_].set_xlabel(r'IMBH Population [$N$]')
-                axes[int_].set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$')
+                axes[int_].set_title(integrator[int_], fontsize = plot_ini.tilabel_size)
+                axes[int_].set_xlabel(r'IMBH Population [$N$]', fontsize = plot_ini.axlabel_size)
+                axes[int_].set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$', fontsize = plot_ini.axlabel_size)
                 axes[int_].set_ylim(-7, 0)
                 #axes[int_].plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
                 axes[int_].plot(xtemp, y_fit, color = 'black', linestyle = '-.', zorder = 1)
@@ -749,7 +749,7 @@ class sustainable_sys(object):
                 plot_ini.tickers_pop(axes[int_], self.pop[1], 'GRX')
             ax2.legend()
             plt.colorbar(colour_axes, ax=axes[int_], label = r'$\langle N_{\rm{sys}} \rangle$ ')
-            plt.savefig('figures/binary_hierarchical/sys_formation_N_plot_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
+            plt.savefig('figures/binary_hierarchical/sys_form_HermGRX'+fold_+'.pdf', dpi=300, bbox_inches='tight')
 
             iterf += 1
 
@@ -762,9 +762,9 @@ class sustainable_sys(object):
         integrators = ['Hermite', 'GRX']
 
         fig, ax = plt.subplots()
-        ax.set_title('Average System Counts')
-        ax.set_xlabel(r'IMBH Population [$N$]')
-        ax.set_ylabel(r'$\langle N\rangle$')
+        ax.set_title('Average System Counts', fontsize = plot_ini.tilabel_size)
+        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = plot_ini.axlabel_size)
+        ax.set_ylabel(r'$\langle N\rangle$', fontsize = plot_ini.axlabel_size)
         for int_ in range(2):
             ini_pop = np.unique(self.pop[int_])
             ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = integrators[int_], zorder = 2)
@@ -776,9 +776,9 @@ class sustainable_sys(object):
         plt.clf() 
 
         fig, ax = plt.subplots()
-        ax.set_title('Average System Counts')
-        ax.set_xlabel(r'IMBH Population [$N$]')
-        ax.set_ylabel(r'$\langle N\rangle$')
+        ax.set_title('Average System Counts', fontsize = plot_ini.tilabel_size)
+        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = plot_ini.axlabel_size)
+        ax.set_ylabel(r'$\langle N\rangle$', fontsize = plot_ini.axlabel_size)
         iterf = 0
         for fold_ in self.folders:
             integrator, drange = folder_loop(iterf)

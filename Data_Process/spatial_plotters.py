@@ -80,8 +80,8 @@ def ecc_semi_histogram(integrator):
     plt.clf()
     
     fig, ax = plt.subplots()
-    ax.set_xlabel(r'$\log_{10}a$ [pc]')
-    ax.set_ylabel(r'$\log_{10}e$')
+    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = plot_ini.axlabel_size)
+    ax.set_ylabel(r'$\log_{10}e$', fontsize = plot_ini.axlabel_size)
     bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
@@ -290,10 +290,10 @@ def global_properties():
         axL1 = fig.add_subplot(gs[0, 0:2], sharex=axL)
         axR = fig.add_subplot(gs[1, 2:])
         axR1 = fig.add_subplot(gs[0, 2:], sharex=axR)
-        axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$')
-        axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]')
-        axL.set_ylabel(r'$\log_{10}$(CDF)')
-        axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
+        axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$', fontsize = plot_ini.axlabel_size)
+        axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]', fontsize = plot_ini.axlabel_size)
+        axL.set_ylabel(r'$\log_{10}$(CDF)', fontsize = plot_ini.axlabel_size)
+        axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
 
         for int_ in range(2):
             ecc_sort = np.sort(eccSMBH_flat[int_])
@@ -389,8 +389,8 @@ def spatial_plotter(int_string):
                     ax3 = fig.add_subplot(323)
                     ax4 = fig.add_subplot(324)
                     
-                    ax1.set_title('Overall System')
-                    ax2.set_title('Energy Error vs. Time')
+                    ax1.set_title('Overall System', fontsize = plot_ini.tilabel_size)
+                    ax2.set_title('Energy Error vs. Time', fontsize = plot_ini.tilabel_size)
                     ax1.xaxis.set_major_locator(plt.MaxNLocator(3))
                     ax1.yaxis.set_major_locator(plt.MaxNLocator(3))
                     for ax_ in [ax1, ax2, ax3, ax4]:
@@ -408,14 +408,14 @@ def spatial_plotter(int_string):
                     ax4.set_ylim(-abs(zaxis_lim), zaxis_lim)
                     ax2.set_yscale('log')
 
-                    ax1.set_xlabel(r'$x$ [pc]')
-                    ax1.set_ylabel(r'$y$ [pc]')
-                    ax2.set_xlabel(r'Time [Myr]')
-                    ax2.set_ylabel(r'$\frac{|E(t)-E_0|}{|E_0|}$')
-                    ax3.set_xlabel(r'$x$ [pc]')
-                    ax3.set_ylabel(r'$z$ [pc]')
-                    ax4.set_xlabel(r'$y$ [pc]')
-                    ax4.set_ylabel(r'$z$ [pc]')
+                    ax1.set_xlabel(r'$x$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax1.set_ylabel(r'$y$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax2.set_xlabel(r'Time [Myr]', fontsize = plot_ini.axlabel_size)
+                    ax2.set_ylabel(r'$\frac{|E(t)-E_0|}{|E_0|}$', fontsize = plot_ini.axlabel_size)
+                    ax3.set_xlabel(r'$x$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax3.set_ylabel(r'$z$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax4.set_xlabel(r'$y$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax4.set_ylabel(r'$z$ [pc]', fontsize = plot_ini.axlabel_size)
                     iter = -1
                     
                     for i in range(len(ptracker)):
@@ -471,9 +471,9 @@ def spatial_plotter(int_string):
                     ax3D.xaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
                     ax3D.yaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
                     ax3D.zaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
-                    ax3D.set_xlabel(r'$x$ [pc]')
-                    ax3D.set_ylabel(r'$y$ [pc]')
-                    ax3D.set_zlabel(r'$z$ [pc]')
+                    ax3D.set_xlabel(r'$x$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax3D.set_ylabel(r'$y$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax3D.set_zlabel(r'$z$ [pc]', fontsize = plot_ini.axlabel_size)
                     ax3D.view_init(30, 160)
                     plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_3D_'+str(iter_file)+'.pdf', dpi=300, bbox_inches='tight')
 
