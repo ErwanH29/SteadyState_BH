@@ -39,7 +39,9 @@ def cmove_dist(z):
 
 def plotter():
 
-    plot_init = plotter_setup()
+    plot_ini = plotter_setup()
+    axlabel_size, tick_size = plot_ini.font_size()
+        
 
     # Data from Furlong et al. (2015)
     merger_rate = np.linspace(10**-3, 1, 100) #0.9/7 -> 7 / 0.9 merge per Myr
@@ -61,12 +63,11 @@ def plotter():
     xtext = r'$\Gamma_{\rm{infall}}$ [Myr$^{-1}$]'
     
     fig, ax = plt.subplots()
-    ax.set_title(r'IMBH Infall rate vs. Cumulative Merger Rate ($z \leq 3$)', fontsize = plot_init.tilabel_size)
-    ax.set_ylabel(r'$\log_{10}$'+ytext, fontsize = plot_init.axlabel_size)
-    ax.set_xlabel(r'$\log_{10}$'+xtext, fontsize = plot_init.axlabel_size)
+    ax.set_ylabel(r'$\log_{10}$'+ytext, fontsize = axlabel_size)
+    ax.set_xlabel(r'$\log_{10}$'+xtext, fontsize = axlabel_size)
     ax.tick_params(axis="y", direction="in", labelcolor='black')
     ax.set_ylim(0.1,4.4)
-    plot_init.tickers(ax, 'plot')
+    plot_ini.tickers(ax, 'plot')
 
     cum_merger = [ ]
     for rate_ in merger_rate:

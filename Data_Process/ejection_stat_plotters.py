@@ -12,10 +12,17 @@ class ejection_stats(object):
     """
 
     def __init__(self):
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
-        self.colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
+
+
+        self.fcrop = False
+        if (self.fcrop):
+            self.frange = 1
+        else:
+            self.frange = 3
 
     def new_data_extractor(self):
         """
@@ -23,7 +30,7 @@ class ejection_stats(object):
         """
 
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
@@ -78,6 +85,8 @@ class ejection_stats(object):
         """
 
         plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+        
         MW_code = MWpotentialBovy2015()
         vesc_MW = (np.sqrt(2)*MW_code.circular_velocity(0.4 | units.parsec) + np.sqrt(2*constants.G*(4e6 | units.MSun)/(0.1 | units.parsec))).value_in(units.kms)
         configD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
@@ -86,7 +95,7 @@ class ejection_stats(object):
                    r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
 
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             print('Plotting data for: ', fold_)
             self.combine_data(fold_)
             vels = [ ]
@@ -137,10 +146,9 @@ class ejection_stats(object):
                     fig = plt.figure(figsize=(5, 8))
                     ax1 = fig.add_subplot(211)
                     ax2 = fig.add_subplot(212)
-                    ax1.set_title(integrator[int_]+'\n'+configD[iterf], fontsize = plot_ini.tilabel_size)
-                    ax1.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = plot_ini.axlabel_size)
-                    ax2.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
-                    ax1.set_ylabel(r'$\langle v_{\rm{ejec}} \rangle$ [km s$^{-1}$]', fontsize = plot_ini.axlabel_size)
+                    ax1.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = axlabel_size)
+                    ax2.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
+                    ax1.set_ylabel(r'$\langle v_{\rm{ejec}} \rangle$ [km s$^{-1}$]', fontsize = axlabel_size)
                     ax2.axvline(vesc_MW, linestyle = ':', color = 'black')
                     ax2.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270)
 
@@ -173,6 +181,8 @@ class event_tracker(object):
     def __init__(self):
 
         plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+        
         colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
         folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
         labelsI = ['Hermite', 'GRX']
@@ -191,8 +201,7 @@ class event_tracker(object):
         frac_merge = [[ ], [ ]]
 
         fig, ax = plt.subplots()
-        ax.set_title(r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6} M_{\odot}$', fontsize = plot_ini.tilabel_size)
-        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = plot_ini.axlabel_size)
+        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = axlabel_size)
         ax.set_ylim(0, 1.05)
         for int_ in range(2):
             for file_ in range(len(chaos_data[int_])):
@@ -211,7 +220,7 @@ class event_tracker(object):
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_HermGRX.pdf', dpi=300, bbox_inches='tight')
 
         fig, ax = plt.subplots()
-        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = plot_ini.axlabel_size)
+        ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = axlabel_size)
         ax.set_ylim(0,1.05)
         init_pop = [[ ], [ ], [ ], [ ]]
         merger = [[ ], [ ], [ ], [ ]]

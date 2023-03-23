@@ -30,9 +30,15 @@ class gw_calcs(object):
         self.H0 = 67.4 #From arXiv:1807.06209
         self.tH = (self.H0*(3.2408*10**-20))**-1 * 1/(3600*365*24*10**6) | units.Myr
         self.integrator = ['Hermite', 'GRX']
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
-        self.colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
-        self.distance = [r'$\langle r_c = 0.25 \rangle$', r'$\langle r_c = 0.50 \rangle$']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
+        self.distance = [r'$\langle r_c = 0.25 \rangle$']
+
+        self.fcrop = True
+        if (self.fcrop):
+            self.frange = 1
+        else:
+            self.frange = 3
         
     def new_data_extractor(self):
         """
@@ -43,17 +49,17 @@ class gw_calcs(object):
 
         iterf = 0
         no_files = 40
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]: #tGW only care for one parameter space
             tcropG = 59
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')) #HARDCODED - CHANGE DEPENDING ON DATA PROCESSED
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            filename[0] = filename[0][::-1]
-            filenameC[0] = filenameC[0][::-1]
-            #filename[0] = filename[0][47:]
-            #filenameC[0] = filenameC[0][47:]
-            filename[0] = filename[0][283:]
-            filenameC[0] = filenameC[0][283:]
+            #filename[0] = filename[0][::-1]
+            #filenameC[0] = filenameC[0][::-1]
+            filename[0] = filename[0][47:]
+            filenameC[0] = filenameC[0][47:]
+            #filename[0] = filename[0][289:]
+            #filenameC[0] = filenameC[0][289:]
             pop_checker = [0]
             no_samples = 0
             for int_ in range(drange):
@@ -74,9 +80,8 @@ class gw_calcs(object):
                                         SMBH_sys_mass = data.iloc[0][0][1]
 
                                         for parti_ in range(np.shape(data)[0]):
-                                            count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*'))+1000
+                                            count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*'))+3000
                                             mass1 = data.iloc[parti_][0][1]
-                                            tot_mass = SMBH_sys_mass + mass1
 
                                             mass_IMBH = []
                                             semi_SMBH_GW_indiv = []
@@ -198,7 +203,7 @@ class gw_calcs(object):
                                                                         'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
                                                                         'Tertiary SMBH Event': SMBH_t_event})
                                                 stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
 
             iterf += 1
 
@@ -455,6 +460,7 @@ class gw_calcs(object):
         """
 
         plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
 
         x1 = np.asarray(x1)
         x2 = np.asarray(x2)
@@ -500,11 +506,11 @@ class gw_calcs(object):
             ax_histh.fill_between(kdeh_IMBH.density, kdeh_IMBH.support, alpha = 0.35, color = 'orange')
            
         ax_histf.set_ylim(0, 1.05)
-        ax_histf.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
-        ax_histf.legend()
+        ax_histf.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
+        ax_histf.legend(prop={'size': axlabel_size})
 
         ax_histh.set_xlim(0, 1.05) 
-        ax_histh.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
+        ax_histh.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
 
         # LISA
         lisa = li.LISA() 
@@ -535,7 +541,9 @@ class gw_calcs(object):
         Separates events depending on IMBH-IMBH or SMBH-IMBH.
         """
 
-        plot_init = plotter_setup()
+        plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+        
         pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
         print('Plotting Orbital Parameter Diagram')
 
@@ -544,7 +552,7 @@ class gw_calcs(object):
         ymin = -8
 
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             if iterf == 0:
                 drange = 2
                 integrator = ['Hermite', 'GRX']
@@ -622,12 +630,12 @@ class gw_calcs(object):
             ax2.tick_params(axis="y", labelleft=False)
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, 0)
-            ax.set_ylabel(r'$\log_{10}(1-e)$', fontsize = plot_init.axlabel_size)
-            ax.set_xlabel(r'$\log_{10} a$ [pc]', fontsize = plot_init.axlabel_size)
+            ax.set_ylabel(r'$\log_{10}(1-e)$', fontsize = plot_ini.axlabel_size)
+            ax.set_xlabel(r'$\log_{10} a$ [pc]', fontsize = plot_ini.axlabel_size)
             ax1.set_ylim(0,1.05)
-            ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_init.axlabel_size)
+            ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
             ax2.set_xlim(0,1.05)
-            ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_init.axlabel_size)
+            ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
             self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_SMBH[0][0])
             ax.text(-5, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
             ax.text(-5.7, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
@@ -649,7 +657,7 @@ class gw_calcs(object):
                 ax1.fill_between(kdef_SMBH.support, (kdef_SMBH.density), alpha = 0.35, color = self.colors[int_+iterf])
 
             for ax_ in [ax, ax1, ax2]:
-                plot_init.tickers(ax_, 'plot')
+                plot_ini.tickers(ax_, 'plot')
             ax1.legend()
             ax.plot(x_arr, const_tgw2, color = 'black', zorder = 6)
             ax.text(-2.5, -1, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = 'medium', rotation=self.text_angle+27, color = 'white', 
@@ -670,12 +678,12 @@ class gw_calcs(object):
             ax2.tick_params(axis="y", labelleft=False)
             ax.set_xlim(xmin, xmax)
             ax.set_ylim(ymin, 0)
-            ax.set_ylabel(r'$\log_{10}(1-e)$', fontsize = plot_init.axlabel_size)
-            ax.set_xlabel(r'$\log_{10} a$ [pc]', fontsize = plot_init.axlabel_size)
+            ax.set_ylabel(r'$\log_{10}(1-e)$', fontsize = plot_ini.axlabel_size)
+            ax.set_xlabel(r'$\log_{10} a$ [pc]', fontsize = plot_ini.axlabel_size)
             ax1.set_ylim(0,1.05)
-            ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_init.axlabel_size)
+            ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
             ax2.set_xlim(0,1.05)
-            ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_init.axlabel_size)
+            ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
 
             ax.text(-6.1, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
             ax.text(-6.8, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
@@ -699,7 +707,7 @@ class gw_calcs(object):
 
             ax1.legend()
             for ax_ in [ax, ax2, ax2]:
-                plot_init.tickers(ax_, 'plot')
+                plot_ini.tickers(ax_, 'plot')
             ax.plot(x_arr, const_tgw, color = 'black', zorder = 6)
             ax.text(-2.55, -3, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+27, color = 'white', 
                     path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
@@ -716,11 +724,13 @@ class gw_calcs(object):
         """
         
         plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+        
         pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
 
         print('Plotting Strain Frequency Diagram')
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             if iterf == 0:
                 drange = 2
                 integrator = ['Hermite', 'GRX']
@@ -779,9 +789,8 @@ class gw_calcs(object):
                                   IMBH_freq, IMBH_strain, 
                                   ax, ax1, ax2, 'SMBH-IMBH', 'IMBH-IMBH',
                                   True, True)
-                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
-                ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
-                ax1.set_title(integrator[int_], fontsize = plot_ini.tilabel_size)
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = axlabel_size)
+                ax.set_ylabel(r'$\log_{10}h$', fontsize = axlabel_size)
                 for ax_ in [ax, ax1, ax2]:
                     plot_ini.tickers(ax_, 'plot')
                 ax.set_xlim(-12.5, 0.1)

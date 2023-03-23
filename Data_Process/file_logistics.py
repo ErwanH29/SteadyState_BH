@@ -1,17 +1,17 @@
 from amuse.lab import *
 import numpy as np
 import glob
-import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import natsort
 import os
 import pickle as pkl
 
 class plotter_setup(object):
-    def init(self):
-        self.axlabel_size = 13
-        self.tilabel_size = 16
-        self.tick_size = 11
+    def font_size(self):
+        axlabel_size = 13
+        tick_size = 11
+
+        return axlabel_size, tick_size
 
     def tickers(self, ax, plot_type):
         """

@@ -5,6 +5,8 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import statsmodels.api as sm
 import warnings
 
@@ -28,6 +30,8 @@ def ecc_semi_histogram(integrator):
     """
     
     plot_ini = plotter_setup()
+    axlabel_size, tick_size = plot_ini.font_size()
+
     data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+integrator+'/particle_trajectory/*'))
 
     SMBH_ecca = [ ]
@@ -75,13 +79,41 @@ def ecc_semi_histogram(integrator):
     with open('figures/system_evolution/output/ecc_events_ALL.txt', 'w') as file:
         file.write('For '+integrator+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
 
-    ##### All eccentricity vs. semimajor axis #####
+    """##### All eccentricity vs. semimajor axis #####
     n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 50, range=([-7.88, 2.5], [-4.3, 8]))
     plt.clf()
     
     fig, ax = plt.subplots()
-    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = plot_ini.axlabel_size)
-    ax.set_ylabel(r'$\log_{10}e$', fontsize = plot_ini.axlabel_size)
+    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = axlabel_size)
+    ax.set_ylabel(r'$\log_{10}e$', fontsize = axlabel_size)
+    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
+    bin2d_sim /= np.max(bin2d_sim)
+    extent = [-7, 2, -2, 6]
+    contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
+    ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
+    ax.scatter(-1, -0.75, color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
+    ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
+    contours = ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
+                          linewidths=1.25, cmap='binary', levels = 6, zorder = 2)
+    ax.clabel(contours, inline=True, fontsize=axlabel_size)
+    ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
+    ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
+    plot_ini.tickers(ax, 'histogram')
+    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+    ax.legend() 
+    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
+    plt.clf()"""
+
+    data_set = pd.DataFrame()
+    for i in range(len(IMBH_sema)):
+        arr = {'sem': IMBH_sema[i], 'ecc': IMBH_ecca[i]}
+        raw_data = pd.Series(data=arr, index=['sem', 'ecc'])
+        data_set = data_set.append(raw_data, ignore_index = True)
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = axlabel_size)
+    ax.set_ylabel(r'$\log_{10}e$', fontsize = axlabel_size)
     bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
@@ -89,15 +121,15 @@ def ecc_semi_histogram(integrator):
     ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
     ax.scatter(SMBH_sema[25], SMBH_ecca[25], color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
     ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
-    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
-               linewidths=1.25, cmap='binary', levels = 6, label = 'IMBH-IMBH', zorder = 2)
-    ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center')
-    ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center')
+    sns.kdeplot(data=data_set, x='sem', y='ecc', levels = 6, cmap='binary')
+    #ax.clabel(contours, inline=True, fontsize=axlabel_size)
+    ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
+    ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
     plot_ini.tickers(ax, 'histogram')
     ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
     ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
     ax.legend() 
-    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6_TEST.png', dpi=300, bbox_inches='tight')
     plt.clf()
 
 def global_properties():
@@ -106,6 +138,7 @@ def global_properties():
     """
     
     plot_ini = plotter_setup()
+    
     pop_lower = int(input('What should be the lower limit of the population sampled? '))
     pop_upper = int(input('What should be the upper limit of the population sampled? '))
     integrator = ['Hermite', 'GRX']
@@ -290,10 +323,10 @@ def global_properties():
         axL1 = fig.add_subplot(gs[0, 0:2], sharex=axL)
         axR = fig.add_subplot(gs[1, 2:])
         axR1 = fig.add_subplot(gs[0, 2:], sharex=axR)
-        axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$', fontsize = plot_ini.axlabel_size)
-        axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]', fontsize = plot_ini.axlabel_size)
-        axL.set_ylabel(r'$\log_{10}$(CDF)', fontsize = plot_ini.axlabel_size)
-        axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = plot_ini.axlabel_size)
+        axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$')
+        axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]')
+        axL.set_ylabel(r'$\log_{10}$(CDF)')
+        axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
 
         for int_ in range(2):
             ecc_sort = np.sort(eccSMBH_flat[int_])
@@ -334,6 +367,7 @@ def spatial_plotter(int_string):
     """
 
     plot_ini = plotter_setup()
+    axlabel_size, tick_size = plot_ini.font_size()
 
     ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
     etracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/energy/*'))
@@ -389,8 +423,6 @@ def spatial_plotter(int_string):
                     ax3 = fig.add_subplot(323)
                     ax4 = fig.add_subplot(324)
                     
-                    ax1.set_title('Overall System', fontsize = plot_ini.tilabel_size)
-                    ax2.set_title('Energy Error vs. Time', fontsize = plot_ini.tilabel_size)
                     ax1.xaxis.set_major_locator(plt.MaxNLocator(3))
                     ax1.yaxis.set_major_locator(plt.MaxNLocator(3))
                     for ax_ in [ax1, ax2, ax3, ax4]:
@@ -408,14 +440,14 @@ def spatial_plotter(int_string):
                     ax4.set_ylim(-abs(zaxis_lim), zaxis_lim)
                     ax2.set_yscale('log')
 
-                    ax1.set_xlabel(r'$x$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax1.set_ylabel(r'$y$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax2.set_xlabel(r'Time [Myr]', fontsize = plot_ini.axlabel_size)
-                    ax2.set_ylabel(r'$\frac{|E(t)-E_0|}{|E_0|}$', fontsize = plot_ini.axlabel_size)
-                    ax3.set_xlabel(r'$x$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax3.set_ylabel(r'$z$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax4.set_xlabel(r'$y$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax4.set_ylabel(r'$z$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax1.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
+                    ax1.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
+                    ax2.set_xlabel(r'Time [Myr]', fontsize = axlabel_size)
+                    ax2.set_ylabel(r'$\frac{|E(t)-E_0|}{|E_0|}$', fontsize = axlabel_size)
+                    ax3.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
+                    ax3.set_ylabel(r'$z$ [pc]', fontsize = axlabel_size)
+                    ax4.set_xlabel(r'$y$ [pc]', fontsize = axlabel_size)
+                    ax4.set_ylabel(r'$z$ [pc]', fontsize = axlabel_size)
                     iter = -1
                     
                     for i in range(len(ptracker)):
@@ -471,9 +503,9 @@ def spatial_plotter(int_string):
                     ax3D.xaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
                     ax3D.yaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
                     ax3D.zaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
-                    ax3D.set_xlabel(r'$x$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax3D.set_ylabel(r'$y$ [pc]', fontsize = plot_ini.axlabel_size)
-                    ax3D.set_zlabel(r'$z$ [pc]', fontsize = plot_ini.axlabel_size)
+                    ax3D.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
+                    ax3D.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
+                    ax3D.set_zlabel(r'$z$ [pc]', fontsize = axlabel_size)
                     ax3D.view_init(30, 160)
                     plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_3D_'+str(iter_file)+'.pdf', dpi=300, bbox_inches='tight')
 

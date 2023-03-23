@@ -17,15 +17,19 @@ class sustainable_sys(object):
 
     def __init__(self):
         warnings.filterwarnings("ignore", category=RuntimeWarning)
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
-        self.colors = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
-        self.labels = [r'$r_c = 0.25$ pc', r'$r_c = 0.50$ pc']
-        self.labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
-                        r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
-                        r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$',
-                        r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
+        self.labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
+                        r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
+                        r'$M_{\rm{SMBH}} = 4\times10^{8}M_{\odot}$']
         self.legend_id = [3, 4]
         self.vdisp = 150000
+
+        self.fcrop = False
+        if (self.fcrop):
+            self.frange = 1
+        else:
+            self.frange = 3
 
     def new_data_extractor(self):
         """
@@ -38,7 +42,7 @@ class sustainable_sys(object):
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
         iterf = 0
         count = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             print('Files for: ', fold_)
             tcropG = 59
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
@@ -303,7 +307,7 @@ class sustainable_sys(object):
         self.tot_sim = [[ ], [ ], [ ], [ ], [ ]]
 
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             system_data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/*'))
             for file_ in range(len(system_data)):
                 with open(system_data[file_], 'rb') as input_file:
@@ -383,7 +387,7 @@ class sustainable_sys(object):
                 [40, 40, 40, 40, 40, 40, 40]]   #TO CHANGE
 
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             integrator, drange = folder_loop(iterf)
             with open('figures/binary_hierarchical/output/system_summary_'+fold_+'.txt', 'w') as file:
                 for int_ in range(drange):
@@ -542,7 +546,7 @@ class sustainable_sys(object):
             iterf += 1
 
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             integrator, drange = folder_loop(iterf)
             for int_ in range(drange):
                 sim_ = folder_data_loop(iterf, int_)
@@ -565,12 +569,13 @@ class sustainable_sys(object):
         
         GW_calcs = gw_calcs()
         plot_ini = plotter_setup()
+        axlabel_size, ticklabel_size = plot_ini.font_size()
 
         plt.clf()
 
         ####### PLOT FOR ALL ########
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             integrator, drange = folder_loop(iterf)
 
             for int_ in range(drange):
@@ -582,8 +587,8 @@ class sustainable_sys(object):
                 ax = fig.add_subplot(gs[1, 0])
                 ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
                 ax2 = fig.add_subplot(gs[1, 1], sharey=ax)
-                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
-                ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = axlabel_size)
+                ax.set_ylabel(r'$\log_{10}h$', fontsize = axlabel_size)
                 
                 tertiary = False
                 if len(self.GWfreq_ter[sim_]) > 0:
@@ -599,7 +604,7 @@ class sustainable_sys(object):
                     ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
                 ax.set_ylim(-35, -12.2)
                 ax.set_xlim(-15, 0.3)
-                plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'GW_scatter_diagram.png', dpi = 500, bbox_inches='tight')
+                plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'GW_scatter_allbins__diagram.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
 
                 # Reactivate with full data set
@@ -633,8 +638,8 @@ class sustainable_sys(object):
                                       ax, ax1, ax2, 'Hard Binary', 'Hierarchical',
                                       tertiary, False)
 
-                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
-                ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
+                ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = axlabel_size)
+                ax.set_ylabel(r'$\log_{10}h$', fontsize = axlabel_size)
                 for ax_ in [ax, ax1, ax2]:
                     plot_ini.tickers(ax_, 'plot')
                 ax.set_ylim(-35, -12.2)
@@ -649,6 +654,8 @@ class sustainable_sys(object):
         """
 
         plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+        
         integrators = ['Hermite', 'GRX']
 
         x_temp = np.linspace(10**-5, 1, 1000)
@@ -685,8 +692,8 @@ class sustainable_sys(object):
                 ax.scatter(np.log10(GWfreq_terIMBH), np.log10(GWstra_terIMBH), c = GWtime_terIMBH)
             plt.colorbar(colour_axes, ax=ax, label = r'$t_{\rm{sys}}$ [Myr]')
             
-            ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = plot_ini.axlabel_size)
-            ax.set_ylabel(r'$\log_{10}h$', fontsize = plot_ini.axlabel_size)
+            ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = axlabel_size)
+            ax.set_ylabel(r'$\log_{10}h$', fontsize = axlabel_size)
             plot_ini.tickers(ax, 'plot')
             ax.set_ylim(-35, -12.2)
             ax.set_xlim(-15, 0.1)
@@ -701,57 +708,65 @@ class sustainable_sys(object):
             return slope * (xval)
 
         plot_ini = plotter_setup()
-        mtick_formatter = mtick.FormatStrFormatter('%0.3f')
+        axlabel_size, tick_size = plot_ini.font_size()
+
         integrator = ['Hermite', 'GRX']
 
         normalise_p1 = plt.Normalize(0, (max(self.binary_systems[0])))#, max(self.binary_systems[1])))
         normalise_p2 = plt.Normalize(10, 40)
+
+        xtemp = np.linspace(10, 40, 1000)
+
+        for sim_ in range(2):
+            ini_pop = np.unique(self.pop[sim_])
+
+            fig, ax = plt.subplots()
+            best_fit = np.polyfit(ini_pop, np.log10(self.binary_occupation[sim_]), 1)
+            curve = np.poly1d(best_fit)
+            print('Factor:       ', best_fit[0])
+            print('y-intercept:  ', best_fit[1])
+
+            params = curve_fit(log_fit, ini_pop, np.log10(self.binary_occupation[sim_]))
+            [a] = params[0]
+            y_fit = [(a)*i for i in xtemp]
+            print(a)
+
+            ax.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$', fontsize = axlabel_size)
+            ax.set_ylim(-7, 0)
+            #ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
+            ax.plot(xtemp, y_fit, color = 'black', linestyle = '-.', zorder = 1)
+            colour_axes = ax.scatter(ini_pop, np.log10(self.binary_occupation[sim_]), edgecolors  = 'black', c = (self.binary_systems[sim_]), norm = (normalise_p1), label = 'Stable Binary', zorder = 2)
+            ax.scatter(ini_pop, np.log10(self.tertiary_occupation[sim_]), edgecolors  = 'black', c = (self.tertiary_systems[sim_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
+            print('Number of tertiary: ', self.tertiary_systems[sim_])
+            plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
+            ax.legend()
+            plt.colorbar(colour_axes, ax=ax, label = r'$\langle N_{\rm{sys}} \rangle$ ')
+            plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[sim_]+'_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
     
-        iterf = 0
-        for fold_ in self.folders:
-            if iterf == 0:
-                fig = plt.figure(figsize=(11, 4))
-                ax1 = fig.add_subplot(121)
-                ax2 = fig.add_subplot(122)
-                axes = [ax1, ax2]
-            else:
-                fig, ax = plt.subplots()
-                axes = [ax]
+        for sim_ in range(2):
+            ini_pop = np.unique(self.pop[sim_+2])
 
-            integrator, drange = folder_loop(iterf)
-            for int_ in range(drange):
-                if iterf == 0:
-                    sim_ = int_
-                else:
-                    sim_ = int_ + (1+iterf)
-                ini_pop = np.unique(self.pop[sim_])
+            fig, ax = plt.subplots()
+            best_fit = np.polyfit(ini_pop, np.log10(self.binary_occupation[sim_+2]), 1)
+            curve = np.poly1d(best_fit)
+            print('Factor:       ', best_fit[0])
+            print('y-intercept:  ', best_fit[1])
+            params = curve_fit(log_fit, ini_pop, np.log10(self.binary_occupation[sim_]))
+            [a] = params[0]
+            y_fit_data = [(a)*i for i in xtemp]
+            print(a)
 
-                xtemp = np.linspace(10, 40, 1000)
-                best_fit = np.polyfit(ini_pop, np.log10(self.binary_occupation[sim_]), 1)
-                curve = np.poly1d(best_fit)
-                print('Factor:       ', best_fit[0])
-                print('y-intercept:  ', best_fit[1])
-
-                params = curve_fit(log_fit, ini_pop, np.log10(self.binary_occupation[sim_]))
-                [a] = params[0]
-                y_fit = [(a)*i for i in xtemp]
-                print(a)
-
-                axes[int_].set_title(integrator[int_], fontsize = plot_ini.tilabel_size)
-                axes[int_].set_xlabel(r'IMBH Population [$N$]', fontsize = plot_ini.axlabel_size)
-                axes[int_].set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$', fontsize = plot_ini.axlabel_size)
-                axes[int_].set_ylim(-7, 0)
-                #axes[int_].plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
-                axes[int_].plot(xtemp, y_fit, color = 'black', linestyle = '-.', zorder = 1)
-                colour_axes = axes[int_].scatter(ini_pop, np.log10(self.binary_occupation[sim_]), edgecolors  = 'black', c = (self.binary_systems[sim_]), norm = (normalise_p1), label = 'Stable Binary', zorder = 2)
-                axes[int_].scatter(ini_pop, np.log10(self.tertiary_occupation[sim_]), edgecolors  = 'black', c = (self.tertiary_systems[sim_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
-                print('Number of tertiary: ', self.tertiary_systems[sim_])
-                plot_ini.tickers_pop(axes[int_], self.pop[1], 'GRX')
-            ax2.legend()
-            plt.colorbar(colour_axes, ax=axes[int_], label = r'$\langle N_{\rm{sys}} \rangle$ ')
-            plt.savefig('figures/binary_hierarchical/sys_form_HermGRX'+fold_+'.pdf', dpi=300, bbox_inches='tight')
-
-            iterf += 1
+            ax.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$', fontsize = axlabel_size)
+            ax.set_ylim(-7, 0)
+            #ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
+            ax.plot(xtemp, y_fit_data, color = 'black', linestyle = '-.', zorder = 1)
+            ax.scatter(ini_pop, np.log10(self.binary_occupation[sim_+2]), edgecolors  = 'black', c = (self.colors[sim_+2]), label = self.labelsD[sim_+2], zorder = 2)
+            ax.scatter(ini_pop, np.log10(self.tertiary_occupation[sim_+2]), edgecolors  = 'black', c = (self.colors[sim_+2]), marker = 's', zorder = 3)
+            print('Number of tertiary: ', self.tertiary_systems[sim_+2])
+            plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
+            ax.legend()
+        ax.plot(xtemp, y_fit)
+        plt.savefig('figures/binary_hierarchical/sys_form_GRX.pdf', dpi=300, bbox_inches='tight')
 
     def sys_popul_plotter(self):
         """
@@ -759,12 +774,13 @@ class sustainable_sys(object):
         """
 
         plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+        
         integrators = ['Hermite', 'GRX']
 
         fig, ax = plt.subplots()
-        ax.set_title('Average System Counts', fontsize = plot_ini.tilabel_size)
-        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = plot_ini.axlabel_size)
-        ax.set_ylabel(r'$\langle N\rangle$', fontsize = plot_ini.axlabel_size)
+        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = axlabel_size)
+        ax.set_ylabel(r'$\langle N\rangle$', fontsize = axlabel_size)
         for int_ in range(2):
             ini_pop = np.unique(self.pop[int_])
             ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = integrators[int_], zorder = 2)
@@ -776,11 +792,10 @@ class sustainable_sys(object):
         plt.clf() 
 
         fig, ax = plt.subplots()
-        ax.set_title('Average System Counts', fontsize = plot_ini.tilabel_size)
-        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = plot_ini.axlabel_size)
-        ax.set_ylabel(r'$\langle N\rangle$', fontsize = plot_ini.axlabel_size)
+        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = axlabel_size)
+        ax.set_ylabel(r'$\langle N\rangle$', fontsize = axlabel_size)
         iterf = 0
-        for fold_ in self.folders:
+        for fold_ in self.folders[:self.frange]:
             integrator, drange = folder_loop(iterf)
             for int_ in range(drange):
                 sim_ = folder_data_loop(iterf, int_)
