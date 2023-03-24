@@ -18,13 +18,15 @@ class plotter_setup(object):
         Function to setup axis
         """
         
+        axlabel_size, self.tick_size = self.font_size()
+
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.xaxis.set_minor_locator(mtick.AutoMinorLocator())
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
         if plot_type == 'plot':
-            ax.tick_params(axis="y", which = 'both', direction="in", fontsize = self.tick_size)
-            ax.tick_params(axis="x", which = 'both', direction="in", fontsize = self.tick_size)
+            ax.tick_params(axis="y", which = 'both', direction="in", labelsize = self.tick_size)
+            ax.tick_params(axis="x", which = 'both', direction="in", labelsize = self.tick_size)
 
         return ax
 
@@ -33,12 +35,14 @@ class plotter_setup(object):
         Function to setup axis for population plots
         """
 
+        axlabel_size, self.tick_size = self.font_size()
+
         ax.set_xlabel(r'$N_{\rm{IMBH}}$', fontsize = 13)
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
-        ax.tick_params(axis="y", which = 'both', direction="in", fontsize = self.tick_size)
-        ax.tick_params(axis="x", which = 'both', direction="in", fontsize = self.tick_size)    
+        ax.tick_params(axis="y", which = 'both', direction="in", labelsize = self.tick_size)
+        ax.tick_params(axis="x", which = 'both', direction="in", labelsize = self.tick_size)    
         
         if int_str == 'Hermite':
             xints = [i for i in range(1+int(max(pop))) if i % 10 == 0 and i > 5]

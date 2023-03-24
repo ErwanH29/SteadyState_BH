@@ -54,15 +54,14 @@ class gw_calcs(object):
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')) #HARDCODED - CHANGE DEPENDING ON DATA PROCESSED
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            #filename[0] = filename[0][::-1]
-            #filenameC[0] = filenameC[0][::-1]
-            filename[0] = filename[0][47:]
-            filenameC[0] = filenameC[0][47:]
-            #filename[0] = filename[0][289:]
-            #filenameC[0] = filenameC[0][289:]
+            filename[1] = filename[1][::-1]
+            filenameC[1] = filenameC[1][::-1]
+            #filename[0] = filename[0][47:]
+            #filenameC[0] = filenameC[0][47:]
             pop_checker = [0]
             no_samples = 0
-            for int_ in range(drange):
+            for int_ in range(1):
+                int_ += 1
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
@@ -80,7 +79,7 @@ class gw_calcs(object):
                                         SMBH_sys_mass = data.iloc[0][0][1]
 
                                         for parti_ in range(np.shape(data)[0]):
-                                            count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*'))+3000
+                                            count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*'))
                                             mass1 = data.iloc[parti_][0][1]
 
                                             mass_IMBH = []
@@ -203,7 +202,7 @@ class gw_calcs(object):
                                                                         'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
                                                                         'Tertiary SMBH Event': SMBH_t_event})
                                                 stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
 
             iterf += 1
 

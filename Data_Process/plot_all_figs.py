@@ -7,8 +7,9 @@ from spatial_plotters import *
 
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
-ecc_semi_histogram('GRX')
-#spatial_plotter('GRX')
+#ecc_semi_histogram('GRX')
+energy_scatter()
+spatial_plotter('GRX')
 #global_properties()
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
@@ -23,6 +24,8 @@ cls.strain_freq_plotter()
 end_tgw = cpu_time.time()
 print('Plotting time: ', end_tgw - start_tgw, ' seconds')
 STOP
+
+
 
 print('...steady_plotter...')
 start_steady = cpu_time.time()

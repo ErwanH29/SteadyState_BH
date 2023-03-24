@@ -2,6 +2,7 @@ from amuse.lab import *
 from file_logistics import *
 from matplotlib.pyplot import *
 from scipy import stats
+import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
@@ -131,6 +132,60 @@ def ecc_semi_histogram(integrator):
     ax.legend() 
     plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6_TEST.png', dpi=300, bbox_inches='tight')
     plt.clf()
+
+def energy_scatter():
+    """
+    Function which plots the final energy error w.r.t simulation time
+    """
+
+    plot_ini = plotter_setup()
+    axlabel_size, tick_size = plot_ini.font_size()
+
+    integrator = ['Hermite', 'GRX']
+    colors = ['red', 'blue']
+    time_arr = [[ ], [ ]]
+    err_ener = [[ ], [ ]]
+
+    iterd = 0
+    for int_ in integrator:
+        print('Processing energy data for ', int_)
+        etracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_)+'/energy/*'))
+
+        for file_ in range(len(etracker_files)):
+            with open(etracker_files[file_], 'rb') as input_file:
+                etracker = pkl.load(input_file)
+                time_arr[iterd].append(etracker.iloc[-1][-4].value_in(units.Myr))
+                err_ener[iterd].append(etracker.iloc[-1][-2])
+
+        fig, ax = plt.subplots()
+        ax.set_ylabel(r'$\log_{10}\Delta E$', fontsize = axlabel_size)
+        ax.set_xlabel(r'$\log_{10}t_{\mathrm{end}}$ [Myr]', fontsize = axlabel_size)
+        plot_ini.tickers(ax, 'plot') 
+        bin2d_sim, xed, yed, image = ax.hist2d(np.log10(time_arr[iterd]), np.log10(err_ener[iterd]), bins = 50, 
+                                                range=([-2.2, 2.2], [-14.2, 0]), cmap = 'viridis')
+        bin2d_sim /= np.max(bin2d_sim)
+        extent = [-7, 2, -2, 6]
+        contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
+        plot_ini.tickers(ax, 'histogram')
+        ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+        plt.savefig('figures/system_evolution/energy_error_'+int_+'_HISTOGRAM.pdf', dpi=300, bbox_inches='tight')
+        plt.clf()
+        iterd += 1
+
+    fig, ax = plt.subplots()
+    ax.set_ylabel(r'$\log_{10}\Delta E$', fontsize = axlabel_size)
+    ax.set_xlabel(r'$\log_{10}t_{\mathrm{end}}$ [Myr]', fontsize = axlabel_size)
+    plot_ini.tickers(ax, 'plot')
+    for int_ in range(len(integrator)): 
+        ax.scatter(np.log10(time_arr[int_]), np.log10(err_ener[int_]), color = colors[int_], s = 3, label = integrator[int_])
+    ax.legend()
+    plt.savefig('figures/system_evolution/energy_error.pdf', dpi=300, bbox_inches='tight')
+    plt.clf()
+    plt.close()  
+
+
+    return
 
 def global_properties():
     """
@@ -362,32 +417,28 @@ def global_properties():
 def spatial_plotter(int_string):
     """
     Function to plot the evolution of the system
-
-    output: The spatial evolution of the system
     """
-
-    plot_ini = plotter_setup()
-    axlabel_size, tick_size = plot_ini.font_size()
-
-    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
-    etracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/energy/*'))
-    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
     
-    iter_file = -1
-    for file_ in range(len(ptracker_files)):
-        iter_file += 1
-        with open(ctracker_files[file_], 'rb') as input_file:
-            ctracker = pkl.load(input_file)
+    def plotter_code(merger_idx, chaos_data):
+        plot_ini = plotter_setup()
+        axlabel_size, tick_size = plot_ini.font_size()
+
+        if merger_idx == -4:
+            outcome = 'merger'
+            bool = chaos_data.iloc[0][merger_idx]
+            idx = 0
+        else:
+            outcome = 'ejection'
+            bool = chaos_data.iloc[0][merger_idx].number
+
+        if bool > 0:
             with open(ptracker_files[file_], 'rb') as input_file:
                 file_size = os.path.getsize(ptracker_files[file_])
                 if file_size < 2e9:
                     print('Reading File ', file_, ' : ', input_file)
                     ptracker = pkl.load(input_file)
-                    with open(etracker_files[file_], 'rb') as input_file:
-                        etracker = pkl.load(input_file)
 
-                    col_len_raw = np.shape(ptracker)[1]-1
-                    col_len = round(col_len_raw**0.8)
+                    col_len = 200
                     parti_size = 20+len(ptracker)**-0.5
 
                     line_x = np.empty((len(ptracker), col_len))
@@ -397,116 +448,71 @@ def spatial_plotter(int_string):
                     for i in range(len(ptracker)):
                         tptracker = ptracker.iloc[i]
                         for j in range(col_len):
-                            coords = tptracker.iloc[j][2]
-                            if len(coords) == 1:
-                                pass
-                            else:
-                                line_x[i][j] = coords[0].value_in(units.pc)
-                                line_y[i][j] = coords[1].value_in(units.pc)
-                                line_z[i][j] = coords[2].value_in(units.pc)
+                            data_it = col_len - j
+                            coords = tptracker.iloc[-data_it][2]
+                            line_x[i][j] = coords[0].value_in(units.pc)
+                            line_y[i][j] = coords[1].value_in(units.pc)
+                            line_z[i][j] = coords[2].value_in(units.pc)
 
-                    time = np.empty((col_len_raw - 1))
-                    dE_array = np.empty((col_len_raw - 1))
-
-                    for i in range(col_len_raw-1):
-                        if i == 0:
-                            pass
-                        else:
-                            vals = etracker.iloc[i]
-                            time[i-1] = vals[6].value_in(units.Myr)
-                            dE_array[i-1] = vals[7]
+                        if outcome == 'merger':       
+                            if i != 0 and math.isnan(line_x[i][-1]) or tptracker.iloc[-1][1].value_in(units.kg) > 10**36:
+                                idx = i
 
                     c = colour_picker()
-                    fig = plt.figure(figsize=(12.5, 15))
-                    ax1 = fig.add_subplot(321)
-                    ax2 = fig.add_subplot(322)
-                    ax3 = fig.add_subplot(323)
-                    ax4 = fig.add_subplot(324)
+                    fig, ax = plt.subplots()
                     
-                    ax1.xaxis.set_major_locator(plt.MaxNLocator(3))
-                    ax1.yaxis.set_major_locator(plt.MaxNLocator(3))
-                    for ax_ in [ax1, ax2, ax3, ax4]:
-                        plot_ini.tickers(ax_, 'plot') 
+                    plot_ini.tickers(ax, 'plot') 
 
                     xaxis_lim = 1.05*np.nanmax(abs(line_x-line_x[0]))
                     yaxis_lim = 1.05*np.nanmax(abs(line_y-line_y[0]))
-                    zaxis_lim = 1.05*np.nanmax(abs(line_z-line_z[0]))
 
-                    ax1.set_xlim(-abs(xaxis_lim), abs(xaxis_lim))
-                    ax1.set_ylim(-abs(yaxis_lim), yaxis_lim)
-                    ax3.set_xlim(-abs(xaxis_lim), abs(xaxis_lim))
-                    ax3.set_ylim(-abs(zaxis_lim), zaxis_lim)
-                    ax4.set_xlim(-abs(yaxis_lim), abs(yaxis_lim))
-                    ax4.set_ylim(-abs(zaxis_lim), zaxis_lim)
-                    ax2.set_yscale('log')
+                    ax.set_xlim(-abs(xaxis_lim), abs(xaxis_lim))
+                    ax.set_ylim(-abs(yaxis_lim), yaxis_lim)
 
-                    ax1.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
-                    ax1.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
-                    ax2.set_xlabel(r'Time [Myr]', fontsize = axlabel_size)
-                    ax2.set_ylabel(r'$\frac{|E(t)-E_0|}{|E_0|}$', fontsize = axlabel_size)
-                    ax3.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
-                    ax3.set_ylabel(r'$z$ [pc]', fontsize = axlabel_size)
-                    ax4.set_xlabel(r'$y$ [pc]', fontsize = axlabel_size)
-                    ax4.set_ylabel(r'$z$ [pc]', fontsize = axlabel_size)
-                    iter = -1
+                    ax.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
+                    ax.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
                     
+                    iter = 0
                     for i in range(len(ptracker)):
-                        iter += 1
                         if iter > len(c):
                             iter = 0
 
                         if i == 0:
                             adapt_c = 'black'
-                            ax1.scatter((line_x[i]-line_x[0]), (line_y[i]-line_y[0]), 
-                                        c = adapt_c, zorder = 1, s = 250)
-                            ax3.scatter((line_x[i]-line_x[0]), (line_z[i]-line_z[0]), 
-                                        c = adapt_c, zorder = 1, s = 250)
-                            ax4.scatter((line_z[i]-line_z[0]), (line_y[i]-line_y[0]), 
+                            ax.scatter((line_x[i]-line_x[0]), (line_y[i]-line_y[0]), 
                                         c = adapt_c, zorder = 1, s = 250)
                             
                         else:
-                            ax1.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
+                            ax.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
                                         c = c[iter-2], edgecolors = 'black', s = parti_size, zorder = 3)
-                            ax1.scatter(line_x[i]-line_x[0], line_y[i]-line_y[0], 
+                            ax.scatter(line_x[i]-line_x[0], line_y[i]-line_y[0], 
                                         c = c[iter-2], s = 1, zorder = 1) 
-
-                            ax3.scatter(line_x[i][-1]-line_x[0][-1], line_z[i][-1]-line_z[0][-1], 
-                                        c = c[iter-2], edgecolors = 'black', s = parti_size, zorder = 3)
-                            ax3.scatter(line_x[i]-line_x[0], line_z[i]-line_z[0], 
-                                        c = c[iter-2], s = 1, zorder = 1) 
-
-                            ax4.scatter(line_y[i][-1]-line_y[0][-1], line_z[i][-1]-line_z[0][-1], 
-                                        c = c[iter-2], edgecolors = 'black', s = parti_size, zorder = 3)
-                            ax4.scatter(line_y[i]-line_y[0], line_z[i]-line_z[0], 
-                                        c = c[iter-2], s = 1, zorder = 1) 
-                            
-                    ax2.plot(time[:-5], dE_array[:-5], color = 'black')
-                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_'+str(iter_file)+'.pdf', dpi=300, bbox_inches='tight')
-                    plt.clf()
-                    plt.close()     
-
-                    fig = plt.figure(figsize=(8, 8))
-                    ax3D = fig.add_subplot(121, projection="3d")
-                    iter = -1
-                    for i in range(len(ptracker)):
+                            if outcome == 'merger' and i == idx:
+                                ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
+                                           c = c[iter-2], edgecolors = 'black', s = 2*parti_size, zorder = 3)
                         iter += 1
-                        if iter > len(c):
-                            iter = 0
-                        if i == 0:
-                            pass
-                        else:
-                            ax3D.scatter(line_x[i]-line_x[0], 
-                                        line_y[i]-line_y[0], 
-                                        line_z[i]-line_z[0], 
-                                        c = c[iter-2], s = 1, zorder = 1)
-                    ax3D.scatter(0, 0, 0, color = 'black', s = 150, zorder = 2)
-                    ax3D.xaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
-                    ax3D.yaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
-                    ax3D.zaxis.set_major_formatter(mtick.FormatStrFormatter('%0.2f'))
-                    ax3D.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
-                    ax3D.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
-                    ax3D.set_zlabel(r'$z$ [pc]', fontsize = axlabel_size)
-                    ax3D.view_init(30, 160)
-                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_3D_'+str(iter_file)+'.pdf', dpi=300, bbox_inches='tight')
+                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(len(ptracker))+'_'+outcome+'.pdf', dpi=300, bbox_inches='tight')
+                    plt.clf()
+                    plt.close()
 
+
+    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
+    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
+
+    print('Spatial evolution plotter')
+    bools = [False, True]
+    for bool_ in bools:
+        merger_bool = bool_
+        if (merger_bool):
+            outcome_idx = -4
+        else:
+            outcome_idx = 3
+
+        iter_file = 0
+        for file_ in range(len(ptracker_files)):
+            with open(ctracker_files[file_], 'rb') as input_file:
+                ctracker = pkl.load(input_file)
+                plotter_code(outcome_idx, ctracker)
+            iter_file += 1
+            
     return
