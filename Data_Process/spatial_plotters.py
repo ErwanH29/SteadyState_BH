@@ -419,7 +419,17 @@ def spatial_plotter(int_string):
     Function to plot the evolution of the system
     """
     
-    def plotter_code(merger_idx, chaos_data):
+    def plotter_code(merger_idx, chaos_data, file_, integrator):
+        """
+        Plotter function
+        
+        Inputs:
+        merger_idx: Idx to denote what outcome probed
+        chaos_data: Chaos data files
+        file_:      The file # extracted
+        integrator: The integrator used 
+        """
+
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
 
@@ -438,7 +448,7 @@ def spatial_plotter(int_string):
                     print('Reading File ', file_, ' : ', input_file)
                     ptracker = pkl.load(input_file)
 
-                    col_len = 200
+                    col_len = 150
                     parti_size = 20+len(ptracker)**-0.5
 
                     line_x = np.empty((len(ptracker), col_len))
@@ -487,11 +497,17 @@ def spatial_plotter(int_string):
                                         c = c[iter-2], edgecolors = 'black', s = parti_size, zorder = 3)
                             ax.scatter(line_x[i]-line_x[0], line_y[i]-line_y[0], 
                                         c = c[iter-2], s = 1, zorder = 1) 
-                            if outcome == 'merger' and i == idx:
-                                ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
-                                           c = c[iter-2], edgecolors = 'black', s = 2*parti_size, zorder = 3)
+                            if outcome == 'merger':
+                                if i == idx:
+                                    ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
+                                            c = c[iter-2], edgecolors = 'black', s = 4*parti_size, zorder = 3)
+                                else:
+                                    ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
+                                            c = c[iter-2], edgecolors = 'black', s = 0.8*parti_size, zorder = 3)
                         iter += 1
-                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(len(ptracker))+'_'+outcome+'.pdf', dpi=300, bbox_inches='tight')
+                    print('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'.pdf')
+                    print(ptracker_files[file_])
+                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'.pdf', dpi=300, bbox_inches='tight')
                     plt.clf()
                     plt.close()
 
@@ -500,7 +516,7 @@ def spatial_plotter(int_string):
     ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
 
     print('Spatial evolution plotter')
-    bools = [False, True]
+    bools = [True, False]
     for bool_ in bools:
         merger_bool = bool_
         if (merger_bool):
@@ -512,7 +528,7 @@ def spatial_plotter(int_string):
         for file_ in range(len(ptracker_files)):
             with open(ctracker_files[file_], 'rb') as input_file:
                 ctracker = pkl.load(input_file)
-                plotter_code(outcome_idx, ctracker)
+                plotter_code(outcome_idx, ctracker, file_, int_string)
             iter_file += 1
             
     return

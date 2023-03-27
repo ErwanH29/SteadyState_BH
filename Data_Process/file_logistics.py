@@ -8,8 +8,8 @@ import pickle as pkl
 
 class plotter_setup(object):
     def font_size(self):
-        axlabel_size = 13
-        tick_size = 11
+        axlabel_size = 16
+        tick_size = 14
 
         return axlabel_size, tick_size
 
@@ -37,7 +37,7 @@ class plotter_setup(object):
 
         axlabel_size, self.tick_size = self.font_size()
 
-        ax.set_xlabel(r'$N_{\rm{IMBH}}$', fontsize = 13)
+        ax.set_xlabel(r'$N_{\rm{IMBH}}$', fontsize = axlabel_size)
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
@@ -233,7 +233,7 @@ def stats_chaos_extractor(dir):
     return fin_parti_data, stab_time_data
 
 print('...Gathering simulation outcomes...')
-folders = ['rc_0.25_4e6', 'rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
+folders = ['rc_0.25_4e6', 'rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
 integr = ['Hermite', 'GRX', 'GRX', 'GRX', 'GRX']
 for fold_, integ_ in zip(folders, integr):
     simulation_stats_checker(fold_, integ_)

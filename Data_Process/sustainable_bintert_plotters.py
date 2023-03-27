@@ -47,7 +47,7 @@ class sustainable_sys(object):
             tcropG = 59
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
-            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG)
+            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
 
             for int_ in range(drange):
                 for file_ in range(len(filename[int_])):

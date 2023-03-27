@@ -47,17 +47,17 @@ class stability_plotters(object):
                    r'$M_{\rm{SMBH}} = 4\times10^{8}M_{\odot}$']
         integ_label = ['Hermite', 'GRX']
 
-        pop = [[ ], [ ], [ ], [ ], [ ]]
-        psamp = [[ ], [ ], [ ], [ ], [ ]]
-        fparti = [[ ], [ ], [ ], [ ], [ ]]
-        stab_time = [[ ], [ ], [ ], [ ], [ ]]
+        pop = [[ ], [ ], [ ], [ ]]
+        psamp = [[ ], [ ], [ ], [ ]]
+        fparti = [[ ], [ ], [ ], [ ]]
+        stab_time = [[ ], [ ], [ ], [ ]]
 
-        N_parti_avg = [[ ], [ ], [ ], [ ], [ ]]
-        N_parti_std = [[ ], [ ], [ ], [ ], [ ]]
-        avg_deviate = [[ ], [ ], [ ], [ ], [ ]]
-        full_simul = [[ ], [ ], [ ], [ ], [ ]]
-        std_max = [[ ], [ ], [ ], [ ], [ ]]
-        std_min = [[ ], [ ], [ ], [ ], [ ]]
+        N_parti_avg = [[ ], [ ], [ ], [ ]]
+        N_parti_std = [[ ], [ ], [ ], [ ]]
+        avg_deviate = [[ ], [ ], [ ], [ ]]
+        full_simul = [[ ], [ ], [ ], [ ]]
+        std_max = [[ ], [ ], [ ], [ ]]
+        std_min = [[ ], [ ], [ ], [ ]]
 
         N_parti_avg_Nsims = [[ ], [ ], [ ], [ ]]
         N_parti_std_Nsims = [[ ], [ ], [ ], [ ]]
@@ -67,7 +67,7 @@ class stability_plotters(object):
         temp_data = [ ]
 
         iterf = 0
-        for fold_ in folders:
+        for fold_ in self.folders:
             if iterf == 0:
                 drange = 2
                 ffactor = 0
@@ -83,14 +83,14 @@ class stability_plotters(object):
                 stab_time[int_+iterf+ffactor] = stab_time_data_val
             iterf += 1
 
-        for data_ in range(5):
+        for data_ in range(4):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
         rng = np.random.default_rng()
         data_size = [30, 40, 50, 60]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
-        for int_ in range(5):
+        for int_ in range(4):
             for pop_, samp_ in zip(pop[int_], psamp[int_]):
                 N_parti = np.argwhere(fparti[int_] == pop_)
                 time_arr = stab_time[int_][N_parti]
@@ -134,13 +134,13 @@ class stability_plotters(object):
         hist_tails = np.concatenate((temp_data[0], temp_data[1]))
 
         fig, ax = plt.subplots()
-        ax.set_xlabel(r'Time [Myr]', fontsize = axlabel_size)
-        ax.set_ylabel(r'Counts', fontsize = axlabel_size)
         ax.text((N_parti_avg[0][5]+N_parti_avg[0][6])/2 + 0.3, 17, r'$\langle t_{\rm{dis}}\rangle$', rotation = 270)
         ax.axvline((N_parti_avg[0][5]+N_parti_avg[0][6])/2, color = 'black', linestyle = ':')
         n1, bins, patches = ax.hist(hist_tails, 30, histtype='step', color = 'black')
         n1, bins, patches = ax.hist(hist_tails, 30, alpha = 0.3, color = 'black')
         plot_ini.tickers(ax, 'plot')
+        ax.set_xlabel(r'Time [Myr]', fontsize = axlabel_size)
+        ax.set_ylabel(r'Counts', fontsize = axlabel_size)
         plt.savefig('figures/steady_time/stab_time_hist_6070.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
@@ -184,7 +184,7 @@ class stability_plotters(object):
         ax1 = fig.add_subplot(111)
         ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]', fontsize = axlabel_size)
         ax1.set_xlim(5,105)
-        for int_ in range(3):
+        for int_ in range(2):
             int_ += 2
             for j, xpos in enumerate(pop[int_]):
                 pops = [i+1.1*xshift[int_-2] for i in pop[int_]]
@@ -242,7 +242,7 @@ class stability_plotters(object):
     
         ###### N vs. Residuals #####
         iterf = 0
-        for data_ in range(5):
+        for data_ in range(4):
             fig, ax = plt.subplots()
             if data_ == 0:
                 title_string = 'Hermite'
@@ -254,26 +254,29 @@ class stability_plotters(object):
                 ax.set_xlim(6, 45)
                 if data_ > 1:
                     iterf += 1
-            print(folders[iterf])
-            print(pop[data_], avg_deviate[data_])
+                    
             ax.set_ylabel(r'$\langle (t_{\rm{dis}} - \sigma_{\rm{dis}}) \rangle$ [Myr]', fontsize = axlabel_size)
             x_arr = np.linspace(10, max(pop[data_]), 100)
-            smooth_curve = make_interp_spline(pop[data_], avg_deviate[data_])
-            ax.plot(x_arr, smooth_curve(x_arr), color = colors[data_], zorder = 1)
+            #smooth_curve = make_interp_spline(pop[data_], avg_deviate[data_])
+            #ax.plot(x_arr, smooth_curve(x_arr), color = colors[data_], zorder = 1)
             ax.scatter(pop[data_][pop[data_] > 5], avg_deviate[data_][pop[data_] > 5], color = colors[data_], edgecolors='black', zorder = 2)
             plt.savefig('figures/steady_time/stab_time_residuals_'+folders[iterf]+'_'+title_string+'.pdf', dpi = 300, bbox_inches='tight')
             plt.clf()
 
+        frange = 0
         for data_ in range(4):
-            with open('figures/steady_time/Sim_summary_'+folders[data_]+'.txt', 'w') as file:
-                integrator, drange = folder_loop(data_)
-
-                for int_ in range(drange):
-                    file.write('For '+str(integrator[int_])+', # of full simulations per population:       '+str(pop[data_+int_].flatten()))
-                    file.write('\n                                                     '+str(full_simul[data_+int_]))
-                    file.write('\nNumber of samples:                                   '+str(psamp[data_+int_].flatten()))
-                    file.write('\nThe slope of the curve goes as:                      '+str(slope[data_+int_]))
-                    file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_+int_]))
-                    file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_+int_]))
-                    file.write('\nThe final raw data:                                  '+str(pop[data_+int_][pop[data_+int_] > 5].flatten()))
-                    file.write('\nSimulated time [Myr]                                 '+str(N_parti_avg[data_+int_][pop[data_+int_] > 5].flatten())+'\n\n')
+            if data_ == 0:
+                integ = 'Hermite'
+            else:
+                integ = 'GRX'
+            if data_ > 1:
+                frange += 1
+            with open('figures/steady_time/Sim_summary_'+self.folders[frange]+'_'+str(integ)+'.txt', 'w') as file:
+                file.write('For '+str(integ)+', # of full simulations per population:       '+str(pop[data_].flatten()))
+                file.write('\n                                                     '+str(full_simul[data_]))
+                file.write('\nNumber of samples:                                   '+str(psamp[data_].flatten()))
+                file.write('\nThe slope of the curve goes as:                      '+str(slope[data_]))
+                file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_]))
+                file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_]))
+                file.write('\nThe final raw data:                                  '+str(pop[data_][pop[data_] > 5].flatten()))
+                file.write('\nSimulated time [Myr]                                 '+str(N_parti_avg[data_][pop[data_] > 5].flatten())+'\n\n')

@@ -87,11 +87,11 @@ def plotter():
         if itert <= 1:
             ax.text(np.log10(rate_)+0.05, np.log10(mergerval_temp)-0.5, 
                     xtext+' = '+"{0:.3g}".format(rate_)+'\n'+ytext+' = '+"{0:.4g}".format(mergerval_temp), 
-                    horizontalalignment='left')
+                    horizontalalignment='left', fontsize = 13)
         else:
             ax.text(np.log10(rate_)-0.03, np.log10(mergerval_temp)+0.1, 
                     xtext+' = '+"{0:.3g}".format(rate_)+'\n'+ytext+' = '+"{0:.4g}".format(mergerval_temp), 
-                    horizontalalignment='right')
+                    horizontalalignment='right', fontsize = 13)
         itert += 1
 
     ax.scatter(np.log10(mrate_fixed), np.log10(cum_merger_fixed), color = 'black')
