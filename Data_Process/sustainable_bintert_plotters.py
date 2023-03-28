@@ -48,6 +48,8 @@ class sustainable_sys(object):
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
+            #filename[0] = filename[0][::-1]
+            #filenameC[0] = filenameC[0][::-1]
 
             for int_ in range(drange):
                 for file_ in range(len(filename[int_])):
@@ -238,7 +240,7 @@ class sustainable_sys(object):
                                                                 'Total sim. length': col_ * 1000,
                                                                 })
                                         stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                        stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
             iterf += 1
 
     def array_rewrite(self, arr, arr_type, filt):

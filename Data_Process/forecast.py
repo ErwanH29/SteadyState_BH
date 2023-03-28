@@ -86,13 +86,20 @@ def plotter():
         cum_merger_fixed.append(mergerval_temp)
         if itert <= 1:
             ax.text(np.log10(rate_)+0.05, np.log10(mergerval_temp)-0.5, 
-                    xtext+' = '+"{0:.3g}".format(rate_)+'\n'+ytext+' = '+"{0:.4g}".format(mergerval_temp), 
+                    xtext+' = '+r"$10^{{{0:.3g}}}$".format(np.log10(rate_))+'\n'+ytext+' = '+"{:.3f}".format(mergerval_temp)[:4], 
                     horizontalalignment='left', fontsize = 13)
         else:
+            if itert == 2:
+                no_dig = 3
+                merger_text = mergerval_temp
+            else:
+                no_dig += 1
+                merger_text = 10*round(0.1*mergerval_temp)
             ax.text(np.log10(rate_)-0.03, np.log10(mergerval_temp)+0.1, 
-                    xtext+' = '+"{0:.3g}".format(rate_)+'\n'+ytext+' = '+"{0:.4g}".format(mergerval_temp), 
+                    xtext+' = '+r"$10^{{{0:.3g}}}$".format(np.log10(rate_))+'\n'+ytext+' = '+"{:.3f}".format(merger_text)[:no_dig], 
                     horizontalalignment='right', fontsize = 13)
         itert += 1
+        print(itert)
 
     ax.scatter(np.log10(mrate_fixed), np.log10(cum_merger_fixed), color = 'black')
     plt.savefig('figures/forecast/merger_rate.pdf', dpi=300, bbox_inches='tight')

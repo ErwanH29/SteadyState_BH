@@ -39,7 +39,7 @@ class stability_plotters(object):
         axlabel_size, tick_size = plot_ini.font_size()
         
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
-        colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
+        colors = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
         dirH = '/data/Hermite/chaotic_simulation/*'
         dirG = '/data/GRX/chaotic_simulation/*'
         labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
@@ -134,7 +134,7 @@ class stability_plotters(object):
         hist_tails = np.concatenate((temp_data[0], temp_data[1]))
 
         fig, ax = plt.subplots()
-        ax.text((N_parti_avg[0][5]+N_parti_avg[0][6])/2 + 0.3, 17, r'$\langle t_{\rm{dis}}\rangle$', rotation = 270)
+        ax.text((N_parti_avg[0][5]+N_parti_avg[0][6])/2 + 0.3, 17, r'$t_{\rm{dis}}$', rotation = 270)
         ax.axvline((N_parti_avg[0][5]+N_parti_avg[0][6])/2, color = 'black', linestyle = ':')
         n1, bins, patches = ax.hist(hist_tails, 30, histtype='step', color = 'black')
         n1, bins, patches = ax.hist(hist_tails, 30, alpha = 0.3, color = 'black')
@@ -147,21 +147,21 @@ class stability_plotters(object):
         ##### GRX vs. Hermite #####
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]', fontsize = axlabel_size) 
+        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,105)
         for int_ in range(2):
-            for j, xpos in enumerate(pop[int_][pop[int_] % 10 == 0]):
+            for j, xpos in enumerate(pop[int_]):
                 N_parti_avg[int_] = np.array([float(i) for i in N_parti_avg[int_]])
                 if j == 0:
-                    ax1.scatter(pop[int_][pop[int_] % 10 == 0], np.log10(N_parti_avg[int_][pop[int_] % 10 == 0]), 
+                    ax1.scatter(pop[int_], np.log10(N_parti_avg[int_]), 
                                 color = colors[int_], edgecolor = 'black', zorder = 2, label = integ_label[int_])
                 else:
-                    ax1.scatter(pop[int_][pop[int_] % 10 == 0], np.log10(N_parti_avg[int_][pop[int_] % 10 == 0]), 
+                    ax1.scatter(pop[int_], np.log10(N_parti_avg[int_]), 
                                 color = colors[int_], edgecolor = 'black', zorder = 2)
-            ax1.scatter(pop[int_][pop[int_] % 10 == 0], np.log10(std_min[int_][pop[int_] % 10 == 0]), color = colors[int_], marker = '_')
-            ax1.scatter(pop[int_][pop[int_] % 10 == 0], np.log10(std_max[int_][pop[int_] % 10 == 0]), color = colors[int_], marker = '_')
-            ax1.plot([pop[int_][pop[int_] % 10 == 0], pop[int_][pop[int_] % 10 == 0]], [np.log10(std_min[int_][pop[int_] % 10 == 0]), 
-                      np.log10(std_max[int_][pop[int_] % 10 == 0])], color = colors[int_], zorder = 1)
+            ax1.scatter(pop[int_], np.log10(std_min[int_]), color = colors[int_], marker = '_')
+            ax1.scatter(pop[int_], np.log10(std_max[int_]), color = colors[int_], marker = '_')
+            ax1.plot([pop[int_], pop[int_]], [np.log10(std_min[int_]), 
+                      np.log10(std_max[int_])], color = colors[int_], zorder = 1)
         
         p0 = (100, -5, 20)
         xtemp = np.linspace(10, 100, 1000)
@@ -182,7 +182,7 @@ class stability_plotters(object):
         ##### Make sure to fix y lims to be the same as Hermite vs. GRX plot
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}}\rangle$ [Myr]', fontsize = axlabel_size)
+        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size)
         ax1.set_xlim(5,105)
         for int_ in range(2):
             int_ += 2
@@ -217,7 +217,7 @@ class stability_plotters(object):
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 50$']
         fig = plt.figure(figsize=(8, 6))
         ax1 = fig.add_subplot(111)
-        ax1.set_ylabel(r'$\log_{10} \langle t_{\rm{dis}} \rangle$ [Myr]', fontsize = axlabel_size) 
+        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)
         for rng_ in range(len(data_size)):
             for j, xpos in enumerate(pop[1]):
