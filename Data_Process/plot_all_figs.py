@@ -8,13 +8,6 @@ from spatial_plotters import *
 
 
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
-STOP
 
 print('...sustainable_bintert_plotters...')
 cls = sustainable_sys()
@@ -24,6 +17,14 @@ cls.combine_data()
 #cls.single_streak_plotter()
 cls.sys_occupancy_plotter()
 cls.sys_popul_plotter()
+STOP
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
 STOP
 
 print('... ejection_stat_plotters ...')
