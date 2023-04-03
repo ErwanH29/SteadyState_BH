@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import statsmodels.api as sm
 import warnings
 
@@ -80,57 +79,35 @@ def ecc_semi_histogram(integrator):
     with open('figures/system_evolution/output/ecc_events_ALL.txt', 'w') as file:
         file.write('For '+integrator+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
 
-    """##### All eccentricity vs. semimajor axis #####
-    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 50, range=([-7.88, 2.5], [-4.3, 8]))
-    plt.clf()
-    
-    fig, ax = plt.subplots()
-    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = axlabel_size)
-    ax.set_ylabel(r'$\log_{10}e$', fontsize = axlabel_size)
-    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
-    bin2d_sim /= np.max(bin2d_sim)
-    extent = [-7, 2, -2, 6]
-    contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
-    ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
-    ax.scatter(-1, -0.75, color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
-    ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
-    contours = ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
-                          linewidths=1.25, cmap='binary', levels = 6, zorder = 2)
-    ax.clabel(contours, inline=True, fontsize=axlabel_size)
-    ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
-    ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
-    plot_ini.tickers(ax, 'histogram')
-    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-    ax.legend() 
-    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
-    plt.clf()"""
-
     data_set = pd.DataFrame()
     for i in range(len(IMBH_sema)):
         arr = {'sem': IMBH_sema[i], 'ecc': IMBH_ecca[i]}
         raw_data = pd.Series(data=arr, index=['sem', 'ecc'])
         data_set = data_set.append(raw_data, ignore_index = True)
 
+    ##### All eccentricity vs. semimajor axis #####
+    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 50, range=([-7.88, 2.5], [-4.3, 8]))
+    plt.clf()
+    
     fig, ax = plt.subplots()
-    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = axlabel_size)
-    ax.set_ylabel(r'$\log_{10}e$', fontsize = axlabel_size)
+    ax.set_xlabel(r'$\log_{10}a$ [pc]')
+    ax.set_ylabel(r'$\log_{10}e$')
     bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
     contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
     ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
-    ax.scatter(SMBH_sema[25], SMBH_ecca[25], color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
+    ax.scatter(-0.5, -1.0, color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
     ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
-    sns.kdeplot(data=data_set, x='sem', y='ecc', levels = 6, cmap='binary')
-    #ax.clabel(contours, inline=True, fontsize=axlabel_size)
-    ax.text(-6.6, 0.48, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
-    ax.text(-6.6, -0.52, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
+    ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
+               linewidths=1.25, cmap='binary', levels = 6, label = 'IMBH-IMBH', zorder = 2)
+    ax.text(-6.6, 0.45, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
+    ax.text(-6.6, -0.55, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
     plot_ini.tickers(ax, 'histogram')
     ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
     ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-    ax.legend() 
-    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6_TEST.png', dpi=300, bbox_inches='tight')
+    ax.legend(prop={'size': axlabel_size})
+    plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
     plt.clf()
 
 def energy_scatter():
@@ -194,8 +171,8 @@ def global_properties():
     
     plot_ini = plotter_setup()
     
-    pop_lower = int(input('What should be the lower limit of the population sampled? '))
-    pop_upper = int(input('What should be the upper limit of the population sampled? '))
+    pop_lower = 5#int(input('What should be the lower limit of the population sampled? '))
+    pop_upper = 40#int(input('What should be the upper limit of the population sampled? '))
     integrator = ['Hermite', 'GRX']
     folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
 
@@ -214,16 +191,16 @@ def global_properties():
         IMBH_sem = [[ ], [ ]]
         IMBH_dist = [[ ], [ ]]
 
-        dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'.txt')
+        dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'_GRX.txt')
         with open(dir) as f:
             line = f.readlines()
-            popG = line[10][54:-2] 
-            avgG = line[17][56:-2]
+            popG = line[0][54:-2] 
+            avgG = line[7][56:-2]
             popG_data = popG.split()
             avgG_data = avgG.split()
             popG = np.asarray([float(i) for i in popG_data])
             avgG = np.asarray([float(i) for i in avgG_data])
-
+            
         iter = 0
         no_files = 40
         for int_ in integrator:   

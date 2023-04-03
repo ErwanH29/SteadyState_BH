@@ -145,8 +145,7 @@ class stability_plotters(object):
         plt.clf()
 
         ##### GRX vs. Hermite #####
-        fig = plt.figure(figsize=(8, 6))
-        ax1 = fig.add_subplot(111)
+        fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,105)
         for int_ in range(2):
@@ -180,8 +179,7 @@ class stability_plotters(object):
 
         ##### Only GRX #####
         ##### Make sure to fix y lims to be the same as Hermite vs. GRX plot
-        fig = plt.figure(figsize=(8, 6))
-        ax1 = fig.add_subplot(111)
+        fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size)
         ax1.set_xlim(5,105)
         for int_ in range(2):
@@ -215,8 +213,7 @@ class stability_plotters(object):
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 30$',
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 40$',
                        r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 50$']
-        fig = plt.figure(figsize=(8, 6))
-        ax1 = fig.add_subplot(111)
+        fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)
         for rng_ in range(len(data_size)):

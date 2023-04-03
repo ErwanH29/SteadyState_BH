@@ -42,22 +42,24 @@ class sustainable_sys(object):
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
         iterf = 0
         count = 0
+        drange = 1
         for fold_ in self.folders[:self.frange]:
             print('Files for: ', fold_)
             tcropG = 59
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            filename[0] = filename[0][::-1]
-            filenameC[0] = filenameC[0][::-1]
-            #filename[0] = filename[0][95:]
-            #filenameC[0] = filenameC[0][95:]
+            #filename[0] = filename[0][::-1]
+            #filenameC[0] = filenameC[0][::-1]
+            filename[0] = filename[0][60:]
+            filenameC[0] = filenameC[0][60:]
 
             for int_ in range(drange):
+                int_ += 1
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
-                        if chaotic_tracker.iloc[0][6] <= pop_tracker:
+                        if chaotic_tracker.iloc[0][6] <= pop_tracker:# and file_ > 297:
                             with open(filename[int_][file_], 'rb') as input_file:
                                 file_size = os.path.getsize(filename[int_][file_])
                                 if file_size < 2.8e9:
@@ -244,7 +246,7 @@ class sustainable_sys(object):
                                                                     'Total sim. length': col_ * 1000,
                                                                     })
                                             stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local1.pkl'))
+                                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_file_'+str(file_)+'_'+str(parti_)+'_local1.pkl'))
             iterf += 1
 
     def array_rewrite(self, arr, arr_type, filt):

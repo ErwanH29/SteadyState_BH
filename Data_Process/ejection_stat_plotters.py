@@ -214,8 +214,9 @@ class event_tracker(object):
                 indices = np.where((init_pop[int_] == pop_))[0]
                 temp_frac = [merger[int_][i] for i in indices]
                 frac_merge[int_].append(np.mean(temp_frac))
-            ax.scatter(in_pop[int_][(in_pop[int_] > 5)], frac_merge[int_], color = colours[int_], edgecolors = 'black')
+            ax.scatter(in_pop[int_][(in_pop[int_] > 5)], frac_merge[int_], color = colours[int_], label = labelsI[int_], edgecolors = 'black')
         plot_ini.tickers_pop(ax, in_pop[0], labelsI[0])
+        ax.legend(prop={'size': axlabel_size})
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_HermGRX.pdf', dpi=300, bbox_inches='tight')
 
         fig, ax = plt.subplots()
@@ -244,6 +245,6 @@ class event_tracker(object):
                 frac_merge[iterf].append(np.mean(temp_frac))
             ax.scatter(in_pop[iterf][(in_pop[iterf] > 5)], frac_merge[iterf], color = colours[iterf+1], label = labelsD[iterf], edgecolors = 'black')
             iterf += 1
-        ax.legend()
+        ax.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax, in_pop[1], labelsI[1])
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_GRX_All.pdf', dpi=300, bbox_inches='tight')
