@@ -38,6 +38,10 @@ def ecc_semi_histogram(integrator):
     SMBH_sema = [ ]
     IMBH_ecca = [ ]
     IMBH_sema = [ ]
+
+    pop_checker = 0
+    no_files = 10
+    no_samples = 0
     
     total_data = 0
     ecc_data = 0
@@ -48,36 +52,37 @@ def ecc_semi_histogram(integrator):
                 print('Reading File :', input_file)
                 ptracker = pkl.load(input_file)
                 col_len = np.shape(ptracker)[1]
+                pop = np.shape(ptracker)[0]
 
                 if np.shape(ptracker)[0] <= 40:
-                    for parti_ in range(np.shape(ptracker)[0]):
-                        if parti_ != 0:
-                            particle = ptracker.iloc[parti_]
+                    no_samples, process, pop_checker = no_file_tracker(pop_checker, 5*round(0.2*pop), no_files, no_samples)
+                    print(no_samples, process, pop_checker)
+                    if (process):
+                        for parti_ in range(pop):
+                            if parti_ != 0:
+                                particle = ptracker.iloc[parti_]
 
-                            for j in range(col_len-1):
-                                total_data += 1
-                                sim_snap = particle.iloc[j]
+                                for j in range(col_len-1):
+                                    total_data += 1
+                                    sim_snap = particle.iloc[j]
 
-                                if sim_snap[8][2] < 1:
-                                    ecc_data += 1
-                                if sim_snap[8][1] < 1:
-                                    ecc_data += 1
+                                    if sim_snap[8][2] < 1:
+                                        ecc_data += 1
+                                    if sim_snap[8][1] < 1:
+                                        ecc_data += 1
 
-                                SMBH_ecca.append(np.log10(sim_snap[8][0]))
-                                SMBH_sema.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
+                                    SMBH_ecca.append(np.log10(sim_snap[8][0]))
+                                    SMBH_sema.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
 
-                                if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
-                                    pass
-                                elif sim_snap[8][0] == sim_snap[8][2] or sim_snap[7][0] == sim_snap[7][2]:
-                                    pass
-                                else: 
-                                    IMBH_ecca.append(np.log10(sim_snap[8][1]))
-                                    IMBH_sema.append(np.log10(abs(sim_snap[7][1]).value_in(units.pc)))
-                                    IMBH_ecca.append(np.log10(sim_snap[8][2]))
-                                    IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
-                
-    with open('figures/system_evolution/output/ecc_events_ALL.txt', 'w') as file:
-        file.write('For '+integrator+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
+                                    if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
+                                        pass
+                                    elif sim_snap[8][0] == sim_snap[8][2] or sim_snap[7][0] == sim_snap[7][2]:
+                                        pass
+                                    else: 
+                                        IMBH_ecca.append(np.log10(sim_snap[8][1]))
+                                        IMBH_sema.append(np.log10(abs(sim_snap[7][1]).value_in(units.pc)))
+                                        IMBH_ecca.append(np.log10(sim_snap[8][2]))
+                                        IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
 
     data_set = pd.DataFrame()
     for i in range(len(IMBH_sema)):
@@ -86,21 +91,25 @@ def ecc_semi_histogram(integrator):
         data_set = data_set.append(raw_data, ignore_index = True)
 
     ##### All eccentricity vs. semimajor axis #####
+    print('1')
     n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 50, range=([-7.88, 2.5], [-4.3, 8]))
     plt.clf()
     
     fig, ax = plt.subplots()
     ax.set_xlabel(r'$\log_{10}a$ [pc]')
     ax.set_ylabel(r'$\log_{10}e$')
+    print('2')
     bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
+    print('3')
     contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
     ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
     ax.scatter(-0.5, -1.0, color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
     ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
+    print('4')
     ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
-               linewidths=1.25, cmap='binary', levels = 6, label = 'IMBH-IMBH', zorder = 2)
+               linewidths=1.25, cmap='binary', levels = 5, label = 'IMBH-IMBH', zorder = 2)
     ax.text(-6.6, 0.45, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
     ax.text(-6.6, -0.55, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
     plot_ini.tickers(ax, 'histogram')
@@ -202,21 +211,22 @@ def global_properties():
             avgG = np.asarray([float(i) for i in avgG_data])
             
         iter = 0
-        no_files = 40
         for int_ in integrator:   
             data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+(int_)+'/particle_trajectory/*'))
             if int_ != 'GRX':
                 val = 63 - iterf
                 energy = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/energy/'+str(i[val:]) for i in data]
                 chaotic = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[val:]) for i in data]
+                no_files = 20
             else:
                 val = 59 - iterf
                 energy = ['/media/erwanh/Elements/'+fold_+'/data/GRX/energy/'+str(i[val:]) for i in data]
                 chaotic = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
+                no_files = 60
 
             total_data = 0
             ecc_data = 0
-            pop_checker = [0]
+            pop_checker = 0
             no_samples = 0
             for file_ in range(len(data)):
                 with open(chaotic[file_], 'rb') as input_file:
@@ -227,7 +237,8 @@ def global_properties():
                             file_size = os.path.getsize(data[file_])
                             if file_size < 2.9e9:
                                 print('Reading File', file_, ': ', input_file)
-                                no_samples, process = no_file_tracker(pop_checker[0], pop, no_files, no_samples)
+                                no_samples, process, pop_checker = no_file_tracker(pop_checker, 5*round(0.2*pop), no_files, no_samples)
+                                print(no_samples, process, pop_checker)
 
                                 if (process):
                                     ptracker = pkl.load(input_file)
@@ -292,12 +303,9 @@ def global_properties():
                                             SMBH_dist[iter].append(dist_SMBH)
                                             IMBH_dist[iter].append(dist_IMBH)
 
-            if fold_ == 'rc_0.25' and iter == 0:
-                with open('figures/system_evolution/output/ecc_events.txt', 'w') as file:
-                    file.write('For '+str(int_)+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
-            else:
-                with open('figures/system_evolution/output/ecc_events.txt', 'a') as file:
-                    file.write('\nFor '+str(int_)+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
+            with open('figures/system_evolution/output/ecc_events_'+str(fold_)+'_'+str(int_)+'.txt', 'w') as file:
+                file.write('For '+str(int_)+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
+
             iter += 1
                 
         c_hist = ['red', 'blue']
@@ -386,7 +394,7 @@ def global_properties():
         for ax_ in [axL1, axR1]:
             ax_.set_ylim(0, 1.1)
         axL1.legend(loc='upper left')
-        plt.savefig('figures/system_evolution/ecc_cdf_histogram_'+fold_+'.png', dpi=300, bbox_inches='tight')
+        plt.savefig('figures/system_evolution/ecc_cdf_histogram_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
         plt.clf()
 
         iterf += 1
@@ -447,7 +455,6 @@ def spatial_plotter(int_string):
 
                     c = colour_picker()
                     fig, ax = plt.subplots()
-                    
                     plot_ini.tickers(ax, 'plot') 
 
                     xaxis_lim = 1.05*np.nanmax(abs(line_x-line_x[0]))

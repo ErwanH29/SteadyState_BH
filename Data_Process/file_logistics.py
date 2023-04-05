@@ -128,7 +128,7 @@ def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
         no_samples = 1
         process = True
     
-    return no_samples, process
+    return no_samples, process, pop_arr
 
 def folder_loop(iterf):
     """

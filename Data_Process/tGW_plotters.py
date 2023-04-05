@@ -2,10 +2,10 @@ from amuse.lab import *
 from file_logistics import *
 from scipy.special import jv 
 
-import fnmatch
 import LISA_Curves.LISA as li
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
+import math
 import numpy as np
 import pandas as pd
 import pickle as pkl
@@ -48,22 +48,23 @@ class gw_calcs(object):
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
 
         iterf = 0
-        no_files = 40
+        no_files = 60
         for fold_ in self.folders[:self.frange]: #tGW only care for one parameter space
             tcropG = 59
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')) #HARDCODED - CHANGE DEPENDING ON DATA PROCESSED
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            pop_checker = [0]
+            #filename[0] = filename[0][::-1]
+            #filenameC[0] = filenameC[0][::-1]
+            pop_checker = 0
             no_samples = 0
             for int_ in range(1):
-                int_ += 1
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
                         if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] > 5:
                             pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
-                            no_samples, process = no_file_tracker(pop_checker[0], pop, no_files, no_samples)
+                            no_samples, process, pop_checker = no_file_tracker(pop_checker, pop, no_files, no_samples)
 
                             if (process):
                                 with open(filename[int_][file_], 'rb') as input_file:
@@ -75,7 +76,6 @@ class gw_calcs(object):
                                         SMBH_sys_mass = data.iloc[0][0][1]
 
                                         for parti_ in range(np.shape(data)[0]):
-                                            count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/tGW/'), '*.*')) + 3000
                                             mass1 = data.iloc[parti_][0][1]
 
                                             mass_IMBH = []
@@ -198,7 +198,7 @@ class gw_calcs(object):
                                                                         'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
                                                                         'Tertiary SMBH Event': SMBH_t_event})
                                                 stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(count)+'_'+str(parti_)+'_local2.pkl'))
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(file_)+'_'+str(parti_)+'_local1.pkl'))
 
             iterf += 1
 
@@ -417,7 +417,7 @@ class gw_calcs(object):
         """
 
         dist = 1 | units.Gpc
-        redshift = 0.0228
+        redshift = 0.1972
         ecc = abs(ecc)
 
         chirp_mass = (m1*m2)**0.6/(m1+m2)**0.2 * (1+redshift)**-1
@@ -540,6 +540,134 @@ class gw_calcs(object):
         ax.text(-4.1, -18.2, 'LISA', fontsize ='small', rotation = 330, color = 'slateblue')
         ax.text(-5.9, -19, r'$\mu$Ares', fontsize ='small', rotation = 330, color = 'red')
         
+    def GW_event_tracker(self):
+        """
+        Function which plots all transient events into a histogram.
+        Separates events depending on IMBH-IMBH or SMBH-IMBH.
+        """
+
+
+        print('Tracking events detectable if in MW')
+        lisa = li.LISA()
+        ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
+        Ares_freq = ares['x']
+        Ares_stra = ares['y']
+        scale_dist = 10**5
+        cluster_pop = [10, 15, 20, 25, 30, 35, 40]
+        pop_tracker = 40#int(input('What should be the upper limit of the population for simulations sampled? '))
+
+        iterf = 0
+        for fold_ in self.folders[:self.frange]:
+            dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'_GRX.txt')
+            with open(dir) as f:
+                line = f.readlines()
+                popG = line[0][54:-2] 
+                avgG = line[8][55:-2]
+                avgG2 = line[9][3:-2]
+                popG_data = popG.split()
+                avgG_data = avgG.split()
+                avgG2_data = avgG2.split()
+                avgG_data = np.concatenate([avgG_data, avgG2_data])
+                popG = np.asarray([float(i) for i in popG_data])
+                avgG = np.asarray([float(i) for i in avgG_data])
+
+            tot_sims   = [[0], [0], [0], [0], [0], [0], [0]]
+             
+            IMBH_tot_arr  = [[0], [0], [0], [0], [0], [0], [0]]
+            IMBH_detL_arr = [[0], [0], [0], [0], [0], [0], [0]]
+            IMBH_detA_arr = [[0], [0], [0], [0], [0], [0], [0]]
+            
+            SMBH_tot_arr  = [[0], [0], [0], [0], [0], [0], [0]]
+            SMBH_detL_arr = [[0], [0], [0], [0], [0], [0], [0]]
+            SMBH_detA_arr = [[0], [0], [0], [0], [0], [0], [0]]
+
+            if iterf == 0:
+                drange = 1
+                integrator = ['Hermite', 'GRX']
+            else:
+                drange = 1
+                integrator = ['GRX']
+
+            with open('figures/gravitational_waves/output/detectable_events'+fold_+'.txt', 'w') as file:
+                file.write('Double counts sustainable binaries and discrete events (every thousand years).')
+                for int_ in range(drange):
+                    int_ += 1
+
+                    self.combine_data(integrator[int_], fold_, pop_tracker)
+                    for parti_ in range(len(self.freq_flyby_nn)): #Looping through every individual particle
+                        pop = self.pop[parti_][0]
+                        idx = cluster_pop.index(pop)
+                        tot_sims[idx] += 1
+
+                        for event_ in range(len(self.freq_flyby_nn[parti_])): #Looping through every detected event
+
+                            freq_nn = self.freq_flyby_nn[parti_][event_]
+                            gw_strain = scale_dist*self.strain_flyby_nn[parti_][event_]
+                            index = np.abs(np.asarray(Ares_freq-freq_nn)).argmin()
+
+                            if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                                IMBH_tot_arr[idx] += 0.5
+                                if lisa.Sn(freq_nn) > gw_strain:
+                                    IMBH_detL_arr[idx] += 0.5
+                                if Ares_stra[index] > gw_strain:
+                                    IMBH_detA_arr[idx] += 0.5
+
+                            else:
+                                SMBH_tot_arr[idx] += 1
+                                if lisa.Sn(freq_nn) > gw_strain:
+                                    SMBH_detL_arr[idx] += 1
+                                if Ares_stra[index] > gw_strain:
+                                    SMBH_detA_arr[idx] += 1
+
+                    for parti_ in range(len(self.freq_flyby_t)):
+                        for event_ in range(len(self.freq_flyby_t[parti_])):
+                            pop = self.pop[parti_][event_]
+                            idx = cluster_pop.index(pop)
+
+                            freq_t = self.freq_flyby_t[parti_][event_]
+                            gw_strain = scale_dist*self.strain_flyby_t[parti_][event_]
+                            index = np.abs(np.asarray(Ares_freq-freq_t)).argmin()
+
+                            if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                                IMBH_tot_arr[idx] += 0.5
+                                if lisa.Sn(freq_t) > gw_strain:
+                                    IMBH_detL_arr[idx] += 0.5
+                                if Ares_stra[index] > gw_strain:
+                                    IMBH_detA_arr[idx] += 0.5
+
+                            else:
+                                SMBH_tot_arr[idx] += 1
+                                if lisa.Sn(freq_t) > gw_strain:
+                                    SMBH_detL_arr[idx] += 1
+                                if Ares_stra[index] > gw_strain:
+                                    SMBH_detA_arr[idx] += 1
+
+                    for parti_ in range(len(self.freq_flyby_SMBH)):
+                        for event_ in range(len(self.freq_flyby_SMBH[parti_])):
+                            pop = self.pop[parti_][event_]
+                            idx = cluster_pop.index(pop)
+
+                            freq_SMBH = self.freq_flyby_SMBH[parti_][event_]
+                            gw_strain = scale_dist*self.strain_flyby_SMBH[parti_][event_]
+                            index = np.abs(np.asarray(Ares_freq-freq_SMBH)).argmin()
+
+                            SMBH_tot_arr[idx] += 1
+                            if lisa.Sn(freq_SMBH) > gw_strain:
+                                SMBH_detL_arr[idx] += 1
+                            if Ares_stra[index] > gw_strain:
+                                SMBH_detA_arr[idx] += 1
+                    
+                    tot_sims = [i/j for i, j in zip(tot_sims, cluster_pop)]
+                    IMBH_tot_arr = [i/(j*k*10**3) for i, j, k in zip(IMBH_tot_arr, tot_sims, avgG)]
+                    file.write('For '+str(int_)+': \n\n')
+                    file.write('Populations:                         ', cluster_pop)
+                    file.write('Total IMBH events /yr:               ', IMBH_tot_arr)
+                    file.write('\nLISA Detectable IMBH events /yr:   ', IMBH_detL_arr)
+                    file.write('\nmuAres Detectable IMBH events /yr: ', IMBH_detA_arr)
+                    file.write('\nTotal SMBH events /yr:             ', SMBH_tot_arr)
+                    file.write('\nLISA Detectable SMBH events /yr:   ', SMBH_detL_arr)
+                    file.write('\nmuAres Detectable SMBH events /yr: ', SMBH_detA_arr)
+                
     def orbital_hist_plotter(self):
         """
         Function which plots all transient events into a histogram.
@@ -574,38 +702,33 @@ class gw_calcs(object):
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle\
                     for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
                         semi_fb_nn = self.semi_flyby_nn[parti_][event_]
-                        if semi_fb_nn < 1 | units.parsec:
-                            if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
-                                ecc_fb_nn = self.ecc_flyby_nn[parti_][event_]
-                                IMBH_sem[int_].append(semi_fb_nn.value_in(units.pc))
-                                IMBH_ecc[int_].append(np.log10(1-ecc_fb_nn))
+                        ecc_fb_nn = self.ecc_flyby_nn[parti_][event_]
+                        if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                            IMBH_sem[int_].append(semi_fb_nn.value_in(units.pc))
+                            IMBH_ecc[int_].append(np.log10(1-ecc_fb_nn))
 
-                            else:
-                                ecc_fb_nn = self.ecc_flyby_nn[parti_][event_]
-                                SMBH_sem[int_].append(semi_fb_nn.value_in(units.pc))
-                                SMBH_ecc[int_].append(np.log10(1-ecc_fb_nn))
+                        else:
+                            SMBH_sem[int_].append(semi_fb_nn.value_in(units.pc))
+                            SMBH_ecc[int_].append(np.log10(1-ecc_fb_nn))
 
                 for parti_ in range(len(self.semi_flyby_t)):
                     for event_ in range(len(self.semi_flyby_t[parti_])):
                         semi_fb_t = self.semi_flyby_t[parti_][event_]
-                        if semi_fb_t < 1 | units.parsec:
-                            if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
-                                ecc_fb_t = self.ecc_flyby_t[parti_][event_]
-                                IMBH_sem[int_].append(semi_fb_t.value_in(units.pc))
-                                IMBH_ecc[int_].append(np.log10(1-ecc_fb_t))
+                        ecc_fb_t = self.ecc_flyby_t[parti_][event_]
+                        if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                            IMBH_sem[int_].append(semi_fb_t.value_in(units.pc))
+                            IMBH_ecc[int_].append(np.log10(1-ecc_fb_t))
 
-                            else:
-                                ecc_fb_t = self.ecc_flyby_t[parti_][event_]
-                                SMBH_sem[int_].append(semi_fb_t.value_in(units.pc))
-                                SMBH_ecc[int_].append(np.log10(1-ecc_fb_t))
+                        else:
+                            SMBH_sem[int_].append(semi_fb_t.value_in(units.pc))
+                            SMBH_ecc[int_].append(np.log10(1-ecc_fb_t))
 
                 for parti_ in range(len(self.semi_flyby_SMBH)):
                     for event_ in range(len(self.semi_flyby_SMBH[parti_])):
                         semi_fb_SMBH = self.semi_flyby_SMBH[parti_][event_]
-                        if semi_fb_SMBH < 1 | units.parsec:
-                            ecc_fb_SMBH = self.ecc_flyby_SMBH[parti_][event_]
-                            SMBH_sem[int_].append(semi_fb_SMBH.value_in(units.pc))
-                            SMBH_ecc[int_].append(np.log10(1-ecc_fb_SMBH))
+                        ecc_fb_SMBH = self.ecc_flyby_SMBH[parti_][event_]
+                        SMBH_sem[int_].append(semi_fb_SMBH.value_in(units.pc))
+                        SMBH_ecc[int_].append(np.log10(1-ecc_fb_SMBH))
 
                 IMBH_ecc[int_] = np.asarray(IMBH_ecc[int_])
                 IMBH_sem[int_] = np.asarray(IMBH_sem[int_]) 
@@ -746,32 +869,26 @@ class gw_calcs(object):
                 
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle
                     for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
-                        semi_fb_nn = self.semi_flyby_nn[parti_][event_]
-                        if semi_fb_nn < 1 | units.parsec and self.strain_flyby_nn[parti_][event_] > 0:
-                            if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0:
-                                IMBH_strain.append(self.strain_flyby_nn[parti_][event_])
-                                IMBH_freq.append(self.freq_flyby_nn[parti_][event_])
-                            else:
-                                SMBH_strain.append(self.strain_flyby_nn[parti_][event_])
-                                SMBH_freq.append(self.freq_flyby_nn[parti_][event_])
+                        if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0:
+                            IMBH_strain.append(self.strain_flyby_nn[parti_][event_])
+                            IMBH_freq.append(self.freq_flyby_nn[parti_][event_])
+                        else:
+                            SMBH_strain.append(self.strain_flyby_nn[parti_][event_])
+                            SMBH_freq.append(self.freq_flyby_nn[parti_][event_])
 
                 for parti_ in range(len(self.semi_flyby_t)):
                     for event_ in range(len(self.semi_flyby_t[parti_])):
-                        semi_fb_t = self.semi_flyby_t[parti_][event_]
-                        if semi_fb_t < 1 | units.parsec and self.strain_flyby_t[parti_][event_] > 0:
-                            if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0:
-                                IMBH_strain.append(self.strain_flyby_t[parti_][event_])
-                                IMBH_freq.append(self.freq_flyby_t[parti_][event_])
-                            else:
-                                SMBH_strain.append(self.strain_flyby_t[parti_][event_])
-                                SMBH_freq.append(self.freq_flyby_t[parti_][event_])
+                        if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0:
+                            IMBH_strain.append(self.strain_flyby_t[parti_][event_])
+                            IMBH_freq.append(self.freq_flyby_t[parti_][event_])
+                        else:
+                            SMBH_strain.append(self.strain_flyby_t[parti_][event_])
+                            SMBH_freq.append(self.freq_flyby_t[parti_][event_])
 
                 for parti_ in range(len(self.semi_flyby_SMBH)):
                     for event_ in range(len(self.semi_flyby_SMBH[parti_])):
-                        semi_fb_SMBH = self.semi_flyby_SMBH[parti_][event_]
-                        if semi_fb_SMBH < 1 | units.parsec:
-                            SMBH_strain.append(self.strain_flyby_SMBH[parti_][event_])
-                            SMBH_freq.append(self.freq_flyby_SMBH[parti_][event_])
+                        SMBH_strain.append(self.strain_flyby_SMBH[parti_][event_])
+                        SMBH_freq.append(self.freq_flyby_SMBH[parti_][event_])
 
                 fig = plt.figure(figsize=(8, 6))
                 gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
@@ -794,3 +911,75 @@ class gw_calcs(object):
                 plt.clf()
 
             iterf += 1
+
+def ecc_mergers():
+    """
+    Function to plot the fraction of eccentric merging events
+    """
+
+    integrator = ['Hermite', 'GRX']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+    colors = ['red', 'blue']
+    drange = 1
+
+    plot_ini = plotter_setup()
+    axlabel_size, tick_size = plot_ini.font_size()
+
+    fig = plt.figure(figsize=(5, 6))
+    gs = fig.add_gridspec(2, 1,  width_ratios=[1], height_ratios=[3, 2],
+                          left=0.1, right=0.9, bottom=0.1, top=0.9,
+                          wspace=0.05, hspace=0.05)
+    ax = fig.add_subplot(gs[1, 0])
+    ax1 = fig.add_subplot(gs[0, 0], sharex=ax)
+    ax1.tick_params(axis="x", labelbottom=False)
+    ax.set_xlabel(r'$\log_{10}(1-e)$', fontsize = axlabel_size)
+    ax.set_ylabel(r'CDF', fontsize = axlabel_size)
+    ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
+
+    for fold_ in folders[:drange]:
+        intf = 0
+        for int_ in integrator:
+            ecc = [ ]
+            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+int_+'/particle_trajectory/*'))
+            if int_ != 'GRX':
+                val = 63
+                chaotic = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[val:]) for i in data]
+            else:
+                val = 59
+                chaotic = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
+                
+            for file_ in range(len(data)):
+                with open(chaotic[file_], 'rb') as input_file:
+                    chaotic_tracker = pkl.load(input_file)
+                    
+                pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
+                if chaotic_tracker.iloc[0][2].value_in(units.MSun) > 0 and pop <= 40:
+                    with open(data[file_], 'rb') as input_file:
+                        file_size = os.path.getsize(data[file_])
+                        if file_size < 2.8e9:
+                            print('Reading File :', file_, input_file)
+                            ptracker = pkl.load(input_file)
+                            for parti_ in range(np.shape(ptracker)[0]):
+                                if parti_ != 0:
+                                    particle = ptracker.iloc[parti_]
+                                    if math.isnan(particle.iloc[-1][0]) or particle.iloc[-1][1].value_in(units.MSun) > 1e6:
+                                        ecc.append(np.log10(1-particle.iloc[-2][8][0]))
+            ecc_sort = np.sort(ecc)
+            ecc_index = np.asarray([i for i in enumerate(ecc_sort)])
+            ax.plot(ecc_sort, (ecc_index[:,0]/ecc_index[-1,0]), color = colors[intf])
+
+            kde_ecc = sm.nonparametric.KDEUnivariate(ecc_sort)
+            kde_ecc.fit()
+            kde_ecc.density /= max(kde_ecc.density)
+            ax1.plot(kde_ecc.support, kde_ecc.density, color = colors[intf], label = integrator[intf])
+            ax1.fill_between(kde_ecc.support, kde_ecc.density, alpha = 0.35, color = colors[intf])
+
+            intf += 1
+
+        for ax_ in [ax, ax1]:
+            plot_ini.tickers(ax_, 'plot')
+        ax1.set_ylim(0, 1.1)
+        ax1.legend(loc='upper left', prop={'size': axlabel_size})
+        plt.show()
+
+            
