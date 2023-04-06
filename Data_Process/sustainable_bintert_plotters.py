@@ -3,6 +3,7 @@ from file_logistics import *
 from scipy.optimize import curve_fit
 from tGW_plotters import *
 
+import fnmatch
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
@@ -46,18 +47,23 @@ class sustainable_sys(object):
         for fold_ in self.folders[:self.frange]:
             print('Files for: ', fold_)
             tcropG = 59
-            GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory_temp/*')
+            GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            filename[0] = filename[0][::-1] 
-            filenameC[0] = filenameC[0][::-1]
-            #filename[0] = filename[0][49:]
-            #filenameC[0] = filenameC[0][49:]
-            for int_ in range(drange):
+            #filename[1] = filename[1][::-1] 
+            #filenameC[1] = filenameC[1][::-1]
+            for int_ in range(1):
+                int_ += 1
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
-                        if chaotic_tracker.iloc[0][6] <= pop_tracker and file_ > 288:
+                        if int_ == 0 and file_ >= 71 and file_ <= 99:
+                            proceed = True
+                        elif int_ == 1:
+                            proceed = True
+                        else:
+                            proceed = False
+                        if chaotic_tracker.iloc[0][6] <= pop_tracker and (proceed):
                             with open(filename[int_][file_], 'rb') as input_file:
                                 file_size = os.path.getsize(filename[int_][file_])
                                 if file_size < 2.8e9:

@@ -2,6 +2,7 @@ from amuse.lab import *
 from file_logistics import *
 from scipy.special import jv 
 
+import fnmatch
 import LISA_Curves.LISA as li
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
@@ -925,8 +926,8 @@ def ecc_mergers():
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
 
-    fig = plt.figure(figsize=(5, 6))
-    gs = fig.add_gridspec(2, 1,  width_ratios=[1], height_ratios=[3, 2],
+    fig = plt.figure(figsize=(4, 6))
+    gs = fig.add_gridspec(2, 1,  width_ratios=[1], height_ratios=[1, 1],
                           left=0.1, right=0.9, bottom=0.1, top=0.9,
                           wspace=0.05, hspace=0.05)
     ax = fig.add_subplot(gs[1, 0])
@@ -979,7 +980,8 @@ def ecc_mergers():
         for ax_ in [ax, ax1]:
             plot_ini.tickers(ax_, 'plot')
         ax1.set_ylim(0, 1.1)
-        ax1.legend(loc='upper left', prop={'size': axlabel_size})
-        plt.show()
+        ax1.legend() 
+        plt.savefig('figures/gravitational_waves/eccentricity_mergers.pdf', dpi=700, bbox_inches='tight')
+        plt.clf()
 
             

@@ -88,7 +88,7 @@ class stability_plotters(object):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
         rng = np.random.default_rng()
-        data_size = [30, 40, 50, 60]
+        data_size = [30, 40, 50]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
         for int_ in range(4):
@@ -106,9 +106,8 @@ class stability_plotters(object):
                 if int_ == 1:
                     for rng_ in range(len(data_size)):
                         stab_times_temp = [ ]
-                        for iter_ in range(100):
-                            rno = rng.integers(low = 0, high = data_size[rng_], size = data_size[rng_])
-                            stab_times_temp.append(stab_time[int_][N_parti][rno])
+                        rno = rng.integers(low = 0, high = data_size[-1], size = data_size[rng_])
+                        stab_times_temp.append(stab_time[int_][N_parti][rno])
                             
                         stability_rng = np.median(stab_times_temp)
                         N_parti_med_Nsims[rng_].append(stability_rng)
@@ -141,9 +140,12 @@ class stability_plotters(object):
             std_min[int_] = np.asarray(std_min[int_])
             avg_deviate[int_] = np.asarray(avg_deviate[int_])
             pop[int_] = np.array([float(i) for i in pop[int_]])
-            
-        hist_tails = np.concatenate((temp_data[0], temp_data[1]))
+        
+        N_parti_med_Nsims[-1] = [i for i in N_parti_med[1]]
+        stdmax_Nsims[-1] = [i for i in std_max[1]]
+        stdmin_Nsims[-1] = [i for i in std_min[1]]
 
+        hist_tails = np.concatenate((temp_data[0], temp_data[1]))
         fig, ax = plt.subplots()
         ax.text((N_parti_med[0][5]+N_parti_med[0][6])/2 + 0.3, 17, r'$t_{\rm{dis}}$', rotation = 270)
         ax.axvline((N_parti_med[0][5]+N_parti_med[0][6])/2, color = 'black', linestyle = ':')
@@ -227,7 +229,7 @@ class stability_plotters(object):
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)
-        for rng_ in range(len(data_size)):
+        for rng_ in range(len(data_size)+1):
             for j, xpos in enumerate(pop[1]):
                 pops = [i+xshift[rng_] for i in pop[1]]
                 N_parti_med_Nsims[rng_] = np.array([float(i) for i in N_parti_med_Nsims[rng_]])
