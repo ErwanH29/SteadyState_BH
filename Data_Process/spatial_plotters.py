@@ -159,13 +159,27 @@ def energy_scatter():
         plt.clf()
         iterd += 1
 
-    fig, ax = plt.subplots()
+    fig = plt.figure(figsize=(8, 6))
+    gs = fig.add_gridspec(1, 2,  width_ratios=[5, 2], height_ratios=[1],
+                          left=0.1, right=0.9, bottom=0.1, top=0.9,
+                          wspace=0.05, hspace=0.05)
+    ax = fig.add_subplot(gs[0, 0])
+    ax1 = fig.add_subplot(gs[0, 1], sharey=ax)
+    ax1.tick_params(axis="y", labelleft=False)
     ax.set_ylabel(r'$\log_{10}\Delta E$', fontsize = axlabel_size)
     ax.set_xlabel(r'$\log_{10}t_{\mathrm{end}}$ [Myr]', fontsize = axlabel_size)
-    plot_ini.tickers(ax, 'plot')
+    ax1.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
+    for ax_ in [ax, ax1]:
+        plot_ini.tickers(ax_, 'plot')
     for int_ in range(len(integrator)): 
-        ax.scatter(np.log10(time_arr[int_]), np.log10(err_ener[int_]), color = colors[int_], s = 3, label = integrator[int_])
-    ax.legend()
+        ax.scatter(np.log10(time_arr[int_]), np.log10(err_ener[int_]), color = colors[int_], s = 3)
+        kde_ene = sm.nonparametric.KDEUnivariate(np.log10(err_ener[int_]))
+        kde_ene.fit()
+        kde_ene.density /= max(kde_ene.density)
+        ax1.plot(kde_ene.density, kde_ene.support, color = colors[int_], label = integrator[int_])
+        ax1.fill_between(kde_ene.density, kde_ene.support, alpha = 0.35, color = colors[int_])
+    ax1.legend(prop={'size': axlabel_size})
+    ax.set_ylim(-15, 0)
     plt.savefig('figures/system_evolution/energy_error.pdf', dpi=300, bbox_inches='tight')
     plt.clf()
     plt.close()  

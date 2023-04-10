@@ -63,7 +63,7 @@ class gw_calcs(object):
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
-                        if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] > 5:
+                        if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] > 5 and file_ >= 84:
                             pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
                             no_samples, process, pop_checker = no_file_tracker(pop_checker, pop, no_files, no_samples)
 
@@ -199,7 +199,7 @@ class gw_calcs(object):
                                                                         'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
                                                                         'Tertiary SMBH Event': SMBH_t_event})
                                                 stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(file_)+'_'+str(parti_)+'_local1.pkl'))
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(file_)+'_'+str(parti_)+'_local4.pkl'))
 
             iterf += 1
 
@@ -547,7 +547,6 @@ class gw_calcs(object):
         Separates events depending on IMBH-IMBH or SMBH-IMBH.
         """
 
-
         print('Tracking events detectable if in MW')
         lisa = li.LISA()
         ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
@@ -572,102 +571,103 @@ class gw_calcs(object):
                 popG = np.asarray([float(i) for i in popG_data])
                 avgG = np.asarray([float(i) for i in avgG_data])
 
-            tot_sims   = [[0], [0], [0], [0], [0], [0], [0]]
+            tot_sims = [0, 0, 0, 0, 0, 0, 0]
              
-            IMBH_tot_arr  = [[0], [0], [0], [0], [0], [0], [0]]
-            IMBH_detL_arr = [[0], [0], [0], [0], [0], [0], [0]]
-            IMBH_detA_arr = [[0], [0], [0], [0], [0], [0], [0]]
+            IMBH_tot_arr  = [0, 0, 0, 0, 0, 0, 0]
+            IMBH_detL_arr = [0, 0, 0, 0, 0, 0, 0]
+            IMBH_detA_arr = [0, 0, 0, 0, 0, 0, 0]
             
-            SMBH_tot_arr  = [[0], [0], [0], [0], [0], [0], [0]]
-            SMBH_detL_arr = [[0], [0], [0], [0], [0], [0], [0]]
-            SMBH_detA_arr = [[0], [0], [0], [0], [0], [0], [0]]
-
-            if iterf == 0:
-                drange = 1
-                integrator = ['Hermite', 'GRX']
-            else:
-                drange = 1
-                integrator = ['GRX']
+            SMBH_tot_arr  = [0, 0, 0, 0, 0, 0, 0]
+            SMBH_detL_arr = [0, 0, 0, 0, 0, 0, 0]
+            SMBH_detA_arr = [0, 0, 0, 0, 0, 0, 0]
+            drange = 1
+            integrator = ['GRX']
 
             with open('figures/gravitational_waves/output/detectable_events'+fold_+'.txt', 'w') as file:
                 file.write('Double counts sustainable binaries and discrete events (every thousand years).')
                 for int_ in range(drange):
                     int_ += 1
-
-                    self.combine_data(integrator[int_], fold_, pop_tracker)
+                    self.combine_data(integrator[0], fold_, pop_tracker)
                     for parti_ in range(len(self.freq_flyby_nn)): #Looping through every individual particle
-                        pop = self.pop[parti_][0]
+                        pop = self.pop[parti_]
                         idx = cluster_pop.index(pop)
-                        tot_sims[idx] += 1
+                        tot_sims[idx] = 420#+= 1
 
                         for event_ in range(len(self.freq_flyby_nn[parti_])): #Looping through every detected event
-
                             freq_nn = self.freq_flyby_nn[parti_][event_]
-                            gw_strain = scale_dist*self.strain_flyby_nn[parti_][event_]
-                            index = np.abs(np.asarray(Ares_freq-freq_nn)).argmin()
+                            
+                            if freq_nn > min(Ares_freq):
+                                gw_strain = scale_dist*self.strain_flyby_nn[parti_][event_]
+                                index = np.abs(np.asarray(Ares_freq-freq_nn)).argmin()
 
-                            if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
-                                IMBH_tot_arr[idx] += 0.5
-                                if lisa.Sn(freq_nn) > gw_strain:
-                                    IMBH_detL_arr[idx] += 0.5
-                                if Ares_stra[index] > gw_strain:
-                                    IMBH_detA_arr[idx] += 0.5
+                                if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                                    IMBH_tot_arr[idx] += 0.5
+                                    if np.sqrt(freq_nn*lisa.Sn(freq_nn)) < gw_strain:
+                                        IMBH_detL_arr[idx] += 0.5
+                                    if np.sqrt(freq_nn*Ares_stra[index]) < gw_strain:
+                                        IMBH_detA_arr[idx] += 0.5
 
-                            else:
-                                SMBH_tot_arr[idx] += 1
-                                if lisa.Sn(freq_nn) > gw_strain:
-                                    SMBH_detL_arr[idx] += 1
-                                if Ares_stra[index] > gw_strain:
-                                    SMBH_detA_arr[idx] += 1
+                                else:
+                                    SMBH_tot_arr[idx] += 1
+                                    if np.sqrt(freq_nn*lisa.Sn(freq_nn)) < gw_strain:
+                                        SMBH_detL_arr[idx] += 1
+                                    if np.sqrt(freq_nn*Ares_stra[index]) < gw_strain:
+                                        SMBH_detA_arr[idx] += 1
 
                     for parti_ in range(len(self.freq_flyby_t)):
                         for event_ in range(len(self.freq_flyby_t[parti_])):
-                            pop = self.pop[parti_][event_]
-                            idx = cluster_pop.index(pop)
-
                             freq_t = self.freq_flyby_t[parti_][event_]
-                            gw_strain = scale_dist*self.strain_flyby_t[parti_][event_]
-                            index = np.abs(np.asarray(Ares_freq-freq_t)).argmin()
+                            
+                            if freq_t > min(Ares_freq):
+                                pop = self.pop[parti_]
+                                idx = cluster_pop.index(pop)
+                                gw_strain = scale_dist*self.strain_flyby_t[parti_][event_]
+                                index = np.abs(np.asarray(Ares_freq-freq_t)).argmin()
 
-                            if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
-                                IMBH_tot_arr[idx] += 0.5
-                                if lisa.Sn(freq_t) > gw_strain:
-                                    IMBH_detL_arr[idx] += 0.5
-                                if Ares_stra[index] > gw_strain:
-                                    IMBH_detA_arr[idx] += 0.5
+                                if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                                    IMBH_tot_arr[idx] += 0.5
+                                    if np.sqrt(freq_t*lisa.Sn(freq_t)) < gw_strain:
+                                        IMBH_detL_arr[idx] += 0.5
+                                    if np.sqrt(freq_t*Ares_stra[index]) < gw_strain:
+                                        IMBH_detA_arr[idx] += 0.5
 
-                            else:
-                                SMBH_tot_arr[idx] += 1
-                                if lisa.Sn(freq_t) > gw_strain:
-                                    SMBH_detL_arr[idx] += 1
-                                if Ares_stra[index] > gw_strain:
-                                    SMBH_detA_arr[idx] += 1
+                                else:
+                                    SMBH_tot_arr[idx] += 1
+                                    if np.sqrt(freq_t*lisa.Sn(freq_t)) < gw_strain:
+                                        SMBH_detL_arr[idx] += 1
+                                    if np.sqrt(freq_t*Ares_stra[index]) < gw_strain:
+                                        SMBH_detA_arr[idx] += 1
 
                     for parti_ in range(len(self.freq_flyby_SMBH)):
                         for event_ in range(len(self.freq_flyby_SMBH[parti_])):
-                            pop = self.pop[parti_][event_]
-                            idx = cluster_pop.index(pop)
-
                             freq_SMBH = self.freq_flyby_SMBH[parti_][event_]
-                            gw_strain = scale_dist*self.strain_flyby_SMBH[parti_][event_]
-                            index = np.abs(np.asarray(Ares_freq-freq_SMBH)).argmin()
+                            if freq_SMBH > min(Ares_freq):
+                                pop = self.pop[parti_]
+                                idx = cluster_pop.index(pop)
+                                gw_strain = scale_dist*self.strain_flyby_SMBH[parti_][event_]
+                                index = np.abs(np.asarray(Ares_freq-freq_SMBH)).argmin()
 
-                            SMBH_tot_arr[idx] += 1
-                            if lisa.Sn(freq_SMBH) > gw_strain:
-                                SMBH_detL_arr[idx] += 1
-                            if Ares_stra[index] > gw_strain:
-                                SMBH_detA_arr[idx] += 1
+                                SMBH_tot_arr[idx] += 1
+                                if np.sqrt(freq_SMBH*lisa.Sn(freq_SMBH)) < gw_strain:
+                                    SMBH_detL_arr[idx] += 1
+                                if np.sqrt(freq_SMBH*Ares_stra[index]) < gw_strain:
+                                    SMBH_detA_arr[idx] += 1
                     
                     tot_sims = [i/j for i, j in zip(tot_sims, cluster_pop)]
-                    IMBH_tot_arr = [i/(j*k*10**3) for i, j, k in zip(IMBH_tot_arr, tot_sims, avgG)]
-                    file.write('For '+str(int_)+': \n\n')
-                    file.write('Populations:                         ', cluster_pop)
-                    file.write('Total IMBH events /yr:               ', IMBH_tot_arr)
-                    file.write('\nLISA Detectable IMBH events /yr:   ', IMBH_detL_arr)
-                    file.write('\nmuAres Detectable IMBH events /yr: ', IMBH_detA_arr)
-                    file.write('\nTotal SMBH events /yr:             ', SMBH_tot_arr)
-                    file.write('\nLISA Detectable SMBH events /yr:   ', SMBH_detL_arr)
-                    file.write('\nmuAres Detectable SMBH events /yr: ', SMBH_detA_arr)
+                    IMBH_tot_arr  = [i/(j*k*10**3) for i, j, k in zip(IMBH_tot_arr, tot_sims, avgG)]
+                    IMBH_detL_arr = [i/(j*k*10**3) for i, j, k in zip(IMBH_detL_arr, tot_sims, avgG)]
+                    IMBH_detA_arr = [i/(j*k*10**3) for i, j, k in zip(IMBH_detA_arr, tot_sims, avgG)]
+                    SMBH_tot_arr  = [i/(j*k*10**3) for i, j, k in zip(SMBH_tot_arr, tot_sims, avgG)]
+                    SMBH_detL_arr = [i/(j*k*10**3) for i, j, k in zip(SMBH_detL_arr, tot_sims, avgG)]
+                    SMBH_detA_arr = [i/(j*k*10**3) for i, j, k in zip(SMBH_detA_arr, tot_sims, avgG)]
+                    file.write(' For '+str(integrator[0])+': \n\n')
+                    file.write('Populations:                         '+str(cluster_pop))
+                    file.write('\nTotal IMBH events /yr:             '+str(IMBH_tot_arr))
+                    file.write('\nLISA Detectable IMBH events /yr:   '+str(IMBH_detL_arr))
+                    file.write('\nmuAres Detectable IMBH events /yr: '+str(IMBH_detA_arr))
+                    file.write('\nTotal SMBH events /yr:             '+str(SMBH_tot_arr))
+                    file.write('\nLISA Detectable SMBH events /yr:   '+str(SMBH_detL_arr))
+                    file.write('\nmuAres Detectable SMBH events /yr: '+str(SMBH_detA_arr))
                 
     def orbital_hist_plotter(self):
         """
