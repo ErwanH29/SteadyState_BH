@@ -190,7 +190,7 @@ class stability_plotters(object):
         plt.savefig('figures/steady_time/stab_time_mean_HermGRX.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
-        """##### Only GRX #####
+        ##### Only GRX #####
         ##### Make sure to fix y lims to be the same as Hermite vs. GRX plot
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size)
@@ -209,8 +209,8 @@ class stability_plotters(object):
             ax1.scatter(pops, np.log10(std_min[int_]), color = colors[int_], marker = '_', zorder = 3)
             ax1.scatter(pops, np.log10(std_max[int_]), color = colors[int_], marker = '_', zorder = 3)
             ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colors[int_], zorder = 2)
-            params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_med[int_]), p0, maxfev = 10000, method = 'trf')
-            slope[int_-1], beta[int_-1], log_c[int_-1] = params"""
+            #params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_med[int_]), p0, maxfev = 10000, method = 'trf')
+            #slope[int_-1], beta[int_-1], log_c[int_-1] = params
 
         xtemp = np.linspace(10, 40)
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
@@ -229,6 +229,7 @@ class stability_plotters(object):
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)
+        ctemp = ['deepskyblue', 'royalblue', 'slateblue', 'blue']
         for rng_ in range(len(data_size)+1):
             for j, xpos in enumerate(pop[1]):
                 pops = [i+xshift[rng_] for i in pop[1]]
@@ -237,14 +238,14 @@ class stability_plotters(object):
                 stdmax_Nsims[rng_] = np.array([float(i) for i in stdmax_Nsims[rng_]])
                 if j == 0:
                     ax1.scatter(pops, np.log10(N_parti_med_Nsims[rng_]), 
-                                color = colors[rng_+1], edgecolor = 'black', zorder = 2, label = labels[rng_])
+                                color = ctemp[rng_], edgecolor = 'black', zorder = 2, label = labels[rng_])
                 else:
                     ax1.scatter(pops, np.log10(N_parti_med_Nsims[rng_]), 
-                                color = colors[rng_+1], edgecolor = 'black', zorder = 2)
-            ax1.scatter(pops, np.log10(stdmin_Nsims[rng_]), color = colors[rng_+1], marker = '_')
-            ax1.scatter(pops, np.log10(stdmax_Nsims[rng_]), color = colors[rng_+1], marker = '_')
+                                color = ctemp[rng_], edgecolor = 'black', zorder = 2)
+            ax1.scatter(pops, np.log10(stdmin_Nsims[rng_]), color = ctemp[rng_], marker = '_')
+            ax1.scatter(pops, np.log10(stdmax_Nsims[rng_]), color = ctemp[rng_], marker = '_')
             ax1.plot([pops, pops], [np.log10(stdmin_Nsims[rng_]), np.log10(stdmax_Nsims[rng_])], 
-                      color = colors[rng_+1], zorder = 1)
+                      color = ctemp[rng_], zorder = 1)
         ax1.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax1, pop[1], 'GRX')
         plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims.pdf', dpi = 300, bbox_inches='tight')

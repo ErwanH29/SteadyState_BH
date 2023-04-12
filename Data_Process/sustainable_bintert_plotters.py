@@ -71,7 +71,6 @@ class sustainable_sys(object):
                                     pop = 5*round(0.2*np.shape(data)[0])
                                     print('Reading file', file_, ':', input_file)
                                     for parti_ in range(np.shape(data)[0]):
-                                        count = len(fnmatch.filter(os.listdir('/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/'), '*.*'))
                                         pop_bin = [ ]
                                         pop_ter = [ ]
 

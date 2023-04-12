@@ -40,7 +40,7 @@ def ecc_semi_histogram(integrator):
     IMBH_sema = [ ]
 
     pop_checker = 0
-    no_files = 10
+    no_files = 60
     no_samples = 0
     
     total_data = 0
@@ -56,7 +56,6 @@ def ecc_semi_histogram(integrator):
 
                 if np.shape(ptracker)[0] <= 40:
                     no_samples, process, pop_checker = no_file_tracker(pop_checker, 5*round(0.2*pop), no_files, no_samples)
-                    print(no_samples, process, pop_checker)
                     if (process):
                         for parti_ in range(pop):
                             if parti_ != 0:
@@ -84,30 +83,26 @@ def ecc_semi_histogram(integrator):
                                         IMBH_ecca.append(np.log10(sim_snap[8][2]))
                                         IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
 
-    data_set = pd.DataFrame()
+    """data_set = pd.DataFrame()
     for i in range(len(IMBH_sema)):
         arr = {'sem': IMBH_sema[i], 'ecc': IMBH_ecca[i]}
         raw_data = pd.Series(data=arr, index=['sem', 'ecc'])
-        data_set = data_set.append(raw_data, ignore_index = True)
+        data_set = data_set.append(raw_data, ignore_index = True)"""
 
     ##### All eccentricity vs. semimajor axis #####
-    print('1')
-    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 50, range=([-7.88, 2.5], [-4.3, 8]))
+    n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 300, range=([-7.88, 2.5], [-4.3, 8]))
     plt.clf()
     
     fig, ax = plt.subplots()
-    ax.set_xlabel(r'$\log_{10}a$ [pc]')
-    ax.set_ylabel(r'$\log_{10}e$')
-    print('2')
-    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 300, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
+    ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = axlabel_size)
+    ax.set_ylabel(r'$\log_{10}e$', fontsize = axlabel_size)
+    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 700, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
-    print('3')
     contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
     ax.axhline(0, linestyle = ':', color = 'white', zorder = 1)
     ax.scatter(-0.5, -1.0, color = 'blueviolet', label = 'SMBH-IMBH', zorder = 3)
     ax.scatter(SMBH_sema, SMBH_ecca, color = 'blueviolet', s = 0.3, zorder = 4)
-    print('4')
     ax.contour(n.T, extent=[xbins.min(),xbins.max(),ybins.min(),ybins.max()],
                linewidths=1.25, cmap='binary', levels = 5, label = 'IMBH-IMBH', zorder = 2)
     ax.text(-6.6, 0.45, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)

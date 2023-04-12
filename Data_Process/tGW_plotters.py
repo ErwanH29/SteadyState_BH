@@ -55,15 +55,13 @@ class gw_calcs(object):
             GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')) #HARDCODED - CHANGE DEPENDING ON DATA PROCESSED
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            #filename[0] = filename[0][::-1]
-            #filenameC[0] = filenameC[0][::-1]
             pop_checker = 0
             no_samples = 0
-            for int_ in range(1):
+            for int_ in range(2):
                 for file_ in range(len(filename[int_])):
                     with open(filenameC[int_][file_], 'rb') as input_file:
                         chaotic_tracker = pkl.load(input_file)
-                        if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] > 5 and file_ >= 84:
+                        if chaotic_tracker.iloc[0][6] <= 40 and chaotic_tracker.iloc[0][6] > 5:
                             pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
                             no_samples, process, pop_checker = no_file_tracker(pop_checker, pop, no_files, no_samples)
 
@@ -199,7 +197,7 @@ class gw_calcs(object):
                                                                         'Flyby Tertiary Eccentricity': ecc_t_GW_indiv,
                                                                         'Tertiary SMBH Event': SMBH_t_event})
                                                 stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(file_)+'_'+str(parti_)+'_local4.pkl'))
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_tGW_data_indiv_parti_'+str(file_)+'_'+str(parti_)+'_local6.pkl'))
 
             iterf += 1
 
@@ -260,7 +258,7 @@ class gw_calcs(object):
                 print('Population: ', pops, 'Counts: ', counts)
                 if sys_pop <= upperpop and integrator == integ:
                     if (integrator == 'Hermite' and counts[sys_pop == pops] <= [(20*(1+sys_pop))]) or \
-                        (integrator == 'GRX' and counts[sys_pop == pops] <= (60*(1+sys_pop))) or \
+                        (integrator == 'GRX' and counts[sys_pop == pops] <= (80*(1+sys_pop))) or \
                             (np.shape(pops[sys_pop == pops])[0] == 0):
 
                         self.sim_time.append(data_file.iloc[0][1])
@@ -330,7 +328,7 @@ class gw_calcs(object):
         self.LISA_semimaj_min = self.gw_cfreq_semi(ecc_range[1:], 1e-5 | units.Hz, m1, m2)
         self.LISA_semimaj = self.gw_cfreq_semi(ecc_range[1:], 1e-2 | units.Hz, m1, m2)
 
-        ecc_range = [np.log(1-i) for i in ecc_range[1:]]
+        ecc_range = [np.log10(1-i) for i in ecc_range[1:]]
         self.text_angle = np.degrees(np.arctan((ecc_range[30]-ecc_range[20])/(self.Ares_semimaj[30]-self.Ares_semimaj[20])))
 
         ax.plot(self.Ares_semimaj_min, ecc_range, linestyle = ':', color = 'white', zorder = 2)
@@ -511,11 +509,11 @@ class gw_calcs(object):
             ax_histh.plot(kdeh_IMBH.density, kdeh_IMBH.support, color = 'orange')
             ax_histh.fill_between(kdeh_IMBH.density, kdeh_IMBH.support, alpha = 0.35, color = 'orange')
            
-        ax_histf.set_ylim(0, 1.05)
+        ax_histf.set_ylim(0.01, 1.05)
         ax_histf.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
         ax_histf.legend(prop={'size': axlabel_size})
 
-        ax_histh.set_xlim(0, 1.05) 
+        ax_histh.set_xlim(0.01, 1.05) 
         ax_histh.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
 
         # LISA
@@ -537,9 +535,9 @@ class gw_calcs(object):
         ax.plot(np.log10(x_temp), np.log10(np.sqrt(x_temp*Sn)), color = 'slateblue')
         ax.plot(np.log10(Ares_freq), np.log10(np.sqrt(Ares_freq*Ares_strain)), linewidth='1.5', color='red')
         ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), linewidth='1.5', color='orangered')
-        ax.text(-9, -15.7, 'SKA', fontsize ='small', rotation = 340, color = 'orangered')
-        ax.text(-4.1, -18.2, 'LISA', fontsize ='small', rotation = 330, color = 'slateblue')
-        ax.text(-5.9, -19, r'$\mu$Ares', fontsize ='small', rotation = 330, color = 'red')
+        ax.text(-9.7, -16, 'SKA', fontsize = axlabel_size, rotation = 329, color = 'orangered')
+        ax.text(-4.8, -18.2, 'LISA',fontsize = axlabel_size, rotation = 318, color = 'slateblue')
+        ax.text(-6.8, -19, r'$\mu$Ares', fontsize = axlabel_size, rotation = 319, color = 'red')
         
     def GW_event_tracker(self):
         """
@@ -681,8 +679,8 @@ class gw_calcs(object):
         pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
         print('Plotting Orbital Parameter Diagram')
 
-        xmin = -8
-        ymin = -8
+        xmin = -6
+        ymin = -7.99
         iterf = 0
         for fold_ in self.folders[:self.frange]:
             if iterf == 0:
@@ -738,8 +736,8 @@ class gw_calcs(object):
                 
             ############### PLOTTING OF a vs. (1-e) FOR BIN ##############
             x_arr = np.linspace(-10, 0, 2000)
-            rmass_IMBH = (self.mass_parti[0][0]**2)*(2*self.mass_parti[0][0])
-            rmass_SMBH = (self.mass_parti[0][0]*self.mass_SMBH[0][0])*(self.mass_parti[0][0]+self.mass_SMBH[0][0])
+            rmass_IMBH = 10**6*2*10**3 | units.MSun**3 #(self.mass_parti[0][0]**2)*(2*self.mass_parti[0][0])
+            rmass_SMBH = 4*10**6*2*10**3*(4*10**6+2*10**3) | units.MSun**3 #(self.mass_parti[0][0]*self.mass_SMBH[0][0])*(self.mass_parti[0][0]+self.mass_SMBH[0][0])
             const_tgw =  [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_IMBH*(10**(i) * (1 | units.pc)) **-4)) **(1/3.5))) for i in x_arr]
             const_tgw2 = [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_SMBH*(10**(i) * (1 | units.pc)) **-4))**(1/3.5))) for i in x_arr]
 
@@ -756,13 +754,13 @@ class gw_calcs(object):
             ax.set_ylim(ymin, 0)
             ax.set_ylabel(r'$\log_{10}(1-e)$', fontsize = axlabel_size)
             ax.set_xlabel(r'$\log_{10} a$ [pc]', fontsize = axlabel_size)
-            ax1.set_ylim(0,1.05)
+            ax1.set_ylim(1e-3, 1.05)
             ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-            ax2.set_xlim(0,1.05)
+            ax2.set_xlim(1e-3, 1.05)
             ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
             self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_SMBH[0][0])
-            ax.text(-5.15, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
-            ax.text(-5.8, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
+            ax.text(-4.0, -2.7, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
+            ax.text(-5.15, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
             for int_ in range(drange):
                 ax.scatter(np.log10(SMBH_sem[int_]), SMBH_ecc[int_], color = self.colors[int_+iterf], s = 0.75, zorder = 5)
                 no_data_SMBH = round(len(SMBH_ecc[int_])**0.9)
@@ -783,10 +781,10 @@ class gw_calcs(object):
                 plot_ini.tickers(ax_, 'plot')
             ax1.legend(prop={'size': axlabel_size})
             ax.plot(x_arr, const_tgw2, color = 'black', zorder = 6)
-            ax.text(-1.5, -2.4, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+27, color = 'white', 
-                    path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
-            ax.text(-1.7, -3.4, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+27, color = 'white', 
-                    path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
+            ax.text(-1.5, -2.2, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+15, color = 'white', 
+                    path_effects=[pe.withStroke(linewidth=2, foreground="black")], zorder = 6)
+            ax.text(-1.7, -3.0, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+15, color = 'white', 
+                    path_effects=[pe.withStroke(linewidth=2, foreground="black")], zorder = 6)
             plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_SMBH_'+fold_+'.png', dpi=700, bbox_inches='tight')
             plt.clf()
 
@@ -803,13 +801,13 @@ class gw_calcs(object):
             ax.set_ylim(ymin, 0)
             ax.set_ylabel(r'$\log_{10}(1-e)$', fontsize = axlabel_size)
             ax.set_xlabel(r'$\log_{10} a$ [pc]', fontsize = axlabel_size)
-            ax1.set_ylim(0,1.05)
+            ax1.set_ylim(1e-3,1.05)
             ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-            ax2.set_xlim(0,1.05)
+            ax2.set_xlim(1e-3,1.05)
             ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
 
-            ax.text(-5.2, -3, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
-            ax.text(-5.85, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize ='small', rotation=self.text_angle+7, color = 'white')
+            ax.text(-5.2, -2.6, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
+            ax.text(-5.85, -3.4, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
             self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_IMBH[0][0])
 
             for int_ in range(drange):
@@ -828,14 +826,14 @@ class gw_calcs(object):
                 ax1.plot(kdef_IMBH.support, (kdef_IMBH.density), color = self.colors[int_+iterf], label = integrator[int_])
                 ax1.fill_between(kdef_IMBH.support, (kdef_IMBH.density), alpha = 0.35, color = self.colors[int_+iterf])
 
-            ax1.legend(prop={'size': axlabel_size})
-            for ax_ in [ax, ax2, ax2]:
+            for ax_ in [ax, ax1, ax2]:
                 plot_ini.tickers(ax_, 'plot')
+            ax1.legend(prop={'size': axlabel_size})
             ax.plot(x_arr, const_tgw, color = 'black', zorder = 6)
-            ax.text(-2.6, -3.2, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+27, color = 'white', 
-                    path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
-            ax.text(-3, -3.8, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+27, color = 'white', 
-                    path_effects=[pe.withStroke(linewidth=1, foreground="black")], zorder = 6)
+            ax.text(-1.6, -4.1, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+18, color = 'white', 
+                    path_effects=[pe.withStroke(linewidth=2, foreground="black")], zorder = 6)
+            ax.text(-1.6, -5.2, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+18, color = 'white', 
+                    path_effects=[pe.withStroke(linewidth=2, foreground="black")], zorder = 6)
             plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_IMBH_'+fold_+'.png', dpi=700, bbox_inches='tight')
             plt.clf()
 
@@ -907,8 +905,11 @@ class gw_calcs(object):
                 ax.set_ylabel(r'$\log_{10}h$', fontsize = axlabel_size)
                 for ax_ in [ax, ax1, ax2]:
                     plot_ini.tickers(ax_, 'plot')
-                ax.set_xlim(-12.5, 0.4)
-                plt.savefig('figures/gravitational_waves/'+integrator[int_]+'_GW_freq_strain_maximise_diagram_'+str(pop_tracker)+'_'+fold_+'.png', dpi = 500, bbox_inches='tight')
+                    ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+                    ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+                ax.set_ylim(-36, -11.99)
+                ax.set_xlim(-12.2, 0.8)
+                plt.savefig('figures/gravitational_waves/'+integrator[int_]+'_GW_freq_strain_'+str(pop_tracker)+'_'+fold_+'.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
 
             iterf += 1
