@@ -66,7 +66,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set):
     stopping_condition = code.stopping_conditions.collision_detection
     stopping_condition.enable()
     code.stopping_conditions.number_of_steps_detection.enable()
-    code.parameters.stopping_conditions_number_of_steps = 10**9
+    code.parameters.stopping_conditions_number_of_steps = 1e9
     
     channel_IMBH = {"from_gravity": 
                     code.particles.new_channel_to(parti,

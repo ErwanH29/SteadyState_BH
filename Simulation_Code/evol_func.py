@@ -100,4 +100,4 @@ def nearest_neighbour(indivp, pset):
     return min(min_dist), pset[index], pset[index2]
 
 def SMBH_filter(pset):
-    return pset[pset.mass < 5*10**4 | units.MSun]
+    return pset[pset.mass < 5e4 | units.MSun]

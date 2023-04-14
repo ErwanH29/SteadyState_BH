@@ -127,33 +127,6 @@ def energy_scatter():
     time_arr = [[ ], [ ]]
     err_ener = [[ ], [ ]]
 
-    iterd = 0
-    for int_ in integrator:
-        print('Processing energy data for ', int_)
-        etracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_)+'/energy/*'))
-
-        for file_ in range(len(etracker_files)):
-            with open(etracker_files[file_], 'rb') as input_file:
-                etracker = pkl.load(input_file)
-                time_arr[iterd].append(etracker.iloc[-1][-4].value_in(units.Myr))
-                err_ener[iterd].append(etracker.iloc[-1][-2])
-
-        fig, ax = plt.subplots()
-        ax.set_ylabel(r'$\log_{10}\Delta E$', fontsize = axlabel_size)
-        ax.set_xlabel(r'$\log_{10}t_{\mathrm{end}}$ [Myr]', fontsize = axlabel_size)
-        plot_ini.tickers(ax, 'plot') 
-        bin2d_sim, xed, yed, image = ax.hist2d(np.log10(time_arr[iterd]), np.log10(err_ener[iterd]), bins = 50, 
-                                                range=([-2.2, 2.2], [-14.2, 0]), cmap = 'viridis')
-        bin2d_sim /= np.max(bin2d_sim)
-        extent = [-7, 2, -2, 6]
-        contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
-        plot_ini.tickers(ax, 'histogram')
-        ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-        plt.savefig('figures/system_evolution/energy_error_'+int_+'_HISTOGRAM.pdf', dpi=300, bbox_inches='tight')
-        plt.clf()
-        iterd += 1
-
     fig = plt.figure(figsize=(8, 6))
     gs = fig.add_gridspec(1, 2,  width_ratios=[5, 2], height_ratios=[1],
                           left=0.1, right=0.9, bottom=0.1, top=0.9,
@@ -179,7 +152,6 @@ def energy_scatter():
     plt.clf()
     plt.close()  
 
-
     return
 
 def global_properties():
@@ -192,130 +164,91 @@ def global_properties():
     pop_lower = 5#int(input('What should be the lower limit of the population sampled? '))
     pop_upper = 40#int(input('What should be the upper limit of the population sampled? '))
     integrator = ['Hermite', 'GRX']
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
+    
+    SMBH_ecc = [[ ], [ ]]
+    SMBH_sem = [[ ], [ ]]
+    IMBH_ecc = [[ ], [ ]]
+    IMBH_sem = [[ ], [ ]]
 
-    iterf = 0
-    for fold_ in folders:
-        if iterf == 0:
-            integrator = ['Hermite', 'GRX']
+    dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'_GRX.txt')
+    with open(dir) as f:
+        line = f.readlines()
+        popG = line[0][54:-2] 
+        avgG = line[7][56:-2]
+        popG_data = popG.split()
+        avgG_data = avgG.split()
+        popG = np.asarray([float(i) for i in popG_data])
+        avgG = np.asarray([float(i) for i in avgG_data])
+        
+    iter = 0
+    for int_ in integrator:   
+        data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_)+'/particle_trajectory/*'))
+        if int_ != 'GRX':
+            val = 63
+            chaotic = ['/media/erwanh/Elements/rc_0.25_4e6/data/Hermite/chaotic_simulation/'+str(i[val:]) for i in data]
+            no_files = 20
         else:
-            integrator = ['GRX']
+            val = 59
+            chaotic = ['/media/erwanh/Elements/rc_0.25_4e6/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
+            no_files = 60
 
-        print('Data for: ', fold_)
-        SMBH_ecc = [[ ], [ ]]
-        SMBH_sem = [[ ], [ ]]
-        SMBH_dist = [[ ], [ ]]
-        IMBH_ecc = [[ ], [ ]]
-        IMBH_sem = [[ ], [ ]]
-        IMBH_dist = [[ ], [ ]]
+        total_data = 0
+        ecc_data = 0
+        pop_checker = 0
+        no_samples = 0
+        for file_ in range(len(data)):
+            with open(chaotic[file_], 'rb') as input_file:
+                chaotic_tracker = pkl.load(input_file)
+                pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
+                if pop <= pop_upper and pop >= pop_lower:
+                    with open(data[file_], 'rb') as input_file:
+                        file_size = os.path.getsize(data[file_])
+                        if file_size < 2.9e9:
+                            print('Reading File', file_, ': ', input_file)
+                            no_samples, process, pop_checker = no_file_tracker(pop_checker, pop, no_files, no_samples)
+                            
+                            if (process):
+                                ptracker = pkl.load(input_file)
+                                idx = np.where(popG[popG > 5] == pop)
+                                col_len = int(min(np.round((avgG[idx])*1e3), np.shape(ptracker)[1])-1)
 
-        dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'_GRX.txt')
-        with open(dir) as f:
-            line = f.readlines()
-            popG = line[0][54:-2] 
-            avgG = line[7][56:-2]
-            popG_data = popG.split()
-            avgG_data = avgG.split()
-            popG = np.asarray([float(i) for i in popG_data])
-            avgG = np.asarray([float(i) for i in avgG_data])
-            
-        iter = 0
-        for int_ in integrator:   
-            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+(int_)+'/particle_trajectory/*'))
-            if int_ != 'GRX':
-                val = 63 - iterf
-                energy = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/energy/'+str(i[val:]) for i in data]
-                chaotic = ['/media/erwanh/Elements/'+fold_+'/data/Hermite/chaotic_simulation/'+str(i[val:]) for i in data]
-                no_files = 20
-            else:
-                val = 59 - iterf
-                energy = ['/media/erwanh/Elements/'+fold_+'/data/GRX/energy/'+str(i[val:]) for i in data]
-                chaotic = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
-                no_files = 60
+                                for parti_ in range(np.shape(ptracker)[0]):
+                                    if parti_ != 0:
+                                        particle = ptracker.iloc[parti_]
 
-            total_data = 0
-            ecc_data = 0
-            pop_checker = 0
-            no_samples = 0
-            for file_ in range(len(data)):
-                with open(chaotic[file_], 'rb') as input_file:
-                    chaotic_tracker = pkl.load(input_file)
-                    pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
-                    if chaotic_tracker.iloc[0][6] <= pop_upper and chaotic_tracker.iloc[0][6] >= pop_lower:
-                        with open(data[file_], 'rb') as input_file:
-                            file_size = os.path.getsize(data[file_])
-                            if file_size < 2.9e9:
-                                print('Reading File', file_, ': ', input_file)
-                                no_samples, process, pop_checker = no_file_tracker(pop_checker, 5*round(0.2*pop), no_files, no_samples)
-                                print(no_samples, process, pop_checker)
+                                        ecc_SMBH = [ ]
+                                        sem_SMBH = [ ]
+                                        ecc_IMBH = [ ]
+                                        sem_IMBH = [ ]
+                                        for j in range(col_len-1):
+                                            total_data += 1
+                                            sim_snap = particle.iloc[j]
 
-                                if (process):
-                                    ptracker = pkl.load(input_file)
+                                            if sim_snap[8][2] < 1:
+                                                ecc_data += 1
+                                            if sim_snap[8][1] < 1:
+                                                ecc_data += 1
 
-                                    with open(energy[file_], 'rb') as input_file:
-                                        etracker = pkl.load(input_file)
+                                            sem_SMBH.append(np.log10(sim_snap[7][0].value_in(units.pc)))
+                                            ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
 
-                                    if pop in popG:
-                                        idx = np.where(popG[popG > 5] == pop)
-                                        col_len = int(min(np.round((avgG[idx])*10**3), np.shape(ptracker)[1])-1)
-                                    else:
-                                        col_len = np.shape(ptracker)[1]
+                                            if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
+                                                pass
+                                            else: 
+                                                sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
+                                                sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
+                                                ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
+                                                ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
+                                            
+                                        SMBH_ecc[iter].append(ecc_SMBH)
+                                        SMBH_sem[iter].append(sem_SMBH)
+                                        IMBH_ecc[iter].append(ecc_IMBH)
+                                        IMBH_sem[iter].append(sem_IMBH)
 
-                                    for parti_ in range(np.shape(ptracker)[0]):
-                                        if parti_ != 0:
-                                            particle = ptracker.iloc[parti_]
-                                            SMBH_data = ptracker.iloc[0]
+        with open('figures/system_evolution/output/ecc_events_'+str(fold_)+'_'+str(int_)+'.txt', 'w') as file:
+            file.write('For '+str(int_)+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
 
-                                            time = [ ]
-                                            NN = [ ]
-                                            ecc_SMBH = [ ]
-                                            sem_SMBH = [ ]
-                                            ecc_IMBH = [ ]
-                                            sem_IMBH = [ ]
-                                            dist_SMBH = [ ]
-                                            dist_IMBH = [ ]
-
-                                            for j in range(col_len-1):
-                                                total_data += 1
-                                                sim_snap = particle.iloc[j]
-                                                ene_snap = etracker.iloc[j]
-                                                SMBH_coords = SMBH_data.iloc[j]
-                                                time.append(ene_snap[6].value_in(units.Myr))
-
-                                                if sim_snap[8][2] < 1:
-                                                    ecc_data += 1
-                                                if sim_snap[8][1] < 1:
-                                                    ecc_data += 1
-
-                                                NN.append(np.log10(sim_snap[-1]))
-                                                sem_SMBH.append(np.log10(sim_snap[7][0].value_in(units.pc)))
-                                                ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
-
-                                                if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
-                                                    pass
-                                                else: 
-                                                    sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
-                                                    sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
-                                                    ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
-                                                    ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
-                                                
-                                                line_x = (sim_snap[2][0] - SMBH_coords[2][0])
-                                                line_y = (sim_snap[2][1] - SMBH_coords[2][1])
-                                                line_z = (sim_snap[2][2] - SMBH_coords[2][2])
-                                                dist_SMBH.append(np.log10(np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)))
-                                                dist_IMBH.append(np.log10(sim_snap[-1]))
-                                                
-                                            SMBH_ecc[iter].append(ecc_SMBH)
-                                            SMBH_sem[iter].append(sem_SMBH)
-                                            IMBH_ecc[iter].append(ecc_IMBH)
-                                            IMBH_sem[iter].append(sem_IMBH)
-                                            SMBH_dist[iter].append(dist_SMBH)
-                                            IMBH_dist[iter].append(dist_IMBH)
-
-            with open('figures/system_evolution/output/ecc_events_'+str(fold_)+'_'+str(int_)+'.txt', 'w') as file:
-                file.write('For '+str(int_)+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
-
-            iter += 1
+        iter += 1
                 
         c_hist = ['red', 'blue']
 
@@ -323,8 +256,7 @@ def global_properties():
         semSMBH_flat = [[ ], [ ]]
         eccIMBH_flat = [[ ], [ ]]
         semIMBH_flat = [[ ], [ ]]
-        distSMBH_flat = [[ ], [ ]]
-        distIMBH_flat = [[ ], [ ]]
+
         for j in range(2):
             for sublist in SMBH_ecc[j]:
                 for item in sublist:
@@ -340,29 +272,18 @@ def global_properties():
                 for item in sublist:
                     semIMBH_flat[j].append(item)
 
-            for sublist in SMBH_dist[j]:
-                for item in sublist:
-                    distSMBH_flat[j].append(item)
-            for sublist in IMBH_dist[j]:
-                for item in sublist:
-                    distIMBH_flat[j].append(item)
-
         ks_eSMBH = stats.ks_2samp(eccSMBH_flat[0], eccSMBH_flat[1])
         ks_sSMBH = stats.ks_2samp(semSMBH_flat[0], semSMBH_flat[1])
         ks_eIMBH = stats.ks_2samp(eccIMBH_flat[0], eccIMBH_flat[1])
         ks_sIMBH = stats.ks_2samp(semIMBH_flat[0], semIMBH_flat[1])
-        ks_dSMBH = stats.ks_2samp(distSMBH_flat[0], distSMBH_flat[1])
-        ks_dIMBH = stats.ks_2samp(distIMBH_flat[0], distIMBH_flat[1])
         
-        with open('figures/system_evolution/output/KStests_eject_'+fold_+'.txt', 'w') as file:
+        with open('figures/system_evolution/output/KStests_eject_rc_0.25_4e6.txt', 'w') as file:
             file.write('For all simulations. If the p-value is less than 0.05 we reject the')
             file.write('\nhypothesis that samples are taken from the same distribution')
             file.write('\n\nSMBH eccentricity 2 sample KS test:         pvalue = '+str(ks_eSMBH[1]))
             file.write('\nSMBH semi-major axis 2 sample KS test:        pvalue = '+str(ks_sSMBH[1]))
             file.write('\n\nIMBH eccentricity 2 sample KS test:         pvalue = '+str(ks_eIMBH[1]))
             file.write('\nIMBH semi-major axis 2 sample KS test:        pvalue = '+str(ks_sIMBH[1]))
-            file.write('\nSMBH distance 2 sample KS test:               pvalue = '+str(ks_dSMBH[1]))
-            file.write('\nIMBH distance 2 sample KS test:               pvalue = '+str(ks_dIMBH[1]))
 
         ##### CDF Plots #####
         fig = plt.figure(figsize=(10, 6))
@@ -403,10 +324,229 @@ def global_properties():
         for ax_ in [axL1, axR1]:
             ax_.set_ylim(0, 1.1)
         axL1.legend(loc='upper left')
-        plt.savefig('figures/system_evolution/ecc_cdf_histogram_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
+        plt.savefig('figures/system_evolution/ecc_cdf_histogram_rc_0.25_4e6.pdf', dpi=300, bbox_inches='tight')
         plt.clf()
 
-        iterf += 1
+def global_properties_GRX_pops():
+    """
+    Function which plots various Kepler elements of ALL particles simulated
+    """
+    
+    plot_ini = plotter_setup()
+    
+    pop_tracker = 10
+    integrator = 'GRX'
+    labels = [r'$m_{\mathrm{SMBH}} = 4\times10^{6}\ M_\odot$',
+              r'$m_{\mathrm{SMBH}} = 4\times10^{7}\ M_\odot$',
+              r'$m_{\mathrm{SMBH}} = 4\times10^{8}\ M_\odot$']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+
+    SMBH_ecc = [[ ], [ ], [ ]]
+    SMBH_sem = [[ ], [ ], [ ]]
+    SMBH_dis = [[ ], [ ], [ ]]
+    IMBH_ecc = [[ ], [ ], [ ]]
+    IMBH_sem = [[ ], [ ], [ ]]
+    IMBH_dis = [[ ], [ ], [ ]]
+
+    dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
+    with open(dir) as f:
+        line = f.readlines()
+        popG = line[0][54:-2] 
+        avgG = line[7][56:-2]
+        popG_data = popG.split()
+        avgG_data = avgG.split()
+        popG = np.asarray([float(i) for i in popG_data])
+        avgG = np.asarray([float(i) for i in avgG_data])
+            
+        no_files = 60
+        val = 59
+        iterf = 0 
+        for fold_ in folders:
+            print('Data for: ', fold_)
+            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+integrator+'/particle_trajectory/*'))
+            chaotic = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
+
+            total_data = 0
+            ecc_data = 0
+            pop_checker = 0
+            no_samples = 0
+            for file_ in range(len(data)):
+                with open(chaotic[file_], 'rb') as input_file:
+                    chaotic_tracker = pkl.load(input_file)
+                    pop = 5*round(0.2*chaotic_tracker.iloc[0][6])
+                    if pop == pop_tracker:
+                        with open(data[file_], 'rb') as input_file:
+                            file_size = os.path.getsize(data[file_])
+                            if file_size < 2.9e9:
+                                print('Reading File', file_, ': ', input_file)
+                                no_samples, process, pop_checker = no_file_tracker(pop_checker, pop, no_files, no_samples)
+
+                                if (process):
+                                    ptracker = pkl.load(input_file)
+                                    idx = np.where(popG[popG > 5] == pop)
+                                    col_len = int(min(np.round((avgG[idx])*1e3), np.shape(ptracker)[1])-1)
+
+                                    for parti_ in range(np.shape(ptracker)[0]):
+                                        if parti_ != 0:
+                                            particle = ptracker.iloc[parti_]
+                                            SMBH_data = ptracker.iloc[0]
+
+                                            ecc_SMBH = [ ]
+                                            sem_SMBH = [ ]
+                                            dis_SMBH = [ ]
+                                            ecc_IMBH = [ ]
+                                            sem_IMBH = [ ]
+                                            dis_IMBH = [ ]
+
+                                            for j in range(col_len-1):
+                                                total_data += 1
+                                                sim_snap = particle.iloc[j]
+                                                SMBH_coords = SMBH_data.iloc[j]
+
+                                                if sim_snap[8][2] < 1:
+                                                    ecc_data += 1
+                                                if sim_snap[8][1] < 1:
+                                                    ecc_data += 1
+
+                                                sem_SMBH.append(np.log10(sim_snap[7][0].value_in(units.pc)))
+                                                ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
+
+                                                if sim_snap[8][0] == sim_snap[8][1] or sim_snap[7][0] == sim_snap[7][1]:
+                                                    pass
+                                                else: 
+                                                    sem_IMBH.append(np.log10(sim_snap[7][1].value_in(units.pc)))
+                                                    sem_IMBH.append(np.log10(sim_snap[7][2].value_in(units.pc)))
+                                                    ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
+                                                    ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
+                                                
+                                                line_x = (sim_snap[2][0] - SMBH_coords[2][0])
+                                                line_y = (sim_snap[2][1] - SMBH_coords[2][1])
+                                                line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                                                dis_SMBH.append(np.log10(np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)))
+
+                                                if sim_snap[7][0] != sim_snap[7][1] and sim_snap[8][0] != sim_snap[8][1]:
+                                                    dis_IMBH.append(np.log10(sim_snap[-1]))
+                                                
+                                            SMBH_ecc[iterf].append(ecc_SMBH)
+                                            SMBH_sem[iterf].append(sem_SMBH)
+                                            IMBH_ecc[iterf].append(ecc_IMBH)
+                                            IMBH_sem[iterf].append(sem_IMBH)
+                                            SMBH_dis[iterf].append(dis_SMBH)
+                                            IMBH_dis[iterf].append(dis_IMBH)
+                                            
+            iterf += 1
+                
+        c_hist = ['blue', 'deepskyblue', 'royalblue']
+
+        eccSMBH_flat = [[ ], [ ], [ ]]
+        semSMBH_flat = [[ ], [ ], [ ]]
+        disSMBH_flat = [[ ], [ ], [ ]]
+        eccIMBH_flat = [[ ], [ ], [ ]]
+        semIMBH_flat = [[ ], [ ], [ ]]
+        disIMBH_flat = [[ ], [ ], [ ]]
+
+        for j in range(3):
+            for sublist in SMBH_ecc[j]:
+                for item in sublist:
+                    eccSMBH_flat[j].append(item)
+            for sublist in SMBH_sem[j]:
+                for item in sublist:
+                    semSMBH_flat[j].append(item)
+            for sublist in SMBH_dis[j]:
+                for item in sublist:
+                    disSMBH_flat[j].append(item)
+
+            for sublist in IMBH_ecc[j]:
+                for item in sublist:
+                    eccIMBH_flat[j].append(item)
+            for sublist in IMBH_sem[j]:
+                for item in sublist:
+                    semIMBH_flat[j].append(item)
+            for sublist in IMBH_dis[j]:
+                for item in sublist:
+                    disIMBH_flat[j].append(item)
+
+        ##### CDF Plots #####
+        fig = plt.figure(figsize=(10, 6))
+        gs = fig.add_gridspec(2, 4,  width_ratios=(2, 2, 2, 2), height_ratios=(2, 3), left=0.1, right=0.9, bottom=0.1, 
+                              top=0.9, wspace=0.25, hspace=0.1)
+        axL = fig.add_subplot(gs[1, 0:2])
+        axL1 = fig.add_subplot(gs[0, 0:2], sharex=axL)
+        axR = fig.add_subplot(gs[1, 2:])
+        axR1 = fig.add_subplot(gs[0, 2:], sharex=axR)
+        axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$')
+        axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]')
+        axL.set_ylabel(r'$\log_{10}$(CDF)')
+        axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
+        for int_ in range(2):
+            ecc_sort = np.sort(eccSMBH_flat[int_])
+            ecc_index = np.asarray([i for i in enumerate(ecc_sort)])
+            axL.plot(ecc_sort, np.log10(ecc_index[:,0]/ecc_index[-1,0]), color = c_hist[int_])
+
+            kde_ecc = sm.nonparametric.KDEUnivariate(ecc_sort)
+            kde_ecc.fit()
+            kde_ecc.density /= max(kde_ecc.density)
+            axL1.plot(kde_ecc.support, kde_ecc.density, color = c_hist[int_], label = labels[int_])
+            axL1.fill_between(kde_ecc.support, kde_ecc.density, alpha = 0.35, color = c_hist[int_])
+
+            sem_sort = np.sort(semSMBH_flat[int_])
+            sem_index = np.asarray([i for i in enumerate(sem_sort)])
+            axR.plot(sem_sort, np.log10(sem_index[:,0]/sem_index[-1,0]), color = c_hist[int_])
+
+            kde_ecc = sm.nonparametric.KDEUnivariate(sem_sort)
+            kde_ecc.fit()
+            kde_ecc.density /= max(kde_ecc.density)
+            axR1.plot(kde_ecc.support, kde_ecc.density, color = c_hist[int_])
+            axR1.fill_between(kde_ecc.support, kde_ecc.density, alpha = 0.35, color = c_hist[int_])
+        
+        for ax_ in [axL, axL1, axR, axR1]:
+            plot_ini.tickers(ax_, 'plot')
+        for ax_ in [axL1, axR1]:
+            ax_.set_ylim(0, 1.1)
+        axL1.legend(loc='upper left')
+        plt.savefig('figures/system_evolution/ecc_cdf_histogram_GRX.pdf', dpi=300, bbox_inches='tight')
+        plt.clf()
+
+        ##### CDF Plots #####
+        fig = plt.figure(figsize=(10, 6))
+        gs = fig.add_gridspec(2, 4,  width_ratios=(2, 2, 2, 2), height_ratios=(2, 3), left=0.1, right=0.9, bottom=0.1, 
+                              top=0.9, wspace=0.25, hspace=0.1)
+        axL = fig.add_subplot(gs[1, 0:2])
+        axL1 = fig.add_subplot(gs[0, 0:2], sharex=axL)
+        axR = fig.add_subplot(gs[1, 2:])
+        axR1 = fig.add_subplot(gs[0, 2:], sharex=axR)
+        axL.set_xlabel(r'$\log_{10}r_{\rm{SMBH}}$')
+        axR.set_xlabel(r'$\log_{10}r_{\rm{IMBH}}$ [pc]')
+        axL.set_ylabel(r'$\log_{10}$(CDF)')
+        axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$')
+        for int_ in range(2):
+            IMBHdist_sort = np.sort(disIMBH_flat[int_])
+            IMBHdist_index = np.asarray([i for i in enumerate(IMBHdist_sort)])
+            axL.plot(IMBHdist_sort, np.log10(IMBHdist_index[:,0]/IMBHdist_index[-1,0]), color = c_hist[int_])
+
+            kde_ecc = sm.nonparametric.KDEUnivariate(ecc_sort)
+            kde_ecc.fit()
+            kde_ecc.density /= max(kde_ecc.density)
+            axL1.plot(kde_ecc.support, kde_ecc.density, color = c_hist[int_], label = labels[int_])
+            axL1.fill_between(kde_ecc.support, kde_ecc.density, alpha = 0.35, color = c_hist[int_])
+
+            SMBHdist_sort = np.sort(disSMBH_flat[int_])
+            SMBHdist_index = np.asarray([i for i in enumerate(SMBHdist_sort)])
+            axR.plot(sem_sort, np.log10(SMBHdist_index[:,0]/SMBHdist_index[-1,0]), color = c_hist[int_])
+
+            kde_ecc = sm.nonparametric.KDEUnivariate(sem_sort)
+            kde_ecc.fit()
+            kde_ecc.density /= max(kde_ecc.density)
+            axR1.plot(kde_ecc.support, kde_ecc.density, color = c_hist[int_])
+            axR1.fill_between(kde_ecc.support, kde_ecc.density, alpha = 0.35, color = c_hist[int_])
+        
+        for ax_ in [axL, axL1, axR, axR1]:
+            plot_ini.tickers(ax_, 'plot')
+        for ax_ in [axL1, axR1]:
+            ax_.set_ylim(0, 1.1)
+        axL1.legend(loc='upper left')
+        plt.savefig('figures/system_evolution/distances_histogram_GRX.pdf', dpi=300, bbox_inches='tight')
+        plt.clf()
 
 def spatial_plotter(int_string):
     """
@@ -428,27 +568,26 @@ def spatial_plotter(int_string):
         axlabel_size, tick_size = plot_ini.font_size()
 
         if merger_idx == -4:
+            print('true')
             outcome = 'merger'
             bool = chaos_data.iloc[0][merger_idx]
             idx = 0
         else:
             outcome = 'ejection'
             bool = chaos_data.iloc[0][merger_idx].number
-
-        if bool > 0:
+        if bool > 0: #>= for all sims
             with open(ptracker_files[file_], 'rb') as input_file:
                 file_size = os.path.getsize(ptracker_files[file_])
                 if file_size < 2e9:
                     print('Reading File ', file_, ' : ', input_file)
                     ptracker = pkl.load(input_file)
 
-                    col_len = 150
+                    col_len = 250
                     parti_size = 20+len(ptracker)**-0.5
 
                     line_x = np.empty((len(ptracker), col_len))
                     line_y = np.empty((len(ptracker), col_len))
                     line_z = np.empty((len(ptracker), col_len))
-
                     for i in range(len(ptracker)):
                         tptracker = ptracker.iloc[i]
                         for j in range(col_len):
@@ -459,7 +598,7 @@ def spatial_plotter(int_string):
                             line_z[i][j] = coords[2].value_in(units.pc)
 
                         if outcome == 'merger':       
-                            if i != 0 and math.isnan(line_x[i][-1]) or tptracker.iloc[-1][1].value_in(units.kg) > 10**36:
+                            if i != 0 and math.isnan(line_x[i][-1]) or tptracker.iloc[-1][1].value_in(units.kg) > 1e36:
                                 idx = i
 
                     c = colour_picker()
@@ -498,18 +637,15 @@ def spatial_plotter(int_string):
                                     ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
                                             c = c[iter-2], edgecolors = 'black', s = 0.8*parti_size, zorder = 3)
                         iter += 1
-                    print('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'.pdf')
-                    print(ptracker_files[file_])
-                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'.pdf', dpi=300, bbox_inches='tight')
+                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'1.pdf', dpi=300, bbox_inches='tight')
                     plt.clf()
                     plt.close()
 
-
-    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
-    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
+    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e7/'+(int_string)+'/particle_trajectory/*'))
+    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e7/data/'+str(int_string)+'/chaotic_simulation/*'))
 
     print('Spatial evolution plotter')
-    bools = [True, False]
+    bools = [False, True]
     for bool_ in bools:
         merger_bool = bool_
         if (merger_bool):

@@ -49,7 +49,7 @@ class ejection_stats(object):
                                 stab_tracker = pd.DataFrame()
                                 df_stabtime = pd.Series({'Integrator': integrator[int_],
                                                         'Population': np.shape(ptracker)[0],
-                                                        'Simulation Time': np.shape(ptracker)[1] * 10**-3,
+                                                        'Simulation Time': np.shape(ptracker)[1] * 1e-3,
                                                         'vesc': vesc})
                                 stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
                                 stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
@@ -138,11 +138,9 @@ class ejection_stats(object):
                     pops = np.asarray(pops)
                     avg_vesc = np.asarray(avg_vesc)
 
-
                     fig, ax = plt.subplots()
                     ax.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = axlabel_size)
                     ax.set_ylabel(r'$\langle v_{\rm{ejec}} \rangle$ [km s$^{-1}$]', fontsize = axlabel_size)
-
                     colour_axes = ax.scatter(pops, avg_vesc, edgecolors='black', c = np.log10(avg_surv), norm = normalise, zorder = 3)
                     cbar = plt.colorbar(colour_axes, ax=ax)
                     plot_ini.tickers_pop(ax, self.tot_pop[int_], integrator[int_])
@@ -162,7 +160,6 @@ class ejection_stats(object):
                     plt.savefig('figures/ejection_stats/vejection_histogram'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
                     plt.clf()
 
-
                     file.write('\nData for '+str(integrator[int_]))
                     file.write('\nPopulations counts                           ' + str(in_pop) + ' : ' + str(samples))
                     file.write('\nPopulations average escape velocity          ' + str(in_pop) + ' : ' + str(avg_vesc) + ' kms')
@@ -181,23 +178,21 @@ class event_tracker(object):
 
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
-        
-        colours = ['red', 'blue', 'deepskyblue', 'skyblue', 'slateblue', 'turquoise']
-        folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.50_4e6', 'rc_0.50_4e7']
-        labelsI = ['Hermite', 'GRX']
-        labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
-                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
-                   r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$',
-                   r'$r_c = 0.50$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
 
         chaos_data = glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/Hermite/chaotic_simulation/*')
         chaos_data_GRX = glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/GRX/chaotic_simulation/*')
         chaos_data = [natsort.natsorted(chaos_data), natsort.natsorted(chaos_data_GRX)]
+        
+        colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
+        folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        labelsI = ['Hermite', 'GRX']
+        labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
+                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
+                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{8}M_{\odot}$']
 
-        init_pop = [[ ], [ ]]
         merger = [[ ], [ ]]
         in_pop = [[ ], [ ]]
-        frac_merge = [[ ], [ ]]
+        fmerge = [[ ], [ ]]
 
         fig, ax = plt.subplots()
         ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = axlabel_size)
@@ -206,26 +201,26 @@ class event_tracker(object):
             for file_ in range(len(chaos_data[int_])):
                 with open(chaos_data[int_][file_], 'rb') as input_file:
                     data = pkl.load(input_file)
-                    init_pop[int_].append(len(data.iloc[0][8])+1)
+                    in_pop[int_].append(len(data.iloc[0][8])+1)
                     merger[int_].append(data.iloc[0][10])
 
-            in_pop[int_] = np.unique(init_pop[int_])
+            in_pop[int_] = np.unique(in_pop[int_])
             for pop_ in in_pop[int_][(in_pop[int_] > 5)]:
-                indices = np.where((init_pop[int_] == pop_))[0]
+                indices = np.where((in_pop[int_] == pop_))[0]
                 temp_frac = [merger[int_][i] for i in indices]
-                frac_merge[int_].append(np.mean(temp_frac))
-            ax.scatter(in_pop[int_][(in_pop[int_] > 5)], frac_merge[int_], color = colours[int_], label = labelsI[int_], edgecolors = 'black')
+                fmerge[int_].append(np.mean(temp_frac))
+            ax.scatter(in_pop[int_][(in_pop[int_] > 5)], fmerge[int_], color = colours[int_], label = labelsI[int_], edgecolors = 'black')
         plot_ini.tickers_pop(ax, in_pop[0], labelsI[0])
         ax.legend(prop={'size': axlabel_size})
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_HermGRX.pdf', dpi=300, bbox_inches='tight')
+        plt.clf()
 
         fig, ax = plt.subplots()
         ax.set_ylabel(r'$N_{\rm{merge}}/N_{\rm{sim}}$', fontsize = axlabel_size)
         ax.set_ylim(0,1.05)
-        init_pop = [[ ], [ ], [ ], [ ]]
-        merger = [[ ], [ ], [ ], [ ]]
-        in_pop = [[ ], [ ], [ ], [ ]]
-        frac_merge = [[ ], [ ], [ ], [ ]]
+        merger = [[ ], [ ], [ ]]
+        in_pop = [[ ], [ ], [ ]]
+        fmerge = [[ ], [ ], [ ]]
 
         iterf = 0
         for fold_ in folders:
@@ -235,15 +230,15 @@ class event_tracker(object):
             for file_ in range(len(chaos_data[0])):
                 with open(chaos_data[0][file_], 'rb') as input_file:
                     data = pkl.load(input_file)
-                    init_pop[iterf].append(len(data.iloc[0][8])+1)
+                    in_pop[iterf].append(len(data.iloc[0][8])+1)
                     merger[iterf].append(data.iloc[0][10])
 
-            in_pop[iterf] = np.unique(init_pop[iterf])
+            in_pop[iterf] = np.unique(in_pop[iterf])
             for pop_ in in_pop[iterf][(in_pop[iterf] > 5)]:
-                indices = np.where((init_pop[iterf] == pop_))[0]
+                indices = np.where((in_pop[iterf] == pop_))[0]
                 temp_frac = [merger[iterf][i] for i in indices]
-                frac_merge[iterf].append(np.mean(temp_frac))
-            ax.scatter(in_pop[iterf][(in_pop[iterf] > 5)], frac_merge[iterf], color = colours[iterf+1], label = labelsD[iterf], edgecolors = 'black')
+                fmerge[iterf].append(np.mean(temp_frac))
+            ax.scatter(in_pop[iterf][(in_pop[iterf] > 5)], fmerge[iterf], color = colours[iterf+1], label = labelsD[iterf], edgecolors = 'black')
             iterf += 1
         ax.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax, in_pop[1], labelsI[1])

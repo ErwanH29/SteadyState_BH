@@ -200,7 +200,7 @@ def simulation_stats_checker(dist_dir, int_string):
             data = line1.split()
             data2 = line2.split()
             data = [float(i) for i in data]
-            if 4001000 in data:
+            if 4.001e6 or 4.0001e7 or 4.00001e8 in data:
                 SMBH_merger += 1
             elif 2000 in data:
                 IMBH_merger += 1

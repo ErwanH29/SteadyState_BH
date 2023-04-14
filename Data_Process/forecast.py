@@ -44,11 +44,11 @@ def plotter():
         
 
     # Data from Furlong et al. (2015)
-    merger_rate = np.linspace(10**-3, 1, 100) #0.9/7 -> 7 / 0.9 merge per Myr
+    merger_rate = np.linspace(1e-3, 1, 100) #0.9/7 -> 7 / 0.9 merge per Myr
     mrate_fixed = [1e-3, 1e-2, 1e-1, 1]
     zrange = [0, 0.5, 1, 2, 3]
     phi0 = np.asarray([8.4, 8.4, 7.4, 4.5, 2.2]) 
-    phi0 *= 10**-4
+    phi0 *= 1e-4
     mcluster = [10**11.14, 10**11.11, 10**11.06, 10**10.91, 10**10.78]
     alpha = [-1.43, -1.45, -1.48, -1.57, -1.66]
     eps = 0.8
@@ -56,7 +56,7 @@ def plotter():
     ps_int = []
     cmove_dist_int = []
     for i in range(len(zrange)-1):
-        ps_int.append(quad(PS_function, 10**8, 10**14, args=(phi0[i], mcluster[i], alpha[i]))[0])
+        ps_int.append(quad(PS_function, 1e8, 1e14, args=(phi0[i], mcluster[i], alpha[i]))[0])
         cmove_dist_int.append(quad(cmove_dist, zrange[i], zrange[i+1])[0])
 
     ytext = r'$\Gamma_{\rm{events}}$ [yr$^{-1}$]'
@@ -73,7 +73,7 @@ def plotter():
     for rate_ in merger_rate:
         mergerval_temp = 0
         for i in range(len(ps_int)):
-            mergerval_temp += (4/3)*eps*np.pi*rate_*(6*10**10)**-1*(ps_int[i] * cmove_dist_int[i]**3) * 10**-6
+            mergerval_temp += (4/3)*eps*np.pi*rate_*(6e10)**-1*(ps_int[i] * cmove_dist_int[i]**3) * 1e-6
         cum_merger.append(mergerval_temp)
     ax.plot(np.log10(merger_rate), np.log10(cum_merger),  color = 'black')
     
@@ -82,7 +82,7 @@ def plotter():
     for rate_ in mrate_fixed:
         mergerval_temp = 0
         for i in range(len(ps_int)):
-            mergerval_temp += (4/3)*eps*np.pi*rate_*(6*10**10)**-1*(ps_int[i] * cmove_dist_int[i]**3) * 10**-6
+            mergerval_temp += (4/3)*eps*np.pi*rate_*(6e10)**-1*(ps_int[i] * cmove_dist_int[i]**3) * 1e-6
         cum_merger_fixed.append(mergerval_temp)
         if itert <= 1:
             ax.text(np.log10(rate_)+0.05, np.log10(mergerval_temp)-0.5, 

@@ -29,7 +29,7 @@ class gw_calcs(object):
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=UserWarning) 
         self.H0 = 67.4 #From arXiv:1807.06209
-        self.tH = (self.H0*(3.2408*10**-20))**-1 * 1/(3600*365*24*10**6) | units.Myr
+        self.tH = (self.H0*(3.2408e-20))**-1 * 1/(3600*365*24*1e6) | units.Myr
         self.integrator = ['Hermite', 'GRX']
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
         self.colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
@@ -108,7 +108,7 @@ class gw_calcs(object):
                                                     strain_SMBH = self.gw_strain(sem_SMBH, ecc_SMBH, mass1, SMBH_sys_mass)
                                                     freq_SMBH = self.gw_freq(sem_SMBH, ecc_SMBH, mass1, SMBH_sys_mass)
                                                     nharm_SMBH = self.gw_harmonic_mode(ecc_SMBH)
-                                                    if freq_SMBH > 10**-12:
+                                                    if freq_SMBH > 1e-12:
                                                         strain_SMBH_GW_indiv.append(strain_SMBH)
                                                         freq_SMBH_GW_indiv.append(freq_SMBH)
                                                         nharm_SMBH_GW_indiv.append(nharm_SMBH)
@@ -126,7 +126,7 @@ class gw_calcs(object):
                                                     strain_nn = self.gw_strain(semi_major_nn, ecc_nn, mass1, mass2)
                                                     freq_nn = self.gw_freq(semi_major_nn, ecc_nn, mass1, mass2)
                                                     nharm_nn = self.gw_harmonic_mode(ecc_nn)
-                                                    if freq_nn > 10**-12:
+                                                    if freq_nn > 1e-12:
                                                         strain_NN_GW_indiv.append(strain_nn)
                                                         freq_NN_GW_indiv.append(freq_nn)
                                                         nharm_NN_GW_indiv.append(nharm_nn)
@@ -139,7 +139,7 @@ class gw_calcs(object):
                                                         dist_SMBH = (linex**2+liney**2+linez**2).sqrt()
                                                         dist_NN = data.iloc[parti_][col_][-1]
 
-                                                        if dist_SMBH.value_in(units.pc) == dist_NN or mass2 > 10**5 | units.MSun:
+                                                        if dist_SMBH.value_in(units.pc) == dist_NN or mass2 > 1e5 | units.MSun:
                                                             Nfbnn_indiv += 1
                                                             SMBH_NN_event.append(1)
                                                         else:
@@ -154,7 +154,7 @@ class gw_calcs(object):
                                                     strain_t = self.gw_strain(semi_major_t, ecc_t, mass1, mass2)
                                                     freq_t = self.gw_freq(semi_major_t, ecc_t, mass1, mass2)
                                                     nharm_t = self.gw_harmonic_mode(ecc_t)
-                                                    if freq_t > 10**-12:
+                                                    if freq_t > 1e-12:
                                                         strain_t_GW_indiv.append(strain_t)
                                                         freq_t_GW_indiv.append(freq_t)
                                                         nharm_t_GW_indiv.append(nharm_t)
@@ -174,7 +174,7 @@ class gw_calcs(object):
                                                 path = '/media/erwanh/Elements/'+fold_+'/data/tGW/'
                                                 stab_tracker = pd.DataFrame()
                                                 df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                                        'Simulation Time': 10**3*sim_time,
+                                                                        'Simulation Time': 1e3*sim_time,
                                                                         'Population': 5*round(0.2*np.shape(data)[0]),
                                                                         'mass SMBH': SMBH_sys_mass,
                                                                         'mass IMBH1': mass1,
@@ -318,7 +318,7 @@ class gw_calcs(object):
         Function to plot the LISA and muAres frequency range in a vs. (1-e) plots
         """
         
-        ecc_range = np.linspace(0.0001, (1-10**-8), 50)
+        ecc_range = np.linspace(0.0001, (1-1e-8), 50)
 
         self.Ares_semimaj_max = self.gw_cfreq_semi(ecc_range[1:], 1 | units.Hz, m1, m2)
         self.Ares_semimaj_min = self.gw_cfreq_semi(ecc_range[1:], 1e-7 | units.Hz, m1, m2)
@@ -518,7 +518,7 @@ class gw_calcs(object):
 
         # LISA
         lisa = li.LISA() 
-        x_temp = np.linspace(10**-5, 1, 1000)
+        x_temp = np.linspace(1e-5, 1, 1000)
         Sn = lisa.Sn(x_temp)
 
         # SKA
@@ -550,7 +550,7 @@ class gw_calcs(object):
         ares = np.load(os.path.join(os.path.dirname(__file__), 'SGWBProbe/files/S_h_muAres_nofgs.npz'))
         Ares_freq = ares['x']
         Ares_stra = ares['y']
-        scale_dist = 10**5
+        scale_dist = 1e5
         cluster_pop = [10, 15, 20, 25, 30, 35, 40]
         pop_tracker = 40#int(input('What should be the upper limit of the population for simulations sampled? '))
 
@@ -598,7 +598,7 @@ class gw_calcs(object):
                                 gw_strain = scale_dist*self.strain_flyby_nn[parti_][event_]
                                 index = np.abs(np.asarray(Ares_freq-freq_nn)).argmin()
 
-                                if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                                if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 1e5 | units.MSun:
                                     IMBH_tot_arr[idx] += 0.5
                                     if np.sqrt(freq_nn*lisa.Sn(freq_nn)) < gw_strain:
                                         IMBH_detL_arr[idx] += 0.5
@@ -622,7 +622,7 @@ class gw_calcs(object):
                                 gw_strain = scale_dist*self.strain_flyby_t[parti_][event_]
                                 index = np.abs(np.asarray(Ares_freq-freq_t)).argmin()
 
-                                if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                                if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 1e5 | units.MSun:
                                     IMBH_tot_arr[idx] += 0.5
                                     if np.sqrt(freq_t*lisa.Sn(freq_t)) < gw_strain:
                                         IMBH_detL_arr[idx] += 0.5
@@ -652,12 +652,12 @@ class gw_calcs(object):
                                     SMBH_detA_arr[idx] += 1
                     
                     tot_sims = [i/j for i, j in zip(tot_sims, cluster_pop)]
-                    IMBH_tot_arr  = [i/(j*k*10**3) for i, j, k in zip(IMBH_tot_arr, tot_sims, avgG)]
-                    IMBH_detL_arr = [i/(j*k*10**3) for i, j, k in zip(IMBH_detL_arr, tot_sims, avgG)]
-                    IMBH_detA_arr = [i/(j*k*10**3) for i, j, k in zip(IMBH_detA_arr, tot_sims, avgG)]
-                    SMBH_tot_arr  = [i/(j*k*10**3) for i, j, k in zip(SMBH_tot_arr, tot_sims, avgG)]
-                    SMBH_detL_arr = [i/(j*k*10**3) for i, j, k in zip(SMBH_detL_arr, tot_sims, avgG)]
-                    SMBH_detA_arr = [i/(j*k*10**3) for i, j, k in zip(SMBH_detA_arr, tot_sims, avgG)]
+                    IMBH_tot_arr  = [i/(j*k*1e3) for i, j, k in zip(IMBH_tot_arr, tot_sims, avgG)]
+                    IMBH_detL_arr = [i/(j*k*1e3) for i, j, k in zip(IMBH_detL_arr, tot_sims, avgG)]
+                    IMBH_detA_arr = [i/(j*k*1e3) for i, j, k in zip(IMBH_detA_arr, tot_sims, avgG)]
+                    SMBH_tot_arr  = [i/(j*k*1e3) for i, j, k in zip(SMBH_tot_arr, tot_sims, avgG)]
+                    SMBH_detL_arr = [i/(j*k*1e3) for i, j, k in zip(SMBH_detL_arr, tot_sims, avgG)]
+                    SMBH_detA_arr = [i/(j*k*1e3) for i, j, k in zip(SMBH_detA_arr, tot_sims, avgG)]
                     file.write(' For '+str(integrator[0])+': \n\n')
                     file.write('Populations:                         '+str(cluster_pop))
                     file.write('\nTotal IMBH events /yr:             '+str(IMBH_tot_arr))
@@ -702,7 +702,7 @@ class gw_calcs(object):
                     for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
                         semi_fb_nn = self.semi_flyby_nn[parti_][event_]
                         ecc_fb_nn = self.ecc_flyby_nn[parti_][event_]
-                        if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                        if np.asarray(self.fb_nn_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 1e5 | units.MSun:
                             IMBH_sem[int_].append(semi_fb_nn.value_in(units.pc))
                             IMBH_ecc[int_].append(np.log10(1-ecc_fb_nn))
 
@@ -714,7 +714,7 @@ class gw_calcs(object):
                     for event_ in range(len(self.semi_flyby_t[parti_])):
                         semi_fb_t = self.semi_flyby_t[parti_][event_]
                         ecc_fb_t = self.ecc_flyby_t[parti_][event_]
-                        if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 10**5 | units.MSun:
+                        if np.asarray(self.fb_t_SMBH[parti_][event_]) < 0 and self.mass_IMBH[parti_] < 1e5 | units.MSun:
                             IMBH_sem[int_].append(semi_fb_t.value_in(units.pc))
                             IMBH_ecc[int_].append(np.log10(1-ecc_fb_t))
 
@@ -736,8 +736,8 @@ class gw_calcs(object):
                 
             ############### PLOTTING OF a vs. (1-e) FOR BIN ##############
             x_arr = np.linspace(-10, 0, 2000)
-            rmass_IMBH = 10**6*2*10**3 | units.MSun**3 #(self.mass_parti[0][0]**2)*(2*self.mass_parti[0][0])
-            rmass_SMBH = 4*10**6*2*10**3*(4*10**6+2*10**3) | units.MSun**3 #(self.mass_parti[0][0]*self.mass_SMBH[0][0])*(self.mass_parti[0][0]+self.mass_SMBH[0][0])
+            rmass_IMBH = (self.mass_parti[0][0]**2)*(2*self.mass_parti[0][0])
+            rmass_SMBH = (self.mass_parti[0][0]*self.mass_SMBH[0][0])*(self.mass_parti[0][0]+self.mass_SMBH[0][0])
             const_tgw =  [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_IMBH*(10**(i) * (1 | units.pc)) **-4)) **(1/3.5))) for i in x_arr]
             const_tgw2 = [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_SMBH*(10**(i) * (1 | units.pc)) **-4))**(1/3.5))) for i in x_arr]
 
@@ -806,10 +806,9 @@ class gw_calcs(object):
             ax2.set_xlim(1e-3,1.05)
             ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
 
-            ax.text(-5.2, -2.6, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
-            ax.text(-5.85, -3.4, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
+            ax.text(-5.2, -1.5, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+16, color = 'white', zorder = 8)
+            ax.text(-5.85, -2.3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+16, color = 'white')
             self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_IMBH[0][0])
-
             for int_ in range(drange):
                 ax.scatter(np.log10(IMBH_sem[int_]), IMBH_ecc[int_], color = self.colors[int_+iterf], s = 0.75, zorder = 5)
                 no_data_IMBH = round(len(IMBH_ecc[int_])**0.9)
@@ -830,9 +829,9 @@ class gw_calcs(object):
                 plot_ini.tickers(ax_, 'plot')
             ax1.legend(prop={'size': axlabel_size})
             ax.plot(x_arr, const_tgw, color = 'black', zorder = 6)
-            ax.text(-1.6, -4.1, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+18, color = 'white', 
+            ax.text(-1.6, -4.1, r'$t_{\rm{GW}} > t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+14, color = 'white', 
                     path_effects=[pe.withStroke(linewidth=2, foreground="black")], zorder = 6)
-            ax.text(-1.6, -5.2, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+18, color = 'white', 
+            ax.text(-1.6, -5.2, r'$t_{\rm{GW}} < t_H$', verticalalignment = 'center', fontsize = axlabel_size, rotation=self.text_angle+14, color = 'white', 
                     path_effects=[pe.withStroke(linewidth=2, foreground="black")], zorder = 6)
             plt.savefig('figures/gravitational_waves/HistScatter_ecc_semi_IMBH_'+fold_+'.png', dpi=700, bbox_inches='tight')
             plt.clf()

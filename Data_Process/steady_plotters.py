@@ -1,11 +1,10 @@
 from amuse.lab import *
 from file_logistics import *
-from scipy.interpolate import make_interp_spline
 from scipy.optimize import OptimizeWarning
-from scipy.stats import iqr
 from spatial_plotters import *
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 import scipy.optimize
 
 warnings.filterwarnings("ignore", category=OptimizeWarning) 
@@ -39,7 +38,7 @@ class stability_plotters(object):
         axlabel_size, tick_size = plot_ini.font_size()
         
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
-        colors = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
+        colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
         dirH = '/data/Hermite/chaotic_simulation/*'
         dirG = '/data/GRX/chaotic_simulation/*'
         labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
@@ -87,7 +86,6 @@ class stability_plotters(object):
         for data_ in range(4):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
-        rng = np.random.default_rng()
         data_size = [30, 40, 50]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
@@ -106,7 +104,7 @@ class stability_plotters(object):
                 if int_ == 1:
                     for rng_ in range(len(data_size)):
                         stab_times_temp = [ ]
-                        rno = rng.integers(low = 0, high = data_size[-1], size = data_size[rng_])
+                        rno = random.sample(range(0, data_size[-1]), data_size[rng_])
                         stab_times_temp.append(stab_time[int_][N_parti][rno])
                             
                         stability_rng = np.median(stab_times_temp)
@@ -166,21 +164,21 @@ class stability_plotters(object):
                 N_parti_med[int_] = np.array([float(i) for i in N_parti_med[int_]])
                 if j == 0:
                     ax1.scatter(pop[int_], np.log10(N_parti_med[int_]), 
-                                color = colors[int_], edgecolor = 'black', zorder = 2, label = integ_label[int_])
+                                color = colours[int_], edgecolor = 'black', zorder = 2, label = integ_label[int_])
                 else:
                     ax1.scatter(pop[int_], np.log10(N_parti_med[int_]), 
-                                color = colors[int_], edgecolor = 'black', zorder = 2)
-            ax1.scatter(pop[int_], np.log10(std_min[int_]), color = colors[int_], marker = '_')
-            ax1.scatter(pop[int_], np.log10(std_max[int_]), color = colors[int_], marker = '_')
+                                color = colours[int_], edgecolor = 'black', zorder = 2)
+            ax1.scatter(pop[int_], np.log10(std_min[int_]), color = colours[int_], marker = '_')
+            ax1.scatter(pop[int_], np.log10(std_max[int_]), color = colours[int_], marker = '_')
             ax1.plot([pop[int_], pop[int_]], [np.log10(std_min[int_]), 
-                      np.log10(std_max[int_])], color = colors[int_], zorder = 1)
+                      np.log10(std_max[int_])], color = colours[int_], zorder = 1)
         
         p0 = (100, -5, 20)
         xtemp = np.linspace(10, 100, 1000)
-        slope = [[ ], [ ], [ ], [ ]]
-        beta = [[ ], [ ], [ ], [ ]]
-        log_c = [[ ], [ ], [ ], [ ]]
-        curve = [[ ], [ ], [ ], [ ]]
+        slope = [[ ], [ ], [ ]]
+        beta  = [[ ], [ ], [ ]]
+        log_c = [[ ], [ ], [ ]]
+        curve = [[ ], [ ], [ ]]
         params, cv = scipy.optimize.curve_fit(log_fit, pop[1], (N_parti_med[1]), p0, maxfev = 10000, method = 'trf')
         slope[0], beta[0], log_c[0] = params
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
@@ -196,21 +194,23 @@ class stability_plotters(object):
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size)
         ax1.set_xlim(5,105)
         for int_ in range(2):
+            print(int_)
             int_ += 2
             for j, xpos in enumerate(pop[int_]):
                 pops = [i+1.1*xshift[int_-2] for i in pop[int_]]
                 N_parti_med[int_] = np.array([float(i) for i in N_parti_med[int_]])
                 if j == 0:
-                    ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colors[int_], 
+                    ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colours[int_], 
                                 edgecolor = 'black', zorder = 3, label = labelsD[int_-1])
                 else:
-                    ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colors[int_], 
+                    ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colours[int_], 
                                 edgecolor = 'black', zorder = 3)
-            ax1.scatter(pops, np.log10(std_min[int_]), color = colors[int_], marker = '_', zorder = 3)
-            ax1.scatter(pops, np.log10(std_max[int_]), color = colors[int_], marker = '_', zorder = 3)
-            ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colors[int_], zorder = 2)
-            #params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_med[int_]), p0, maxfev = 10000, method = 'trf')
-            #slope[int_-1], beta[int_-1], log_c[int_-1] = params
+            print(pops, (std_min[int_]), N_parti_med[int_])
+            ax1.scatter(pops, np.log10(std_min[int_]), color = colours[int_], marker = '_', zorder = 3)
+            ax1.scatter(pops, np.log10(std_max[int_]), color = colours[int_], marker = '_', zorder = 3)
+            ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colours[int_], zorder = 2)
+            params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_med[int_]), p0, maxfev = 10000, method = 'trf')
+            slope[int_-1], beta[int_-1], log_c[int_-1] = params
 
         xtemp = np.linspace(10, 40)
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
@@ -222,10 +222,7 @@ class stability_plotters(object):
 
         ##### GRX vs. Nsims #####
         labels = [r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$', r'$N_{\rm{sims}} = 60$']
-        labels_diff = [r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 20$', 
-                       r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 30$',
-                       r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 40$',
-                       r'$N_{{\rm{sims}}, i} = 40, N_{{\rm{sims}}, j} = 50$']
+        
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)

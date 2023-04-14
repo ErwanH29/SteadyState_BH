@@ -136,7 +136,7 @@ class sustainable_sys(object):
 
                                                         if (bin):
                                                             if not (bin_sys):  #First formation time
-                                                                formation_time = col_*1000
+                                                                formation_time = col_*1e3
                                                                 bform_time[-1] = formation_time
                                                                 bin_sys = True
                                                             bin_key.append(data.iloc[parti_][col_][6][1])
@@ -170,7 +170,7 @@ class sustainable_sys(object):
                                                                 equality = 2.8 * ((1+mass_outer/(mass1+mass2))*(1+ecc_outer)/(1-ecc_outer)**0.5)**0.4
                                                                 if semi_ratio > equality:
                                                                     if not (ter_sys):
-                                                                        formation_time = col_*1000
+                                                                        formation_time = col_*1e3
                                                                         tform_time[-1] = formation_time
                                                                         ter_sys = True
                                                                     ter_key.append([i for i in data.iloc[parti_][col_][6][2]][0])
@@ -671,7 +671,7 @@ class sustainable_sys(object):
         
         integrators = ['Hermite', 'GRX']
 
-        x_temp = np.linspace(10**-5, 1, 1000)
+        x_temp = np.linspace(1e-5, 1, 1000)
 
         lisa = li.LISA() 
         Sn = lisa.Sn(x_temp)
