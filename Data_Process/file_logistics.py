@@ -156,6 +156,21 @@ def folder_data_loop(iterf, int):
 
     return sim_
 
+def moving_average(array, smoothing):
+        """
+        Function to remove the large fluctuations in various properties by taking the average
+        
+        Inputs:
+        array:     Array consisting of variable for which to produce running average of
+        smoothing: Number of elements to average over
+        output:    Smoothened array
+        """
+
+        value = np.cumsum(array, dtype=float)
+        value[smoothing:] = value[smoothing:] - value[:-smoothing]
+
+        return value[smoothing-1:]/smoothing
+
 def ndata_chaos(iterf, dataG, chaosG, fold_):
     """
     Function to organise data files for a given directory before extracting

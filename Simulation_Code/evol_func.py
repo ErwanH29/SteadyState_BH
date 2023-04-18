@@ -5,11 +5,16 @@ from evol_func import *
 import numpy as np
 
 def calc_momentum(indivp):
+    """
+    Function which calculates the momentum of the particles in collision
+    """
+
     return (indivp.mass * indivp.velocity).sum()
 
 def find_nearest(array, value):
     """
     Function to find the nearest value in an array for a particular element.
+
     Inputs:
     array:  The array for which has all the elements
     value:  The value to compare the elements with
@@ -22,6 +27,7 @@ def find_nearest(array, value):
 def indiv_PE_all(indivp, set):
     """
     Finding a particles' individual PE based on its closest binary
+
     Input:
     indivp:  The individual particle computing BE for
     set:     The complete particle set
@@ -56,7 +62,6 @@ def merge_IMBH(parti, parti_in_enc, tcoll, int_string, code):
         new_particle.key_tracker = parti_in_enc[0].key
     else: 
         new_particle.key_tracker = parti_in_enc[1].key
-
     new_particle.mass = parti_in_enc.total_mass()
     new_particle.collision_time = tcoll
     new_particle.position = com_pos
@@ -88,9 +93,9 @@ def nearest_neighbour(indivp, pset):
     """
 
     min_dist = [ ]
-    for parti_ in pset:
-        if indivp != parti_:
-            rel_pos = indivp.position - parti_.position
+    for i in range(len(pset)):
+        if indivp != pset[i]:
+            rel_pos = indivp.position - pset[i].position
             min_dist.append(rel_pos.length().value_in(units.parsec))
             
     temp = np.sort(min_dist)
@@ -100,4 +105,4 @@ def nearest_neighbour(indivp, pset):
     return min(min_dist), pset[index], pset[index2]
 
 def SMBH_filter(pset):
-    return pset[pset.mass < 5e4 | units.MSun]
+    return pset[pset.mass < max(0.8*pset.mass)]

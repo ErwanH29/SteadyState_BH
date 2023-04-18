@@ -5,22 +5,24 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
-STOP
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
-global_properties_GRX_pops()
+lagrangian_tracker()
+#global_properties_GRX_pops()
 #global_properties()
 #ecc_semi_histogram('GRX')
 #energy_scatter()
 #spatial_plotter('GRX')
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
+STOP
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
 STOP
 
 print('...tGW_plotters...')

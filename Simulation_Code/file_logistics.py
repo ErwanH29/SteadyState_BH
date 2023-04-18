@@ -1,3 +1,4 @@
+from amuse.lab import *
 import glob
 import fnmatch
 import os
@@ -7,7 +8,7 @@ def file_counter(int_string):
     Function which counts the number of files in a directory.
     """
     
-    dir_path = '/home/erwanh/Desktop/SteadyStateBH/Data_Process/data/'+str(int_string)+'/simulation_stats/'
+    dir_path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7/simulation_stats/'
     count = len(fnmatch.filter(os.listdir(dir_path), '*.*'))
     return count
 

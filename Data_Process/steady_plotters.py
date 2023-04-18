@@ -104,7 +104,7 @@ class stability_plotters(object):
                 if int_ == 1:
                     for rng_ in range(len(data_size)):
                         stab_times_temp = [ ]
-                        rno = random.sample(range(0, data_size[-1]), data_size[rng_])
+                        rno = random.sample(range(0, 60), data_size[rng_])
                         stab_times_temp.append(stab_time[int_][N_parti][rno])
                             
                         stability_rng = np.median(stab_times_temp)
@@ -194,7 +194,6 @@ class stability_plotters(object):
         ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size)
         ax1.set_xlim(5,105)
         for int_ in range(2):
-            print(int_)
             int_ += 2
             for j, xpos in enumerate(pop[int_]):
                 pops = [i+1.1*xshift[int_-2] for i in pop[int_]]
@@ -205,7 +204,6 @@ class stability_plotters(object):
                 else:
                     ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colours[int_], 
                                 edgecolor = 'black', zorder = 3)
-            print(pops, (std_min[int_]), N_parti_med[int_])
             ax1.scatter(pops, np.log10(std_min[int_]), color = colours[int_], marker = '_', zorder = 3)
             ax1.scatter(pops, np.log10(std_max[int_]), color = colours[int_], marker = '_', zorder = 3)
             ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colours[int_], zorder = 2)
@@ -260,9 +258,10 @@ class stability_plotters(object):
                 file.write('For '+str(integ)+', # of full simulations per population:       '+str(pop[data_].flatten()))
                 file.write('\n                                                     '+str(full_simul[data_]))
                 file.write('\nNumber of samples:                                   '+str(psamp[data_].flatten()))
-                file.write('\nThe slope of the curve goes as:                      '+str(slope[data_]))
-                file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_]))
-                file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_]))
+                if data_ > 0:
+                    file.write('\nThe slope of the curve goes as:                      '+str(slope[data_-1]))
+                    file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_-1]))
+                    file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_-1]))
                 file.write('\nThe final raw data:                                  '+str(pop[data_][pop[data_] > 5].flatten()))
                 file.write('\nSimulated time [Myr]                                 '+str(N_parti_med[data_][pop[data_] > 5].flatten()))
                 file.write('\nAvg. simulated time [Myr]                            '+str(N_parti_avg[data_][pop[data_] > 5].flatten())+'\n\n')

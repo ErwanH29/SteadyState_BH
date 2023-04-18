@@ -9,7 +9,7 @@ class MW_SMBH(object):
     """
     Class which defines the central SMBH
     """
-    def __init__(self, mass = 4.e6 | units.MSun,
+    def __init__(self, mass = 4.e7 | units.MSun,
                  position = [0, 0, 0] | units.parsec,
                  velocity = [0, 0, 0] | (units.AU/units.yr),
                  distance = 0.2 | units.parsec):
@@ -27,14 +27,7 @@ class IMBH_init(object):
     def __init__(self):
         self.N = 0
         self.mass = 1000 | units.MSun
-
-    def coll_radius(self, radius):
-        """
-        Function which sets the collision radius. 
-        Based on the rISCO.
-        """
-        return 3*radius    
-
+    
     def IMBH_radius(self, mass):
         """
         Function which sets the IMBH radius based on the Schwarzschild radius
@@ -43,6 +36,43 @@ class IMBH_init(object):
         mass:   The mass of the input particle
         """
         return (2*constants.G*mass)/(constants.c**2)
+
+    def coll_radius(self, radius):
+        """
+        Function which sets the collision radius. 
+        Based on the rISCO.
+        """
+        return 3*radius
+
+    def ProbFunc(self, vel):
+        """
+        Function which initialises the velocity distribution [Maxwell distribution]
+        
+        Inputs:
+        vel:    The velocity range for which to sample the weights from
+        """
+
+        sigmaV = 150 # in kms (if changing, change line 26 of physics_func.py)
+
+        return np.sqrt(2/np.pi)*(vel**2/sigmaV**3)*np.exp(-vel**2/(2*sigmaV**2))
+
+    def velocityList(self, vseed):
+        """
+        Function to give a velocity for an initialised particle
+        """
+
+        np.random.seed(vseed)
+
+        vrange = np.linspace(0, 700) # in kms
+        r = [-1,1]
+        w = self.ProbFunc(vrange)
+        scale = [np.random.choice(r), [np.random.choice(r)], [np.random.choice(r)]]
+
+        vx = np.array(choices(vrange, weights=w, k = 1))*scale[0]
+        vy = np.array(choices(vrange, weights=w, k = 1))*scale[1]
+        vz = np.array(choices(vrange, weights=w, k = 1))*scale[2]
+ 
+        return np.concatenate((vx,vy,vz))
 
     def plummer_distr(self, N, vseed):
         """
@@ -57,36 +87,6 @@ class IMBH_init(object):
         distr = new_plummer_model(N, convert_nbody = self.code_conv)
         rhmass = LagrangianRadii(distr)[6].in_(units.parsec)
         return distr, rhmass
-
-    def ProbFunc(self, vel):
-        """
-        Function which initialises the velocity distribution [Maxwell distribution]
-        
-        Inputs:
-        vel:    The velocity range for which to sample the weights from
-        """
-
-        sigmaV = 150 #in km/s
-
-        return np.sqrt(2/np.pi)*(vel**2/sigmaV**3)*np.exp(-vel**2/(2*sigmaV**2))
-
-    def velocityList(self, vseed):
-        """
-        Function to give a velocity for an initialised particle
-        """
-
-        np.random.seed(vseed)
-
-        vrange = np.linspace(0, 700) # in kms
-        w = self.ProbFunc(vrange)
-        r = [-1,1]
-        scale = [np.random.choice(r), [np.random.choice(r)], [np.random.choice(r)]]
-
-        vx = np.array(choices(vrange, weights=w, k = 1))*scale[0]
-        vy = np.array(choices(vrange, weights=w, k = 1))*scale[1]
-        vz = np.array(choices(vrange, weights=w, k = 1))*scale[2]
- 
-        return np.concatenate((vx,vy,vz))
 
     def IMBH_first(self, init_parti, seed):
         """
@@ -141,7 +141,5 @@ class IMBH_init(object):
         particles[0].mass = SMBH_parti.mass
         particles.radius = self.IMBH_radius(particles.mass)
         particles.collision_radius = self.coll_radius(particles.radius)
-
-        print(particles.velocity.in_(units.kms))
         
         return particles, rhmass
