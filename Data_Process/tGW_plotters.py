@@ -697,6 +697,7 @@ class gw_calcs(object):
             SMBH_ecc = [[ ], [ ]]
 
             for int_ in range(drange):
+                print(int_)
                 self.combine_data(integrator[int_], fold_, pop_tracker)
                 for parti_ in range(len(self.semi_flyby_nn)): #Looping through every individual particle\
                     for event_ in range(len(self.semi_flyby_nn[parti_])): #Looping through every detected event
@@ -736,8 +737,10 @@ class gw_calcs(object):
                 
             ############### PLOTTING OF a vs. (1-e) FOR BIN ##############
             x_arr = np.linspace(-10, 0, 2000)
-            rmass_IMBH = (self.mass_parti[0][0]**2)*(2*self.mass_parti[0][0])
-            rmass_SMBH = (self.mass_parti[0][0]*self.mass_SMBH[0][0])*(self.mass_parti[0][0]+self.mass_SMBH[0][0])
+            IMBH_mass = 1e3 | units.MSun
+            SMBH_mass = 4e6 | units.MSun
+            rmass_IMBH = (IMBH_mass**2)*(2*IMBH_mass)
+            rmass_SMBH = (IMBH_mass*SMBH_mass)*(IMBH_mass+SMBH_mass)
             const_tgw =  [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_IMBH*(10**(i) * (1 | units.pc)) **-4)) **(1/3.5))) for i in x_arr]
             const_tgw2 = [np.log10(1-np.sqrt(1-((256*self.tH*(constants.G**3)/(5*constants.c**5)*rmass_SMBH*(10**(i) * (1 | units.pc)) **-4))**(1/3.5))) for i in x_arr]
 
@@ -758,7 +761,7 @@ class gw_calcs(object):
             ax1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
             ax2.set_xlim(1e-3, 1.05)
             ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-            self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_SMBH[0][0])
+            self.forecast_interferometer(ax, IMBH_mass, SMBH_mass)
             ax.text(-4.0, -2.7, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
             ax.text(-5.15, -3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+17, color = 'white')
             for int_ in range(drange):
@@ -806,9 +809,9 @@ class gw_calcs(object):
             ax2.set_xlim(1e-3,1.05)
             ax2.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
 
-            ax.text(-5.2, -1.5, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+16, color = 'white', zorder = 8)
-            ax.text(-5.85, -2.3, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+16, color = 'white')
-            self.forecast_interferometer(ax, self.mass_parti[0][0], self.mass_IMBH[0][0])
+            ax.text(-4.0, -3.9, r'$\mu$Ares ($f_{\rm{peak}} = 10^{-3}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+16, color = 'white', zorder = 8)
+            ax.text(-5.15, -4.1, r'LISA ($f_{\rm{peak}} = 10^{-2}$ Hz)', verticalalignment = 'center', fontsize = axlabel_size-5, rotation=self.text_angle+16, color = 'white')
+            self.forecast_interferometer(ax, IMBH_mass, IMBH_mass)
             for int_ in range(drange):
                 ax.scatter(np.log10(IMBH_sem[int_]), IMBH_ecc[int_], color = self.colors[int_+iterf], s = 0.75, zorder = 5)
                 no_data_IMBH = round(len(IMBH_ecc[int_])**0.9)

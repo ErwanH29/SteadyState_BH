@@ -152,8 +152,8 @@ def ecc_semi_histogram(integrator):
     ax.text(-6.6, 0.45, r'$e > 1$', color = 'white', va = 'center', fontsize = axlabel_size)
     ax.text(-6.6, -0.55, r'$e < 1$', color = 'white', va = 'center', fontsize = axlabel_size)
     plot_ini.tickers(ax, 'histogram')
-    ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-    ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+    ax.tick_params(axis="y", which = 'both', labelsize = tick_size)
+    ax.tick_params(axis="x", which = 'both', labelsize = tick_size)
     ax.legend(prop={'size': axlabel_size})
     plt.savefig('figures/system_evolution/'+integrator+'_all_ecc_sem_scatter_hist_contours_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
     plt.clf()
@@ -638,12 +638,13 @@ def lagrangian_tracker():
         pop_checker = 0
         no_samples = 0
         pop_filt = 10
+        fact = 1e4
         idx = np.where(popG[popG > 5] == pop_filt)
 
-        no_runs  = np.zeros([1, int(np.round(avgG[idx]*1e3)[0])])
-        L25t_arr = np.zeros([1, int(np.round(avgG[idx]*1e3)[0])])
-        L50t_arr = np.zeros([1, int(np.round(avgG[idx]*1e3)[0])])
-        L75t_arr = np.zeros([1, int(np.round(avgG[idx]*1e3)[0])])
+        no_runs  = np.zeros([1, 10**5])# int(np.round(avgG[idx]*1e3)[0])])
+        L25t_arr = np.zeros([1, 10**5])# int(np.round(avgG[idx]*1e3)[0])])
+        L50t_arr = np.zeros([1, 10**5])# int(np.round(avgG[idx]*1e3)[0])])
+        L75t_arr = np.zeros([1, 10**5])# int(np.round(avgG[idx]*1e3)[0])])
         for file_ in range(len(chaotic)):
             with open(chaotic[file_], 'rb') as input_file:
                 chaotic_tracker = pkl.load(input_file)
@@ -657,7 +658,7 @@ def lagrangian_tracker():
                                 no_samples, process, pop_checker = no_file_tracker(pop_checker, pop, no_files, no_samples)
                                 if (process):   
                                     ptracker = pkl.load(input_file)
-                                    col_len = int(min(np.round((avgG[idx])*1e3), np.shape(ptracker)[1])-1)
+                                    col_len = int(min(np.round((avgG[idx])*1e3*fact), np.shape(ptracker)[1])-1)
                                     pset = Particles(pop-1, mass = 1e3 | units.MSun)
                                     for j in range(col_len-1):
                                         simsnap = ptracker.iloc[:,j]
@@ -689,10 +690,9 @@ def lagrangian_tracker():
                                     L50t_arr[0][j] += ltracker.iloc[j][1].value_in(units.pc)
                                     L75t_arr[0][j] += ltracker.iloc[j][2].value_in(units.pc)
 
-        smoothf = int(np.round(50*int(np.round(avgG[idx])[0])))
+        smoothf = 5000#int(np.round(50*int(np.round(avgG[idx])[0])))
 
         tim_arr = [ ] 
-        sim_end = [ ]
         L25_arr = [ ]
         L50_arr = [ ]
         L75_arr = [ ]
@@ -704,12 +704,9 @@ def lagrangian_tracker():
                 L25_arr.append(i/l)
                 L50_arr.append(j/l)
                 L75_arr.append(k/l)
-                sim_end.append(0)
                 tim_arr.append(time_iter)
-            else:
-                sim_end.append(1)
                 
-        return tim_arr, sim_end, L25_arr, L50_arr, L75_arr, smoothf
+        return tim_arr, L25_arr, L50_arr, L75_arr, smoothf
 
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
@@ -725,7 +722,7 @@ def lagrangian_tracker():
     ax.set_xlabel(r'$t$ [Myr]', fontsize = axlabel_size) 
     iterf = 0
     for fold_, bool_ in zip(folders, pset):
-        tim_arr, sim_end, L25_arr, L50_arr, L75_arr, smooth = plotter_func(fold_, bool_)
+        tim_arr, L25_arr, L50_arr, L75_arr, smooth = plotter_func(fold_, bool_)
         tim_arr = moving_average(tim_arr, smooth)
         L25_arr = moving_average(L25_arr, smooth)
         L50_arr = moving_average(L50_arr, smooth)
@@ -734,7 +731,6 @@ def lagrangian_tracker():
         ax.plot(tim_arr, L25_arr, color = colours[iterf+1], label = labelDat[iterf])
         ax.plot(tim_arr, L50_arr, color = colours[iterf+1], linestyle = '-.')
         ax.plot(tim_arr, L75_arr, color = colours[iterf+1], linestyle = ':')
-        ax.scatter(tim_arr[sim_end == 1], L25_arr[sim_end == 1], marker = 'X', edgecolors='black')
         
         iterf += 1
     ax.legend(prop={'size': axlabel_size})
