@@ -757,13 +757,13 @@ def spatial_plotter(int_string):
         axlabel_size, tick_size = plot_ini.font_size()
 
         if merger_idx == -4:
-            print('true')
             outcome = 'merger'
             bool = chaos_data.iloc[0][merger_idx]
             idx = 0
         else:
             outcome = 'ejection'
             bool = chaos_data.iloc[0][merger_idx].number
+            
         if bool > 0: #>= for all sims
             with open(ptracker_files[file_], 'rb') as input_file:
                 file_size = os.path.getsize(ptracker_files[file_])
@@ -811,30 +811,31 @@ def spatial_plotter(int_string):
                         if i == 0:
                             adapt_c = 'black'
                             ax.scatter((line_x[i]-line_x[0]), (line_y[i]-line_y[0]), 
-                                        c = adapt_c, zorder = 1, s = 250)
+                                        c = adapt_c, zorder = 1, s = 400)
                             
                         else:
-                            ax.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
-                                        c = c[iter-2], edgecolors = 'black', s = parti_size, zorder = 3)
                             ax.scatter(line_x[i]-line_x[0], line_y[i]-line_y[0], 
                                         c = c[iter-2], s = 1, zorder = 1) 
                             if outcome == 'merger':
                                 if i == idx:
                                     ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
-                                            c = c[iter-2], edgecolors = 'black', s = 4*parti_size, zorder = 3)
+                                            c = c[iter-2], edgecolors = 'black', s = 100, zorder = 3)
                                 else:
                                     ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
-                                            c = c[iter-2], edgecolors = 'black', s = 0.8*parti_size, zorder = 3)
+                                            c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
+                            else:
+                                ax.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
+                                            c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
                         iter += 1
                     plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'1.pdf', dpi=300, bbox_inches='tight')
                     plt.clf()
                     plt.close()
 
-    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e7/'+(int_string)+'/particle_trajectory/*'))
-    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e7/data/'+str(int_string)+'/chaotic_simulation/*'))
+    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
+    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
 
     print('Spatial evolution plotter')
-    bools = [False, True]
+    bools = [True, False]
     for bool_ in bools:
         merger_bool = bool_
         if (merger_bool):

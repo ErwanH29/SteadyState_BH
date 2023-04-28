@@ -10,11 +10,19 @@ start_spatial = cpu_time.time()
 #lagrangian_tracker()
 #global_properties_GRX_pops()
 #global_properties()
-ecc_semi_histogram('GRX')
+#ecc_semi_histogram('GRX')
 #energy_scatter()
-#spatial_plotter('GRX')
+spatial_plotter('GRX')
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
+STOP
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
 STOP
 
 print('...tGW_plotters...')
@@ -28,13 +36,6 @@ cls.orbital_hist_plotter()
 end_tgw = cpu_time.time()
 print('Plotting time: ', end_tgw - start_tgw, ' seconds')
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
-STOP
 
 
 print('...sustainable_bintert_plotters...')
