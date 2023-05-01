@@ -8,14 +8,16 @@ from spatial_plotters import *
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
 #lagrangian_tracker()
-#global_properties_GRX_pops()
 #global_properties()
 #ecc_semi_histogram('GRX')
 #energy_scatter()
-spatial_plotter('GRX')
+#global_vels_GRX_pops()
+global_properties_GRX_pops()
+#spatial_plotter('GRX')
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
 STOP
+
 
 print('...steady_plotter...')
 start_steady = cpu_time.time()
@@ -24,7 +26,6 @@ cls.overall_steady_plotter()
 end_steady = cpu_time.time()
 print('Plotting time: ', end_steady - start_steady, ' seconds')
 STOP
-
 print('...tGW_plotters...')
 start_tgw = cpu_time.time()
 cls = gw_calcs()
