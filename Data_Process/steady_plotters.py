@@ -32,7 +32,7 @@ class stability_plotters(object):
         """
             
         def log_fit(xval, slope, beta, log_c):
-            return slope*(xval**0.5*np.log(log_c*xval))**beta
+            return slope*(xval*np.log(log_c*xval))**beta
             
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
@@ -173,13 +173,17 @@ class stability_plotters(object):
             ax1.plot([pop[int_], pop[int_]], [np.log10(std_min[int_]), 
                       np.log10(std_max[int_])], color = colours[int_], zorder = 1)
         
-        p0 = (100, -5, 20)
+        p0 = np.asarray([40, -1, 0.11], dtype=float)
         xtemp = np.linspace(10, 100, 1000)
         slope = [[ ], [ ], [ ]]
         beta  = [[ ], [ ], [ ]]
         log_c = [[ ], [ ], [ ]]
         curve = [[ ], [ ], [ ]]
-        params, cv = scipy.optimize.curve_fit(log_fit, pop[1], (N_parti_med[1]), p0, maxfev = 10000, method = 'trf')
+
+        pop[1] = np.asarray(pop[1], dtype=float)
+        N_parti_med[1] = np.asarray(N_parti_med[1], dtype=float)
+
+        params, cv = scipy.optimize.curve_fit(log_fit, pop[1], N_parti_med[1], p0, maxfev = 100000)
         slope[0], beta[0], log_c[0] = params
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
         ax1.plot(xtemp, np.log10(curve[0]), zorder = 1, color = 'black', ls = '-.')

@@ -380,7 +380,7 @@ def global_properties_GRX_pops():
               r'GRX$_{\mathrm{4e6}}$',
               r'GRX$_{\mathrm{4e7}}$',
               r'GRX$_{\mathrm{4e8}}$']
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e7']#, 'rc_0.25_4e8']
     time_share = [False, True]
 
 

@@ -5,6 +5,13 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
+STOP
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
 #lagrangian_tracker()
@@ -19,13 +26,6 @@ print('Plotting time: ', end_spatial - start_spatial, ' seconds')
 STOP
 
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
-STOP
 print('...tGW_plotters...')
 start_tgw = cpu_time.time()
 cls = gw_calcs()
