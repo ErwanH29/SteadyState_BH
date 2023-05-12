@@ -216,6 +216,7 @@ def global_properties():
     IMBH_ecc = [[ ], [ ]]
     IMBH_sem = [[ ], [ ]]
 
+    no_files = 60
     dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
     with open(dir) as f:
         line = f.readlines()
@@ -225,18 +226,16 @@ def global_properties():
         avgG_data = avgG.split()
         popG = np.asarray([float(i) for i in popG_data])
         avgG = np.asarray([float(i) for i in avgG_data])
-        
+    print(avgG)
     iter = 0
     for int_ in integrator:   
         data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_)+'/particle_trajectory/*'))
         if int_ != 'GRX':
             val = 63
             chaotic = ['/media/erwanh/Elements/rc_0.25_4e6/data/Hermite/chaotic_simulation/'+str(i[val:]) for i in data]
-            no_files = 39
         else:
             val = 59
             chaotic = ['/media/erwanh/Elements/rc_0.25_4e6/data/GRX/chaotic_simulation/'+str(i[val:]) for i in data]
-            no_files = 60
 
         total_data = 0
         ecc_data = 0
@@ -381,7 +380,7 @@ def global_properties_GRX_pops():
               r'GRX$_{\mathrm{4e7}}$',
               r'GRX$_{\mathrm{4e8}}$']
     folders = ['rc_0.25_4e6', 'rc_0.25_4e7']#, 'rc_0.25_4e8']
-    time_share = [False, True]
+    time_share = [True, False]
 
 
     dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
@@ -444,10 +443,10 @@ def global_properties_GRX_pops():
                                             idx = np.where(popG[popG > 5] == pop)
                                             if (share_):
                                                 col_len = int(min(np.round((avgG[idx])*1e3), np.shape(ptracker)[1])-1)
-                                                time_string = 'share_time'
+                                                time_string = 'shared_cropped_time'
                                             else:
                                                 col_len = np.shape(ptracker)[1]-1
-                                                time_string = 'total_sims'
+                                                time_string = 'total_simulation_time'
 
                                             for parti_ in range(np.shape(ptracker)[0]):
                                                 if parti_ != 0:

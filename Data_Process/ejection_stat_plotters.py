@@ -12,16 +12,16 @@ class ejection_stats(object):
     """
 
     def __init__(self):
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
         self.colours = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
 
-        self.fcrop = False
+        self.fcrop = True
         if (self.fcrop):
             self.frange = 1
         else:
-            self.frange = 3
+            self.frange = 4
 
     def new_data_extractor(self):
         """
@@ -110,7 +110,7 @@ class ejection_stats(object):
             normalise = plt.Normalize(norm_min, norm_max)
 
             with open('figures/ejection_stats/output/ejec_stats_'+fold_+'.txt', 'w') as file:
-                for int_ in range(self.frange):
+                for int_ in range(drange):
                     sim_ = folder_data_loop(iterf, int_)
                     sim_time = np.asarray(self.sim_time[int_])
                     vesc = np.asarray(self.vesc[int_])
@@ -151,7 +151,10 @@ class ejection_stats(object):
                     fig, ax = plt.subplots()
                     n1, bins, patches = ax.hist(vesc, 20)
                     ax.clear()
+
+                    fig, ax = plt.subplots()
                     ax.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
+                    ax.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = axlabel_size)
                     ax.axvline(vesc_MW, linestyle = ':', color = 'black')
                     ax.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270)
                     n, bins, patches = ax.hist(vesc, 20, histtype = 'step', color=self.colours[sim_], weights=[1/n1.max()]*len(vesc))
@@ -184,11 +187,11 @@ class event_tracker(object):
         chaos_data = [natsort.natsorted(chaos_data), natsort.natsorted(chaos_data_GRX)]
         
         colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
-        folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
         labelsI = ['Hermite', 'GRX']
-        labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
-                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
-                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{8}M_{\odot}$']
+        labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$',
+                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{5}M_{\odot}$', 
+                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
 
         merger = [[ ], [ ]]
         in_pop = [[ ], [ ]]
@@ -203,13 +206,12 @@ class event_tracker(object):
                     data = pkl.load(input_file)
                     in_pop[int_].append(len(data.iloc[0][8])+1)
                     merger[int_].append(data.iloc[0][10])
-
-            in_pop[int_] = np.unique(in_pop[int_])
-            for pop_ in in_pop[int_][(in_pop[int_] > 5)]:
+            unique_pop = np.unique(in_pop[int_])
+            for pop_ in unique_pop:
                 indices = np.where((in_pop[int_] == pop_))[0]
                 temp_frac = [merger[int_][i] for i in indices]
                 fmerge[int_].append(np.mean(temp_frac))
-            ax.scatter(in_pop[int_][(in_pop[int_] > 5)], fmerge[int_], color = colours[int_], label = labelsI[int_], edgecolors = 'black')
+            ax.scatter(unique_pop, fmerge[int_], color = colours[int_], label = labelsI[int_], edgecolors = 'black')
         plot_ini.tickers_pop(ax, in_pop[0], labelsI[0])
         ax.legend(prop={'size': axlabel_size})
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_HermGRX.pdf', dpi=300, bbox_inches='tight')
@@ -223,7 +225,7 @@ class event_tracker(object):
         fmerge = [[ ], [ ], [ ]]
 
         iterf = 0
-        for fold_ in folders:
+        """for fold_ in folders[0]:
             chaos_data_GRX = glob.glob('/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/*')
             chaos_data = [natsort.natsorted(chaos_data_GRX)]
 
@@ -242,4 +244,4 @@ class event_tracker(object):
             iterf += 1
         ax.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax, in_pop[1], labelsI[1])
-        plt.savefig('figures/ejection_stats/SMBH_merge_fraction_GRX_All.pdf', dpi=300, bbox_inches='tight')
+        plt.savefig('figures/ejection_stats/SMBH_merge_fraction_GRX_All.pdf', dpi=300, bbox_inches='tight')"""

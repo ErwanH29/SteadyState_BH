@@ -5,17 +5,20 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
+print('... ejection_stat_plotters ...')
+start_ejec = cpu_time.time()
+event_tracker()
+cls = ejection_stats()
+#cls.new_data_extractor()
+cls.vejec_plotters()
+end_ejec = cpu_time.time()
+print('Plotting time: ', end_ejec - start_ejec, ' seconds')
 STOP
+
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
 #lagrangian_tracker()
-#global_properties()
+global_properties()
 #ecc_semi_histogram('GRX')
 #energy_scatter()
 #global_vels_GRX_pops()
@@ -23,6 +26,14 @@ global_properties_GRX_pops()
 #spatial_plotter('GRX')
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
+STOP
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
 STOP
 
 
@@ -49,13 +60,4 @@ cls.sys_occupancy_plotter()
 cls.sys_popul_plotter()
 STOP
 
-print('... ejection_stat_plotters ...')
-start_ejec = cpu_time.time()
-event_tracker()
-cls = ejection_stats()
-#cls.new_data_extractor()
-cls.vejec_plotters()
-end_ejec = cpu_time.time()
-print('Plotting time: ', end_ejec - start_ejec, ' seconds')
-STOP
 
