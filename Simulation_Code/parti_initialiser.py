@@ -31,10 +31,8 @@ class IMBH_init(object):
     def IMBH_radius(self, mass):
         """
         Function which sets the IMBH radius based on the Schwarzschild radius
-        
-        Inputs:
-        mass:   The mass of the input particle
         """
+
         return (2*constants.G*mass)/(constants.c**2)
 
     def coll_radius(self, radius):
@@ -42,14 +40,12 @@ class IMBH_init(object):
         Function which sets the collision radius. 
         Based on the rISCO.
         """
+
         return 3*radius
 
     def ProbFunc(self, vel):
         """
         Function which initialises the velocity distribution [Maxwell distribution]
-        
-        Inputs:
-        vel:    The velocity range for which to sample the weights from
         """
 
         sigmaV = 150 # in kms (if changing, change line 26 of physics_func.py)
@@ -101,7 +97,6 @@ class IMBH_init(object):
         SMBH_parti = MW_SMBH()
         self.N += init_parti+1
         self.code_conv = nbody_system.nbody_to_si(self.N * self.mass, SMBH_parti.distance)
-        crazy_ecc = True
 
         particles, rhmass = self.plummer_distr(self.N, seed)
         vseed = 0
@@ -128,14 +123,9 @@ class IMBH_init(object):
                 parti_.position *= max_dist/parti_.position.length()
         particles.scale_to_standard(convert_nbody=self.code_conv)
 
-        if (crazy_ecc):
-            for parti_ in particles[1:]:
-                parti_.vx += (constants.G*SMBH_parti.mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
-                parti_.vy += (constants.G*SMBH_parti.mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
-        else:
-            for parti_ in particles[1:]:
-                parti_.vx = (constants.G*SMBH_parti.mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
-                parti_.vy = (constants.G*SMBH_parti.mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
+        for parti_ in particles[1:]:
+            parti_.vx += (constants.G*SMBH_parti.mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
+            parti_.vy += (constants.G*SMBH_parti.mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
 
         particles[1:].mass = self.mass
         particles[0].mass = SMBH_parti.mass

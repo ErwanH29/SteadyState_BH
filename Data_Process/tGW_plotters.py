@@ -31,7 +31,7 @@ class gw_calcs(object):
         self.H0 = 67.4 #From arXiv:1807.06209
         self.tH = (self.H0*(3.2408e-20))**-1 * 1/(3600*365*24*1e6) | units.Myr
         self.integrator = ['Hermite', 'GRX']
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
         self.colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
         self.distance = [r'$\langle r_c = 0.25 \rangle$']
 
@@ -922,7 +922,7 @@ def ecc_mergers():
     """
 
     integrator = ['Hermite', 'GRX']
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
     colors = ['red', 'blue']
     drange = 1
 

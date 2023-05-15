@@ -377,10 +377,10 @@ def global_properties_GRX_pops():
     pop_tracker = 10
     labels = [r'Hermite$_{\mathrm{4e6}}$',
               r'GRX$_{\mathrm{4e6}}$',
-              r'GRX$_{\mathrm{4e7}}$',
-              r'GRX$_{\mathrm{4e8}}$']
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7']#, 'rc_0.25_4e8']
-    time_share = [True, False]
+              r'GRX$_{\mathrm{4e5}}$',
+              r'GRX$_{\mathrm{4e7}}$']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
+    time_share = [True]#, False]
 
 
     dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
@@ -396,9 +396,9 @@ def global_properties_GRX_pops():
         no_files = 60
         val = 59
         iterf = 0 
-        iterd = 0
         
         for share_ in time_share:
+            iterd = 0
             SMBH_ecc = [[ ], [ ], [ ], [ ]]
             SMBH_sem = [[ ], [ ], [ ], [ ]]
             SMBH_dis = [[ ], [ ], [ ], [ ]]
@@ -561,7 +561,7 @@ def global_properties_GRX_pops():
             axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]', fontsize = axlabel_size)
             axL.set_ylabel(r'$\log_{10}$(CDF)', fontsize = axlabel_size)
             axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-            for int_ in range(3):
+            for int_ in range(4):
                 axL, axL1 = orbital_plotter_setup(eccSMBH_flat, int_, axL, axL1, c_hist, labels, True)
                 axR, axR1 = orbital_plotter_setup(semSMBH_flat, int_, axR, axR1, c_hist, labels, False)
             plt.savefig('figures/system_evolution/ecc_SMBH_cdf_histogram_GRX_'+time_string+'.png', dpi=300, bbox_inches='tight')
@@ -578,7 +578,7 @@ def global_properties_GRX_pops():
             axR.set_xlabel(r'$\log_{10}a_{\rm{IMBH}}$ [pc]', fontsize = axlabel_size)
             axL.set_ylabel(r'$\log_{10}$(CDF)', fontsize = axlabel_size)
             axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-            for int_ in range(3):
+            for int_ in range(4):
                 axL, axL1 = orbital_plotter_setup(eccIMBH_flat, int_, axL, axL1, c_hist, labels, True)
                 axR, axR1 = orbital_plotter_setup(semIMBH_flat, int_, axR, axR1, c_hist, labels, False)
             plt.savefig('figures/system_evolution/ecc_IMBH_cdf_histogram_GRX_'+time_string+'.png', dpi=300, bbox_inches='tight')
@@ -595,7 +595,7 @@ def global_properties_GRX_pops():
             axR.set_xlabel(r'$\log_{10}r_{\rm{SMBH}}$ [pc]', fontsize = axlabel_size)
             axL.set_ylabel(r'$\log_{10}$(CDF)', fontsize = axlabel_size)
             axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-            for int_ in range(3):
+            for int_ in range(4):
                 data_sort = np.sort(disIMBH_flat[int_])
                 IMBHdist_index = np.asarray([i for i in enumerate(data_sort)])
 
@@ -616,7 +616,6 @@ def global_properties_GRX_pops():
             plt.savefig('figures/system_evolution/distances_histogram_GRX_'+time_string+'.png', dpi=300, bbox_inches='tight')
             plt.clf()
 
-
 def global_vels_GRX_pops():
     """
     Function which plots various Kepler elements of ALL particles simulated
@@ -629,9 +628,9 @@ def global_vels_GRX_pops():
     pop_tracker = 10
     labels = [r'Hermite$_{\mathrm{4e6}}$',
               r'GRX$_{\mathrm{4e6}}$',
-              r'GRX$_{\mathrm{4e7}}$',
-              r'GRX$_{\mathrm{4e8}}$']
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+              r'GRX$_{\mathrm{4e5}}$',
+              r'GRX$_{\mathrm{4e7}}$']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
 
     IMBH_vel = [[ ], [ ], [ ], [ ]]
 
@@ -722,7 +721,7 @@ def global_vels_GRX_pops():
         
         plot_ini = plotter_setup()
 
-        for int_ in range(3):
+        for int_ in range(4):
             data_sort = np.sort(vel_flat[int_])
 
             kde = sm.nonparametric.KDEUnivariate(data_sort)
@@ -842,10 +841,12 @@ def lagrangian_tracker():
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
 
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e7']#, 'rc_0.25_4e8']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
     colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
     labelLag = [r'$r_{25, L}$', r'$r_{h}$', r'$r_{75, L}$']
-    labelDat = [r'4e6', r'4e7', r'4e8']
+    labelDat = [r'$m_{\mathrm{SMBH}} = 4\times10^{6}\ M_\odot$', 
+                r'$m_{\mathrm{SMBH}} = 4\times10^{5}\ M_\odot$', 
+                r'$m_{\mathrm{SMBH}} = 4\times10^{7}\ M_\odot$']
     pset = [True, False, False]
 
     fig, ax = plt.subplots()
@@ -902,8 +903,10 @@ def spatial_plotter(int_string):
                     print('Reading File ', file_, ' : ', input_file)
                     ptracker = pkl.load(input_file)
 
-                    col_len = 250
-                    parti_size = 20+len(ptracker)**-0.5
+                    if np.shape(ptracker)[0] > 15:
+                        col_len = min(200, round(np.shape(ptracker)[1]))
+                    else:
+                        col_len = 200
 
                     line_x = np.empty((len(ptracker), col_len))
                     line_y = np.empty((len(ptracker), col_len))
@@ -972,8 +975,8 @@ def spatial_plotter(int_string):
                     plt.clf()
                     plt.close()
 
-    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
-    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
+    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/'+(int_string)+'/particle_trajectory_temp/*'))
+    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/data/'+str(int_string)+'/chaotic_simulation_temp/*'))
 
     print('Spatial evolution plotter')
     bools = [True, False]
@@ -984,11 +987,9 @@ def spatial_plotter(int_string):
         else:
             outcome_idx = 3
 
-        iter_file = 0
         for file_ in range(len(ptracker_files)):
             with open(ctracker_files[file_], 'rb') as input_file:
                 ctracker = pkl.load(input_file)
                 plotter_code(outcome_idx, ctracker, file_, int_string)
-            iter_file += 1
             
     return

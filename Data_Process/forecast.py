@@ -99,7 +99,6 @@ def plotter():
                     xtext+' = '+r"$10^{{{0:.3g}}}$".format(np.log10(rate_))+'\n'+ytext+' = '+"{:.3f}".format(merger_text)[:no_dig], 
                     horizontalalignment='right', fontsize = 13)
         itert += 1
-        print(itert)
 
     ax.scatter(np.log10(mrate_fixed), np.log10(cum_merger_fixed), color = 'black')
     plt.savefig('figures/forecast/merger_rate.pdf', dpi=300, bbox_inches='tight')

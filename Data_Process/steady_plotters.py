@@ -37,13 +37,13 @@ class stability_plotters(object):
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
         
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
         colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
         dirH = '/data/Hermite/chaotic_simulation/*'
         dirG = '/data/GRX/chaotic_simulation/*'
         labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
-                   r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
-                   r'$M_{\rm{SMBH}} = 4\times10^{8}M_{\odot}$']
+                   r'$M_{\rm{SMBH}} = 4\times10^{5}M_{\odot}$',
+                   r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
         integ_label = ['Hermite', 'GRX']
 
         pop = [[ ], [ ], [ ], [ ]]
@@ -200,7 +200,7 @@ class stability_plotters(object):
         for int_ in range(2):
             int_ += 2
             for j, xpos in enumerate(pop[int_]):
-                pops = [i+1.1*xshift[int_-2] for i in pop[int_]]
+                pops = [i+1.1*xshift[int_-1] for i in pop[int_]]
                 N_parti_med[int_] = np.array([float(i) for i in N_parti_med[int_]])
                 if j == 0:
                     ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colours[int_], 

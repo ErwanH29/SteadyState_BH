@@ -18,11 +18,11 @@ class sustainable_sys(object):
 
     def __init__(self):
         warnings.filterwarnings("ignore", category=RuntimeWarning)
-        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+        self.folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
         self.colors = ['red', 'blue', 'deepskyblue', 'slateblue', 'turquoise', 'skyblue']
         self.labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
-                        r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$',
-                        r'$M_{\rm{SMBH}} = 4\times10^{8}M_{\odot}$']
+                        r'$M_{\rm{SMBH}} = 4\times10^{5}M_{\odot}$',
+                        r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
         self.legend_id = [3, 4]
         self.vdisp = 150000
 

@@ -59,6 +59,7 @@ class data_initialiser(object):
         
         Inputs:
         int_string:    Hermite or Hermite GRX to separate the data
+        init_IMBH:     Cluster population
         count:         The simulation #
         init_dist:     Initial distance of particles to SMBH
         pset:          The complete particle set

@@ -17,7 +17,7 @@ class ejection_stats(object):
         warnings.filterwarnings("ignore", category=RuntimeWarning) 
         warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
 
-        self.fcrop = True
+        self.fcrop = False
         if (self.fcrop):
             self.frange = 1
         else:
@@ -30,29 +30,32 @@ class ejection_stats(object):
 
         iterf = 0
         for fold_ in self.folders[:self.frange]:
-            path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
-            GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
-            chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
-            filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
+            if fold_ == 'rc_0.25_4e6':
+                pass
+            else:
+                path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
+                GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
+                chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
+                filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
 
-            for int_ in range(drange):
-                for file_ in range(len(filename[int_])):
-                    with open(filenameC[int_][file_], 'rb') as input_file:
-                        ctracker = pkl.load(input_file)
-                        if ctracker.iloc[0][3].number > 0:
-                            with open(filename[int_][file_], 'rb') as input_file:
-                                print('Ejection detected. Reading File :', input_file)
-                                count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                ptracker = pkl.load(input_file)
-                                vesc = ejected_extract_final(ptracker, ctracker)
+                for int_ in range(drange):
+                    for file_ in range(len(filename[int_])):
+                        with open(filenameC[int_][file_], 'rb') as input_file:
+                            ctracker = pkl.load(input_file)
+                            if ctracker.iloc[0][3].number > 0:
+                                with open(filename[int_][file_], 'rb') as input_file:
+                                    print('Ejection detected. Reading File :', input_file)
+                                    count = len(fnmatch.filter(os.listdir(path), '*.*'))
+                                    ptracker = pkl.load(input_file)
+                                    vesc = ejected_extract_final(ptracker, ctracker)
 
-                                stab_tracker = pd.DataFrame()
-                                df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                        'Population': np.shape(ptracker)[0],
-                                                        'Simulation Time': np.shape(ptracker)[1] * 1e-3,
-                                                        'vesc': vesc})
-                                stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                                    stab_tracker = pd.DataFrame()
+                                    df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                            'Population': np.shape(ptracker)[0],
+                                                            'Simulation Time': np.shape(ptracker)[1] * 1e-3,
+                                                            'vesc': vesc})
+                                    stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                    stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
             iterf += 1
 
     def combine_data(self, folder):
@@ -145,7 +148,7 @@ class ejection_stats(object):
                     cbar = plt.colorbar(colour_axes, ax=ax)
                     plot_ini.tickers_pop(ax, self.tot_pop[int_], integrator[int_])
                     cbar.set_label(label = r'$\log_{10} \langle t_{\rm{ejec}}\rangle$ [Myr]', fontsize =  axlabel_size)
-                    plt.savefig('figures/ejection_stats/vejection_scatter'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
+                    plt.savefig('figures/ejection_stats/vejection_scatter_'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
                     plt.clf()
 
                     fig, ax = plt.subplots()
@@ -158,9 +161,9 @@ class ejection_stats(object):
                     ax.axvline(vesc_MW, linestyle = ':', color = 'black')
                     ax.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270)
                     n, bins, patches = ax.hist(vesc, 20, histtype = 'step', color=self.colours[sim_], weights=[1/n1.max()]*len(vesc))
-                    n, bins, patches = ax.hist(vesc, 20, color=self.colours[int_+iterf+sim_], alpha = 0.4, weights=[1/n1.max()]*len(vesc))
+                    n, bins, patches = ax.hist(vesc, 20, color=self.colours[sim_], alpha = 0.4, weights=[1/n1.max()]*len(vesc))
                     plot_ini.tickers(ax, 'plot')
-                    plt.savefig('figures/ejection_stats/vejection_histogram'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
+                    plt.savefig('figures/ejection_stats/vejection_histogram_'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
                     plt.clf()
 
                     file.write('\nData for '+str(integrator[int_]))
@@ -189,9 +192,9 @@ class event_tracker(object):
         colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
         folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
         labelsI = ['Hermite', 'GRX']
-        labelsD = [r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$',
-                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{5}M_{\odot}$', 
-                   r'$r_c = 0.25$ pc, $M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
+        labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$',
+                   r'$M_{\rm{SMBH}} = 4\times10^{5}M_{\odot}$', 
+                   r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
 
         merger = [[ ], [ ]]
         in_pop = [[ ], [ ]]
@@ -214,6 +217,7 @@ class event_tracker(object):
             ax.scatter(unique_pop, fmerge[int_], color = colours[int_], label = labelsI[int_], edgecolors = 'black')
         plot_ini.tickers_pop(ax, in_pop[0], labelsI[0])
         ax.legend(prop={'size': axlabel_size})
+        ax.set_ylim(0,1.05)
         plt.savefig('figures/ejection_stats/SMBH_merge_fraction_HermGRX.pdf', dpi=300, bbox_inches='tight')
         plt.clf()
 
@@ -225,23 +229,24 @@ class event_tracker(object):
         fmerge = [[ ], [ ], [ ]]
 
         iterf = 0
-        """for fold_ in folders[0]:
+        for fold_ in folders:
             chaos_data_GRX = glob.glob('/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/*')
             chaos_data = [natsort.natsorted(chaos_data_GRX)]
 
             for file_ in range(len(chaos_data[0])):
                 with open(chaos_data[0][file_], 'rb') as input_file:
                     data = pkl.load(input_file)
-                    in_pop[iterf].append(len(data.iloc[0][8])+1)
+                    in_pop[iterf].append(5*round(0.2*len(data.iloc[0][8])))
                     merger[iterf].append(data.iloc[0][10])
 
-            in_pop[iterf] = np.unique(in_pop[iterf])
-            for pop_ in in_pop[iterf][(in_pop[iterf] > 5)]:
-                indices = np.where((in_pop[iterf] == pop_))[0]
+            unique_pop = np.unique(in_pop[iterf])
+            for pop_ in unique_pop:
+                indices = np.where(in_pop[iterf] == pop_)[0]
                 temp_frac = [merger[iterf][i] for i in indices]
                 fmerge[iterf].append(np.mean(temp_frac))
-            ax.scatter(in_pop[iterf][(in_pop[iterf] > 5)], fmerge[iterf], color = colours[iterf+1], label = labelsD[iterf], edgecolors = 'black')
+            ax.scatter(unique_pop, fmerge[iterf], color = colours[iterf+1], label = labelsD[iterf], edgecolors = 'black')
             iterf += 1
         ax.legend(prop={'size': axlabel_size})
+        ax.set_ylim(0,1.05)
         plot_ini.tickers_pop(ax, in_pop[1], labelsI[1])
-        plt.savefig('figures/ejection_stats/SMBH_merge_fraction_GRX_All.pdf', dpi=300, bbox_inches='tight')"""
+        plt.savefig('figures/ejection_stats/SMBH_merge_fraction_GRX_All.pdf', dpi=300, bbox_inches='tight')

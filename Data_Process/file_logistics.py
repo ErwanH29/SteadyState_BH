@@ -163,7 +163,6 @@ def moving_average(array, smoothing):
         Inputs:
         array:     Array consisting of variable for which to produce running average of
         smoothing: Number of elements to average over
-        output:    Smoothened array
         """
 
         value = np.cumsum(array, dtype=float)
@@ -193,7 +192,7 @@ def ndata_chaos(iterf, dataG, chaosG, fold_):
 
     return filename, filenameC, integrator, drange
 
-def simulation_stats_checker(dist_dir, int_string):
+def simulation_stats_checker(dist_dir, int_string, file_crop):
     """
     Function to check the final outcomes of all the simulations
     """
@@ -206,23 +205,39 @@ def simulation_stats_checker(dist_dir, int_string):
     tot_sims = 0
     complete = 0
 
+    pops = [10, 15, 20, 25, 30, 35, 40, 
+            45, 50, 60, 70, 80, 90, 100]
+    pop_samp = [0, 0, 0, 0, 0, 0, 0]
+
     for file_ in range(len(filename)):
-        tot_sims += 1
         with open(filename[file_]) as f:
             line = f.readlines()
-            line1 = line[-9][:-7]
-            line2 = line[3][17:]
-            data = line1.split()
-            data2 = line2.split()
-            data = [float(i) for i in data]
-            if 4.001e6 or 4.0001e7 or 4.00001e8 in data:
-                SMBH_merger += 1
-            elif 2000 in data:
-                IMBH_merger += 1
-            elif '100000000.0' in data2:
-                complete += 1
-            else:
-                ejection += 1
+            substring= 'No. of initial IMBH'
+            for i, item in enumerate(line):
+                if substring in item:
+                    line_pop = line[i][21:24]
+            pop = float(line_pop)
+            
+            idx = pops.index(pop)
+            if pop <= 40 and pop_samp[idx] < file_crop:
+                pop_samp[idx] += 1
+                tot_sims += 1
+                line1 = line[-9][:-7]
+                line2 = line[3][17:]
+                data = line1.split()
+                data2 = line2.split()
+                data = [float(i) for i in data]
+                data = max(data)
+
+                if data == 4001000 or data == 40001000 or data == 401000:
+                    SMBH_merger += 1
+                elif data == 2000:
+                    IMBH_merger += 1
+                elif '100000000.0' in data2:
+                    complete += 1
+                else:
+                    ejection += 1
+    print(pop_samp)
 
     with open('figures/'+int_string+'_'+dist_dir+'_summary.txt', 'w') as file:
         file.write('Simulation outcomes for '+str(int_string))
@@ -248,7 +263,11 @@ def stats_chaos_extractor(dir):
     return fin_parti_data, stab_time_data
 
 print('...Gathering simulation outcomes...')
-folders = ['rc_0.25_4e6', 'rc_0.25_4e6', 'rc_0.25_4e7', 'rc_0.25_4e8']
+folders = ['rc_0.25_4e6', 'rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
 integr = ['Hermite', 'GRX', 'GRX', 'GRX', 'GRX']
-for fold_, integ_ in zip(folders, integr):
-    simulation_stats_checker(fold_, integ_)
+data_files = [40, 60, 30, 30]
+
+for fold_, integ_, nofiles_ in zip(folders, integr, data_files):
+    print(fold_)
+    simulation_stats_checker(fold_, integ_, nofiles_)
+    STOP
