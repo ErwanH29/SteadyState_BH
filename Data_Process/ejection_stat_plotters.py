@@ -30,7 +30,7 @@ class ejection_stats(object):
 
         iterf = 0
         for fold_ in self.folders[:self.frange]:
-            if fold_ == 'rc_0.25_4e6':
+            if fold_ != 'rc_0.25_4e6':
                 pass
             else:
                 path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
@@ -87,6 +87,8 @@ class ejection_stats(object):
         Function to plot the ejection velocity
         """
 
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
         
@@ -121,7 +123,9 @@ class ejection_stats(object):
                     tot_pop = np.asarray([5*round(i/5) for i in self.tot_pop[int_]]) 
                     in_pop = np.unique(tot_pop)
                     avg_vesc = np.empty(len(in_pop))
+                    std_vesc = np.empty(len(in_pop))
                     avg_surv = np.empty(len(in_pop))
+                    std_surv = np.empty(len(in_pop))
 
                     pops = [ ]
                     samples = [ ]
@@ -133,13 +137,16 @@ class ejection_stats(object):
                         idx = np.where(tot_pop == pop_)[0]
                         samples.append(len(vesc[idx]))
                         avg_vesc[iter] = np.nanmean(vesc[idx])
+                        std_vesc[iter] = np.nanstd(vesc[idx])
                         avg_surv[iter] = np.nanmean(sim_time[idx])
+                        std_surv[iter] = np.nanstd(sim_time[idx])
                         minvel.append(np.nanmin(vesc[idx]))
                         maxvel.append(np.nanmax(vesc[idx]))
                         iter += 1
                     vels.append(max(vesc))
                     pops = np.asarray(pops)
                     avg_vesc = np.asarray(avg_vesc)
+                    std_vesc = np.asarray(std_vesc)
 
                     fig, ax = plt.subplots()
                     ax.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = axlabel_size)
@@ -158,8 +165,9 @@ class ejection_stats(object):
                     fig, ax = plt.subplots()
                     ax.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
                     ax.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = axlabel_size)
-                    ax.axvline(vesc_MW, linestyle = ':', color = 'black')
-                    ax.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270)
+                    if max(vesc) > 670:
+                        ax.axvline(vesc_MW, linestyle = ':', color = 'black')
+                        ax.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270, fontsize = axlabel_size+5)
                     n, bins, patches = ax.hist(vesc, 20, histtype = 'step', color=self.colours[sim_], weights=[1/n1.max()]*len(vesc))
                     n, bins, patches = ax.hist(vesc, 20, color=self.colours[sim_], alpha = 0.4, weights=[1/n1.max()]*len(vesc))
                     plot_ini.tickers(ax, 'plot')
@@ -169,9 +177,11 @@ class ejection_stats(object):
                     file.write('\nData for '+str(integrator[int_]))
                     file.write('\nPopulations counts                           ' + str(in_pop) + ' : ' + str(samples))
                     file.write('\nPopulations average escape velocity          ' + str(in_pop) + ' : ' + str(avg_vesc) + ' kms')
+                    file.write('\nPopulations std escape velocity              ' + str(in_pop) + ' : ' + str(std_vesc) + ' kms')
                     file.write('\nPopulations min. escape velocity             ' + str(in_pop) + ' : ' + str(minvel) + ' kms')
                     file.write('\nPopulations max. escape velocity             ' + str(in_pop) + ' : ' + str(maxvel) + ' kms')
                     file.write('\nPopulations average escape time              ' + str(in_pop) + ' : ' + str(avg_surv) + ' Myr')
+                    file.write('\nPopulations std escape time                  ' + str(in_pop) + ' : ' + str(std_surv) + ' Myr')
                     file.write('\n========================================================================')
             iterf += 1
 
@@ -182,6 +192,8 @@ class event_tracker(object):
 
     def __init__(self):
 
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
 

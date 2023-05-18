@@ -73,6 +73,8 @@ def ecc_semi_histogram(integrator):
     Function which plots the eccentricity and semi-major axis of the particles
     """
     
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
 
@@ -127,12 +129,6 @@ def ecc_semi_histogram(integrator):
                                         IMBH_ecca.append(np.log10(sim_snap[8][2]))
                                         IMBH_sema.append(np.log10(abs(sim_snap[7][2]).value_in(units.pc)))
 
-    """data_set = pd.DataFrame()
-    for i in range(len(IMBH_sema)):
-        arr = {'sem': IMBH_sema[i], 'ecc': IMBH_ecca[i]}
-        raw_data = pd.Series(data=arr, index=['sem', 'ecc'])
-        data_set = data_set.append(raw_data, ignore_index = True)"""
-
     ##### All eccentricity vs. semimajor axis #####
     n, xbins, ybins, image = hist2d(IMBH_sema[::-1], IMBH_ecca[::-1], bins = 300, range=([-7.88, 2.5], [-4.3, 8]))
     plt.clf()
@@ -163,6 +159,8 @@ def energy_scatter():
     Function which plots the final energy error w.r.t simulation time
     """
 
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
 
@@ -204,6 +202,9 @@ def global_properties():
     """
     
     print('...Plotters Hermite vs. GRX CDF KDE...')
+
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
     
@@ -226,7 +227,7 @@ def global_properties():
         avgG_data = avgG.split()
         popG = np.asarray([float(i) for i in popG_data])
         avgG = np.asarray([float(i) for i in avgG_data])
-    print(avgG)
+        
     iter = 0
     for int_ in integrator:   
         data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_)+'/particle_trajectory/*'))
@@ -274,16 +275,16 @@ def global_properties():
                                             if sim_snap[8][1] < 1:
                                                 ecc_data += 1
 
-                                            sem_SMBH.append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
-                                            ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
+                                        sem_SMBH.append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
+                                        ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
 
-                                            if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
-                                                sem_IMBH.append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
-                                                ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
+                                        if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
+                                            sem_IMBH.append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
+                                            ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
 
-                                            if not (sim_snap[8][0] == sim_snap[8][2]) or not (sim_snap[7][0] == sim_snap[7][2]):
-                                                sem_IMBH.append(np.log10(abs(sim_snap[7][2].value_in(units.pc))))
-                                                ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
+                                        if not (sim_snap[8][0] == sim_snap[8][2]) or not (sim_snap[7][0] == sim_snap[7][2]):
+                                            sem_IMBH.append(np.log10(abs(sim_snap[7][2].value_in(units.pc))))
+                                            ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
                                                 
                                         SMBH_ecc[iter].append(ecc_SMBH)
                                         SMBH_sem[iter].append(sem_SMBH)
@@ -345,7 +346,7 @@ def global_properties():
     for int_ in range(2):
         axL, axL1 = orbital_plotter_setup(eccSMBH_flat, int_, axL, axL1, c_hist, integrator, True)
         axR, axR1 = orbital_plotter_setup(semSMBH_flat, int_, axR, axR1, c_hist, integrator, False)
-    plt.savefig('figures/system_evolution/ecc_SMBH_cdf_histogram_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/system_evolution/ecc_SMBH_cdf_histogram_rc_0.25_4e6.pdf', dpi=300, bbox_inches='tight')
     plt.clf()
 
     fig = plt.figure(figsize=(10, 6))
@@ -362,7 +363,7 @@ def global_properties():
     for int_ in range(2):
         axL, axL1 = orbital_plotter_setup(eccIMBH_flat, int_, axL, axL1, c_hist, integrator, True)
         axR, axR1 = orbital_plotter_setup(semIMBH_flat, int_, axR, axR1, c_hist, integrator, False)
-    plt.savefig('figures/system_evolution/ecc_IMBH_cdf_histogram_rc_0.25_4e6.png', dpi=300, bbox_inches='tight')
+    plt.savefig('figures/system_evolution/ecc_IMBH_cdf_histogram_rc_0.25_4e6.pdf', dpi=300, bbox_inches='tight')
     plt.clf()
 
 def global_properties_GRX_pops():
@@ -371,6 +372,9 @@ def global_properties_GRX_pops():
     """
 
     print('...Plotters Population CDF KDE...')
+    
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
     
@@ -383,7 +387,8 @@ def global_properties_GRX_pops():
     time_share = [True]#, False]
 
 
-    dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
+    #dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
+    dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e5_GRX.txt')
     with open(dir) as f:
         line = f.readlines()
         popG = line[0][54:-2] 
@@ -472,40 +477,40 @@ def global_properties_GRX_pops():
                                                         if sim_snap[8][1] < 1:
                                                             ecc_data += 1
 
-                                                        sem_SMBH.append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
-                                                        ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
+                                                    sem_SMBH.append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
+                                                    ecc_SMBH.append(np.log10(1-sim_snap[8][0]))
 
-                                                        if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
-                                                            ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
-                                                            if abs(sim_snap[7][1]) < 10 | units.pc:
-                                                                sem_IMBH.append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
-                                                            if sim_snap[8][0] <= 0.20:
-                                                                dis_IMBHa.append(np.log10(sim_snap[-1]))
+                                                    if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
+                                                        ecc_IMBH.append(np.log10(1-sim_snap[8][1]))
+                                                        if abs(sim_snap[7][1]) < 10 | units.pc:
+                                                            sem_IMBH.append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
+                                                        if sim_snap[8][0] <= 0.20:
+                                                            dis_IMBHa.append(np.log10(sim_snap[-1]))
 
-                                                        if not (sim_snap[8][0] == sim_snap[8][2]) or not (sim_snap[7][0] == sim_snap[7][2]):
-                                                            ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
-                                                            if sim_snap[7][2] < 10 | units.pc:
-                                                                sem_IMBH.append(np.log10(abs(sim_snap[7][2].value_in(units.pc))))
-                                                        
-                                                        line_x = (sim_snap[2][0] - SMBH_coords[2][0])
-                                                        line_y = (sim_snap[2][1] - SMBH_coords[2][1])
-                                                        line_z = (sim_snap[2][2] - SMBH_coords[2][2])
-                                                        dist = np.sqrt(line_x**2+line_y**2+line_z**2)
-                                                        dis_SMBH.append(np.log10(dist.value_in(units.pc)))
+                                                    if not (sim_snap[8][0] == sim_snap[8][2]) or not (sim_snap[7][0] == sim_snap[7][2]):
+                                                        ecc_IMBH.append(np.log10(1-sim_snap[8][2]))
+                                                        if sim_snap[7][2] < 10 | units.pc:
+                                                            sem_IMBH.append(np.log10(abs(sim_snap[7][2].value_in(units.pc))))
+                                                    
+                                                    line_x = (sim_snap[2][0] - SMBH_coords[2][0])
+                                                    line_y = (sim_snap[2][1] - SMBH_coords[2][1])
+                                                    line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                                                    dist = np.sqrt(line_x**2+line_y**2+line_z**2)
+                                                    dis_SMBH.append(np.log10(dist.value_in(units.pc)))
 
-                                                        if sim_snap[7][0] != sim_snap[7][1] and sim_snap[8][0] != sim_snap[8][1]:
-                                                            dis_IMBH.append(np.log10(sim_snap[-1]))
-                                                            if dist <= 0.20 | units.pc:
-                                                                dis_IMBHc.append(np.log10(sim_snap[-1]))
-                                                        
-                                                    SMBH_ecc[iterd].append(ecc_SMBH)
-                                                    SMBH_sem[iterd].append(sem_SMBH)
-                                                    IMBH_ecc[iterd].append(ecc_IMBH)
-                                                    IMBH_sem[iterd].append(sem_IMBH)
-                                                    SMBH_dis[iterd].append(dis_SMBH)
-                                                    IMBH_dis[iterd].append(dis_IMBH)
-                                                    IMBH_discore[iterd].append(dis_IMBHc)
-                                                    IMBH_dissemi[iterd].append(dis_IMBHa)
+                                                    if sim_snap[7][0] != sim_snap[7][1] and sim_snap[8][0] != sim_snap[8][1]:
+                                                        dis_IMBH.append(np.log10(sim_snap[-1]))
+                                                        if dist <= 0.20 | units.pc:
+                                                            dis_IMBHc.append(np.log10(sim_snap[-1]))
+                                                    
+                                                SMBH_ecc[iterd].append(ecc_SMBH)
+                                                SMBH_sem[iterd].append(sem_SMBH)
+                                                IMBH_ecc[iterd].append(ecc_IMBH)
+                                                IMBH_sem[iterd].append(sem_IMBH)
+                                                SMBH_dis[iterd].append(dis_SMBH)
+                                                IMBH_dis[iterd].append(dis_IMBH)
+                                                IMBH_discore[iterd].append(dis_IMBHc)
+                                                IMBH_dissemi[iterd].append(dis_IMBHa)
                     iterd += 1
                                                 
                 iterf += 1
@@ -564,7 +569,7 @@ def global_properties_GRX_pops():
             for int_ in range(4):
                 axL, axL1 = orbital_plotter_setup(eccSMBH_flat, int_, axL, axL1, c_hist, labels, True)
                 axR, axR1 = orbital_plotter_setup(semSMBH_flat, int_, axR, axR1, c_hist, labels, False)
-            plt.savefig('figures/system_evolution/ecc_SMBH_cdf_histogram_GRX_'+time_string+'.png', dpi=300, bbox_inches='tight')
+            plt.savefig('figures/system_evolution/ecc_SMBH_cdf_histogram_GRX_'+time_string+'.pdf', dpi=300, bbox_inches='tight')
             plt.clf()
 
             fig = plt.figure(figsize=(10, 6))
@@ -581,7 +586,7 @@ def global_properties_GRX_pops():
             for int_ in range(4):
                 axL, axL1 = orbital_plotter_setup(eccIMBH_flat, int_, axL, axL1, c_hist, labels, True)
                 axR, axR1 = orbital_plotter_setup(semIMBH_flat, int_, axR, axR1, c_hist, labels, False)
-            plt.savefig('figures/system_evolution/ecc_IMBH_cdf_histogram_GRX_'+time_string+'.png', dpi=300, bbox_inches='tight')
+            plt.savefig('figures/system_evolution/ecc_IMBH_cdf_histogram_GRX_'+time_string+'.pdf', dpi=300, bbox_inches='tight')
             plt.clf()
             
             fig = plt.figure(figsize=(10, 6))
@@ -613,7 +618,7 @@ def global_properties_GRX_pops():
             axL1.legend(loc='upper left')
             #axL.text(-1.0, -2.8, r'$r_{\mathrm{IMBH}}(a_{\mathrm{SMBH}}\leq0.20\mathrm{ pc})$')
             axL.text(-1.0, -1.3, r'$r_{\mathrm{IMBH}}(r_{\mathrm{SMBH}}\leq0.20\mathrm{ pc})$')
-            plt.savefig('figures/system_evolution/distances_histogram_GRX_'+time_string+'.png', dpi=300, bbox_inches='tight')
+            plt.savefig('figures/system_evolution/distances_histogram_GRX_'+time_string+'.pdf', dpi=300, bbox_inches='tight')
             plt.clf()
 
 def global_vels_GRX_pops():
@@ -622,6 +627,9 @@ def global_vels_GRX_pops():
     """
 
     print('...Plotters Population CDF KDE...')
+
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
     
@@ -689,14 +697,14 @@ def global_vels_GRX_pops():
 
                                                 vel_IMBH = [ ]
 
-                                                for j in range(col_len-1):
-                                                    sim_snap = particle.iloc[j]
-                                                    SMBH_snap = SMBH_data.iloc[j]
-                                                    velx = sim_snap[3][0] - SMBH_snap[3][0]
-                                                    vely = sim_snap[3][1] - SMBH_snap[3][1]
-                                                    velz = sim_snap[3][2] - SMBH_snap[3][2]
-                                                    veli = np.sqrt(velx**2+vely**2+velz**2).value_in(units.kms)
-                                                    vel_IMBH.append(np.log10(veli))
+                                                #for j in range(col_len-1):
+                                                sim_snap = particle.iloc[col_len-1]#[j]
+                                                SMBH_snap = SMBH_data.iloc[col_len-1]
+                                                velx = sim_snap[3][0] - SMBH_snap[3][0]
+                                                vely = sim_snap[3][1] - SMBH_snap[3][1]
+                                                velz = sim_snap[3][2] - SMBH_snap[3][2]
+                                                veli = np.sqrt(velx**2+vely**2+velz**2).value_in(units.kms)
+                                                vel_IMBH.append(np.log10(veli))
                                                     
                                                     
                                                 IMBH_vel[iterd].append(vel_IMBH)
@@ -838,16 +846,16 @@ def lagrangian_tracker():
                 
         return tim_arr, L25_arr, L50_arr, L75_arr, smoothf
 
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
 
-    folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
-    colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
-    labelLag = [r'$r_{25, L}$', r'$r_{h}$', r'$r_{75, L}$']
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e7']
+    colours = ['red', 'blue', 'royalblue']
     labelDat = [r'$m_{\mathrm{SMBH}} = 4\times10^{6}\ M_\odot$', 
-                r'$m_{\mathrm{SMBH}} = 4\times10^{5}\ M_\odot$', 
                 r'$m_{\mathrm{SMBH}} = 4\times10^{7}\ M_\odot$']
-    pset = [True, False, False]
+    pset = [True, False]
 
     fig, ax = plt.subplots()
     ax.set_ylabel(r'$r_{x}$ [pc]', fontsize = axlabel_size) 
@@ -885,6 +893,8 @@ def spatial_plotter(int_string):
         integrator: The integrator used 
         """
 
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
 
@@ -971,15 +981,16 @@ def spatial_plotter(int_string):
                                         ax.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
                                                     c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
                         iter += 1
+                    plot_ini.tickers(ax, 'plot')
                     plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'1.pdf', dpi=300, bbox_inches='tight')
                     plt.clf()
                     plt.close()
 
-    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/'+(int_string)+'/particle_trajectory_temp/*'))
-    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/data/'+str(int_string)+'/chaotic_simulation_temp/*'))
+    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_string)+'/particle_trajectory/*'))
+    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/data/'+str(int_string)+'/chaotic_simulation/*'))
 
     print('Spatial evolution plotter')
-    bools = [True, False]
+    bools = [False]
     for bool_ in bools:
         merger_bool = bool_
         if (merger_bool):

@@ -406,7 +406,9 @@ class sustainable_sys(object):
                     sim_ = folder_data_loop(iterf, int_)
                         
                     bform_stat = [ ]
+                    bform_std  = [ ]
                     tform_stat = [ ]
+                    tform_std  = [ ]
                     minGWtime = [ ]
                     semi_NN_astat = [ ]
                     semi_NN_mstat = [ ]
@@ -536,7 +538,9 @@ class sustainable_sys(object):
                         self.tertiary_occupation[sim_].append(np.mean(ter_occ))
 
                         bform_stat.append('{:.7f}'.format(np.mean(bform_time)))
+                        bform_std.append('{:.7f}'.format(np.std(bform_time)))
                         tform_stat.append('{:.7f}'.format(np.mean(tform_time)))
+                        tform_std.append('{:.7f}'.format(np.std(tform_time)))
                         minGWtime.append(np.sort(GWb_time))
                         semi_NN_astat.append('{:.7f}'.format(np.mean(semi_NN_avg)))
                         semi_NN_mstat.append('{:.7f}'.format(np.mean(semi_NN_min)))
@@ -547,7 +551,9 @@ class sustainable_sys(object):
                         self.tertiary_init[sim_].append(len(tform_time[tform_time <= 1000]))
 
                     file.write('\nAverage binary formation time [yrs]:             '+str(pop_arr)+' : '+str(bform_stat))
+                    file.write('\nStd binary formation time [yrs]:                 '+str(pop_arr)+' : '+str(bform_stat))
                     file.write('\nAverage tertiary formation time [yrs]:           '+str(pop_arr)+' : '+str(tform_stat))
+                    file.write('\nStd tertiary formation time [yrs]:               '+str(pop_arr)+' : '+str(tform_stat))
                     file.write('\nFinal GW timescale (only tGW < tH) [Myr]:        '+str(pop_arr)+' : '+str(minGWtime))
                     file.write('\nFraction of mergers within Hubble time:          '+str(pop_arr)+' : '+str(binHubble)+' / '+str(totalbin))
                     file.write('\nAverage binary semi-major axis per population:   '+str(pop_arr)+' : '+str(semi_NN_astat))
@@ -579,6 +585,8 @@ class sustainable_sys(object):
     def GW_emissions(self):
         
         GW_calcs = gw_calcs()
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, ticklabel_size = plot_ini.font_size()
 
@@ -666,6 +674,8 @@ class sustainable_sys(object):
         Function to illustrate the streak-like characteristic emerging from the simulation
         """
 
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
         
@@ -689,9 +699,9 @@ class sustainable_sys(object):
             ax.plot(np.log10(x_temp), np.log10(np.sqrt(x_temp*Sn)), color = 'slateblue', zorder = 1)
             ax.plot(np.log10(Ares_freq), np.log10(np.sqrt(Ares_freq*Ares_strain)), linewidth='1.5', color='red', zorder = 3)
             ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), linewidth='1.5', color='orangered', zorder = 4)
-            ax.text(-9.26, -15.9, 'SKA', fontsize ='small', rotation = 319, color = 'orangered')
-            ax.text(-4.28, -18.2, 'LISA', fontsize ='small', rotation = 308, color = 'slateblue')
-            ax.text(-5.98, -19, r'$\mu$Ares', fontsize ='small', rotation = 306, color = 'red')
+            ax.text(-9.3, -15.9, 'SKA', fontsize = axlabel_size, rotation = 319, color = 'orangered')
+            ax.text(-4.28, -18.2, 'LISA', fontsize = axlabel_size, rotation = 308, color = 'slateblue')
+            ax.text(-5.98, -19, r'$\mu$Ares', fontsize = axlabel_size, rotation = 306, color = 'red')
 
             idx = [7, 134]  #Hardcoded values
             GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[int_][idx[int_]], 'not', False)
@@ -720,9 +730,9 @@ class sustainable_sys(object):
         """
         Function to plot various 'sustainable system' plots
         """
-        def log_fit(xval, slope):
-            return slope * (xval)
 
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
 
@@ -750,7 +760,7 @@ class sustainable_sys(object):
                 ax.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = (self.tertiary_systems[int_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
                 print('Number of tertiary: ', self.tertiary_systems[int_])
                 plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-                ax.legend()
+                ax.legend(prop={'size': axlabel_size})
                 cbar = plt.colorbar(colour_axes, ax=ax)
                 cbar.set_label(label = r'$\langle N_{\rm{sys}} \rangle$ ')
                 cbar.ax.tick_params(labelsize = axlabel_size)
@@ -784,46 +794,3 @@ class sustainable_sys(object):
             ax.legend()
         ax.plot(xtemp, y_fit)
         plt.savefig('figures/binary_hierarchical/sys_form_GRX.pdf', dpi=300, bbox_inches='tight')"""
-
-    def sys_popul_plotter(self):
-        """
-        Function to plot the avg. population counts of various systems
-        """
-
-        plot_ini = plotter_setup()
-        axlabel_size, tick_size = plot_ini.font_size()
-        
-        integrators = ['Hermite', 'GRX']
-
-        fig, ax = plt.subplots()
-        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = axlabel_size)
-        ax.set_ylabel(r'$\langle N\rangle$', fontsize = axlabel_size)
-        for int_ in range(2):
-            ini_pop = np.unique(self.pop[int_])
-            ax.scatter(ini_pop, self.binary_systems[int_], edgecolors  = 'black', c = self.colors[int_], label = integrators[int_], zorder = 2)
-            ax.scatter(ini_pop, self.tertiary_systems[int_], edgecolors  = 'black', c = self.colors[int_], marker = 's', zorder = 3)
-        plot_ini.tickers_pop(ax, ini_pop[ini_pop <= 40], ' GRX')
-        ax.legend()
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-        plt.savefig('figures/binary_hierarchical/sys_pop_N_plot_HermGRX.pdf', dpi=300, bbox_inches='tight')
-        plt.clf() 
-
-        fig, ax = plt.subplots()
-        ax.set_xlabel(r'IMBH Population [$N$]', fontsize = axlabel_size)
-        ax.set_ylabel(r'$\langle N\rangle$', fontsize = axlabel_size)
-        iterf = 0
-        for fold_ in self.folders[:self.frange]:
-            integrator, drange = folder_loop(iterf)
-            for int_ in range(drange):
-                sim_ = folder_data_loop(iterf, int_)
-                if sim_ == 0:
-                    pass
-                else:
-                    ini_pop = np.unique(self.pop[sim_])
-                    ax.scatter(ini_pop, self.binary_systems[sim_], edgecolors  = 'black', c = self.colors[sim_], label = self.labelsD[sim_-1], zorder = 2)
-                    ax.scatter(ini_pop, self.tertiary_systems[sim_], edgecolors  = 'black', c = self.colors[sim_], marker = 's', zorder = 3)
-            iterf += 1
-        plot_ini.tickers_pop(ax, ini_pop[ini_pop <= 40], ' GRX')
-        ax.legend()
-        ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
-        plt.savefig('figures/binary_hierarchical/sys_pop_N_plot_GRX.pdf', dpi=300, bbox_inches='tight')

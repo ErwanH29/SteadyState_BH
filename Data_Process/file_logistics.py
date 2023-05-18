@@ -1,6 +1,7 @@
 from amuse.lab import *
 import numpy as np
 import glob
+import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import natsort
 import os
@@ -237,7 +238,6 @@ def simulation_stats_checker(dist_dir, int_string, file_crop):
                     complete += 1
                 else:
                     ejection += 1
-    print(pop_samp)
 
     with open('figures/'+int_string+'_'+dist_dir+'_summary.txt', 'w') as file:
         file.write('Simulation outcomes for '+str(int_string))
@@ -268,6 +268,4 @@ integr = ['Hermite', 'GRX', 'GRX', 'GRX', 'GRX']
 data_files = [40, 60, 30, 30]
 
 for fold_, integ_, nofiles_ in zip(folders, integr, data_files):
-    print(fold_)
     simulation_stats_checker(fold_, integ_, nofiles_)
-    STOP

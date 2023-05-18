@@ -3,6 +3,7 @@ from file_logistics import *
 from scipy.optimize import OptimizeWarning
 from spatial_plotters import *
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import random
 import scipy.optimize
@@ -33,7 +34,10 @@ class stability_plotters(object):
             
         def log_fit(xval, slope, beta, log_c):
             return slope*(xval*np.log(log_c*xval))**beta
+
             
+        plt.rcParams["font.family"] = "Times New Roman"
+        plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
         axlabel_size, tick_size = plot_ini.font_size()
         
@@ -72,10 +76,14 @@ class stability_plotters(object):
                 drange = 2
                 ffactor = 0
                 direc = [dirH, dirG]
-            else:
+            elif iterf == 2:
                 drange = 1
                 ffactor = 1
                 direc = [dirG]
+            else:
+                drange = 1
+                ffactor = 1
+                direc = ['/data/GRX/chaotic_simulation_temp/*']
 
             for int_ in range(drange):
                 fparti_data_val, stab_time_data_val = stats_chaos_extractor('/media/erwanh/Elements/'+fold_+direc[int_])

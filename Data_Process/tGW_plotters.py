@@ -509,11 +509,11 @@ class gw_calcs(object):
             ax_histh.plot(kdeh_IMBH.density, kdeh_IMBH.support, color = 'orange')
             ax_histh.fill_between(kdeh_IMBH.density, kdeh_IMBH.support, alpha = 0.35, color = 'orange')
            
-        ax_histf.set_ylim(0.01, 1.05)
+        ax_histf.set_ylim(0.03, 1.05)
         ax_histf.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
         ax_histf.legend(prop={'size': axlabel_size})
 
-        ax_histh.set_xlim(0.01, 1.05) 
+        ax_histh.set_xlim(0.03, 1.05) 
         ax_histh.set_xlabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
 
         # LISA
@@ -537,7 +537,7 @@ class gw_calcs(object):
         ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), linewidth='1.5', color='orangered')
         ax.text(-9.7, -16, 'SKA', fontsize = axlabel_size, rotation = 329, color = 'orangered')
         ax.text(-4.8, -18.2, 'LISA',fontsize = axlabel_size, rotation = 318, color = 'slateblue')
-        ax.text(-6.8, -19, r'$\mu$Ares', fontsize = axlabel_size, rotation = 319, color = 'red')
+        ax.text(-6.6, -19, r'$\mu$Ares', fontsize = axlabel_size, rotation = 319, color = 'red')
         
     def GW_event_tracker(self):
         """
