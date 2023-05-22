@@ -112,8 +112,6 @@ class sustainable_sys(object):
                                         tform_time.append(-5)
 
                                         if parti_ != 0:
-                                            temp_dedt.append(np.NaN) #Two values not used in the modified paper edition
-                                            temp_dadt.append(np.NaN) #Kept not to enforce restarting all of data processing
                                             for col_ in range(np.shape(data)[1]-1):
                                                 nn_semi = abs(data.iloc[parti_][col_][7][1])
                                                 nn_ecc = data.iloc[parti_][col_][8][1]
@@ -715,7 +713,7 @@ class sustainable_sys(object):
             if len(GWfreq_terIMBH) > 0:
                 ax.scatter(np.log10(GWfreq_terIMBH), np.log10(GWstra_terIMBH), c = GWtime_terIMBH)
             cbar = plt.colorbar(colour_axes, ax=ax)
-            cbar.set_label(label = r'$t_{\rm{sys}}$ [Myr]')
+            cbar.set_label(label = r'$t_{\rm{sys}}$ [Myr]', fontsize =  axlabel_size)
             cbar.ax.tick_params(labelsize = axlabel_size)
             
             ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = axlabel_size)
@@ -762,7 +760,7 @@ class sustainable_sys(object):
                 plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
                 ax.legend(prop={'size': axlabel_size})
                 cbar = plt.colorbar(colour_axes, ax=ax)
-                cbar.set_label(label = r'$\langle N_{\rm{sys}} \rangle$ ')
+                cbar.set_label(label = r'$\langle N_{\rm{sys}} \rangle$ ', fontsize =  axlabel_size)
                 cbar.ax.tick_params(labelsize = axlabel_size)
                 plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[int_]+'_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
                 file.write('Data for      '+str(integrator[int_]))

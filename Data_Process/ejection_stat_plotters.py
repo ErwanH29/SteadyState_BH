@@ -108,7 +108,7 @@ class ejection_stats(object):
                 in_pop = np.unique(tot_pop)
                 for pop_ in in_pop:
                     idx = np.where((tot_pop == pop_))[0]
-                    avg_surv.append(np.nanmean(np.asarray(self.sim_time[int_])[idx]))
+                    avg_surv.append(np.nanmedian(np.asarray(self.sim_time[int_])[idx]))
 
             norm_min = np.log10(min(avg_surv))
             norm_max = np.log10(max(avg_surv))
@@ -122,10 +122,14 @@ class ejection_stats(object):
 
                     tot_pop = np.asarray([5*round(i/5) for i in self.tot_pop[int_]]) 
                     in_pop = np.unique(tot_pop)
+
                     avg_vesc = np.empty(len(in_pop))
-                    std_vesc = np.empty(len(in_pop))
+                    vesc_low = np.empty(len(in_pop))
+                    vesc_upp = np.empty(len(in_pop))
+
                     avg_surv = np.empty(len(in_pop))
-                    std_surv = np.empty(len(in_pop))
+                    surv_low = np.empty(len(in_pop))
+                    surv_upp = np.empty(len(in_pop))
 
                     pops = [ ]
                     samples = [ ]
@@ -136,25 +140,32 @@ class ejection_stats(object):
                         pops.append(pop_)
                         idx = np.where(tot_pop == pop_)[0]
                         samples.append(len(vesc[idx]))
-                        avg_vesc[iter] = np.nanmean(vesc[idx])
-                        std_vesc[iter] = np.nanstd(vesc[idx])
-                        avg_surv[iter] = np.nanmean(sim_time[idx])
-                        std_surv[iter] = np.nanstd(sim_time[idx])
+
                         minvel.append(np.nanmin(vesc[idx]))
                         maxvel.append(np.nanmax(vesc[idx]))
+
+                        avg_vesc[iter] = np.nanmedian(vesc[idx])
+                        q1, q3 = np.percentile(vesc[idx], [25, 75])
+                        vesc_low[iter] = q1
+                        vesc_upp[iter] = q3
+
+                        avg_surv[iter] = np.nanmedian(sim_time[idx])
+                        q1, q3 = np.percentile(sim_time[idx], [25, 75])
+                        surv_low[iter] = q1
+                        surv_upp[iter] = q3
+
                         iter += 1
+
                     vels.append(max(vesc))
                     pops = np.asarray(pops)
                     avg_vesc = np.asarray(avg_vesc)
-                    std_vesc = np.asarray(std_vesc)
 
                     fig, ax = plt.subplots()
-                    ax.set_xlabel(r'$v_{ejec}$ [km s$^{-1}$]', fontsize = axlabel_size)
-                    ax.set_ylabel(r'$\langle v_{\rm{ejec}} \rangle$ [km s$^{-1}$]', fontsize = axlabel_size)
+                    ax.set_ylabel(r'med$(v_{\rm{ejec}})$ [km s$^{-1}$]', fontsize = axlabel_size)
                     colour_axes = ax.scatter(pops, avg_vesc, edgecolors='black', c = np.log10(avg_surv), norm = normalise, zorder = 3)
                     cbar = plt.colorbar(colour_axes, ax=ax)
                     plot_ini.tickers_pop(ax, self.tot_pop[int_], integrator[int_])
-                    cbar.set_label(label = r'$\log_{10} \langle t_{\rm{ejec}}\rangle$ [Myr]', fontsize =  axlabel_size)
+                    cbar.set_label(label = r'$\rm{med}(\log_{10}t_{\rm{ejec}})$ [Myr]', fontsize =  axlabel_size)
                     plt.savefig('figures/ejection_stats/vejection_scatter_'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
                     plt.clf()
 
@@ -175,13 +186,15 @@ class ejection_stats(object):
                     plt.clf()
 
                     file.write('\nData for '+str(integrator[int_]))
-                    file.write('\nPopulations counts                           ' + str(in_pop) + ' : ' + str(samples))
-                    file.write('\nPopulations average escape velocity          ' + str(in_pop) + ' : ' + str(avg_vesc) + ' kms')
-                    file.write('\nPopulations std escape velocity              ' + str(in_pop) + ' : ' + str(std_vesc) + ' kms')
-                    file.write('\nPopulations min. escape velocity             ' + str(in_pop) + ' : ' + str(minvel) + ' kms')
-                    file.write('\nPopulations max. escape velocity             ' + str(in_pop) + ' : ' + str(maxvel) + ' kms')
-                    file.write('\nPopulations average escape time              ' + str(in_pop) + ' : ' + str(avg_surv) + ' Myr')
-                    file.write('\nPopulations std escape time                  ' + str(in_pop) + ' : ' + str(std_surv) + ' Myr')
+                    file.write('\nPopulations counts                        ' + str(in_pop) + ' : ' + str(samples))
+                    file.write('\nPopulations median escape velocity        ' + str(in_pop) + ' : ' + str(avg_vesc) + ' kms')
+                    file.write('\nPopulations lower_perc escape velocity    ' + str(in_pop) + ' : ' + str(vesc_low) + ' kms')
+                    file.write('\nPopulations upper_perc escape velocity    ' + str(in_pop) + ' : ' + str(vesc_upp) + ' kms')
+                    file.write('\nPopulations min. escape velocity          ' + str(in_pop) + ' : ' + str(minvel) + ' kms')
+                    file.write('\nPopulations max. escape velocity          ' + str(in_pop) + ' : ' + str(maxvel) + ' kms')
+                    file.write('\nPopulations median escape time            ' + str(in_pop) + ' : ' + str(avg_surv) + ' Myr')
+                    file.write('\nPopulations lower_perc escape time        ' + str(in_pop) + ' : ' + str(surv_low) + ' Myr')
+                    file.write('\nPopulations lower_perc escape time        ' + str(in_pop) + ' : ' + str(surv_upp) + ' Myr')
                     file.write('\n========================================================================')
             iterf += 1
 

@@ -42,7 +42,7 @@ def plotter():
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
-    axlabel_size, tick_size = plot_ini.font_size()
+    dummy1, dummy2, axlabel_size, tick_size = plot_ini.font_size()
         
 
     # Data from Furlong et al. (2015)

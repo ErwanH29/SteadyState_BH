@@ -1,6 +1,7 @@
 from amuse.lab import *
 import numpy as np
 import glob
+import itertools
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import natsort
@@ -246,6 +247,56 @@ def simulation_stats_checker(dist_dir, int_string, file_crop):
         file.write('\nIMBH merging events: '+str(IMBH_merger))
         file.write('\nEjection events:     '+str(ejection))
         file.write('\nCompleted sims:      '+str(complete))
+
+def sphere_of_influence():
+    folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
+
+    iterf = 0
+    for fold_ in folders:
+        if iterf == 0:
+            drange = 2
+            integrator = ['Hermite', 'GRX']
+        else:
+            drange = 1
+            integrator = ['GRX']
+        
+        for int_ in range(drange):
+            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+integrator[int_]+'/particle_trajectory/*'))
+            for file_ in range(len(data)):
+                with open(data[file_], 'rb') as input_file:
+                    file_size = os.path.getsize(data[file_])
+                    if file_size < 2.9e9:
+                        print('Reading File ', file_, ' : ', input_file)
+                        ptracker = pkl.load(input_file)
+                        distance = [ ]
+                        time_snap = [ ]
+
+                        for parti_, j in itertools.product(range(np.shape(ptracker)[0]), range(np.shape(ptracker)[1]-1)):
+                            if parti_ != 0:
+                                particle = ptracker.iloc[parti_]
+                                SMBH_data = ptracker.iloc[0]
+
+                                sim_snap = particle.iloc[j]
+                                SMBH_coords = SMBH_data.iloc[j]
+
+                                line_x = (sim_snap[2][0] - SMBH_coords[2][0])
+                                line_y = (sim_snap[2][1] - SMBH_coords[2][1])
+                                line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                                dist = np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)
+
+                                if dist >= 3.00:
+                                    distance.append(dist)
+                                    time_snap.append(j*1000)
+
+                        time_snap = np.asarray([i for i in time_snap])
+                        distance = np.asarray([i for i in distance])
+                        if len(time_snap) > 0:
+                            with open('figures/sphere_of_influence.txt', 'a') as file:
+                                index = np.where(time_snap == np.min(time_snap))
+                                file.write('File '+str(input_file)+'\n')
+                                file.write('Particle reaches beyond sphere of influence at: '+str(time_snap[index])+' (End time: ) '+str(np.shape(ptracker)[1]-1)+'\n')
+                                file.write('Particle distance:                              '+str(distance[index])+'\n')
+        iterf += 1
 
 def stats_chaos_extractor(dir):
     steadytime_data = bulk_stat_extractor(dir)

@@ -76,14 +76,10 @@ class stability_plotters(object):
                 drange = 2
                 ffactor = 0
                 direc = [dirH, dirG]
-            elif iterf == 2:
-                drange = 1
-                ffactor = 1
-                direc = [dirG]
             else:
                 drange = 1
                 ffactor = 1
-                direc = ['/data/GRX/chaotic_simulation_temp/*']
+                direc = [dirG]
 
             for int_ in range(drange):
                 fparti_data_val, stab_time_data_val = stats_chaos_extractor('/media/erwanh/Elements/'+fold_+direc[int_])
@@ -94,6 +90,59 @@ class stability_plotters(object):
         for data_ in range(4):
             pop[data_], psamp[data_] = self.index_extractor(fparti[data_])
         
+        
+        cor_times = [[ ], [ ], [ ], [ ]]
+        sim_times = [[ ], [ ], [ ], [ ]]
+
+        dir = os.path.join('figures/sphere_of_influence.txt')
+        with open(dir) as f:
+            line = f.readlines()
+            for iter in range(len(line)):
+                if iter%3 == 0:
+                    if line[iter][54:65] == 'rc_0.25_4e6':
+                        if line[iter][66:73] == 'Hermite':
+                            index = 0
+                        else:
+                            index = 1
+                    elif line[iter][54:65] == 'rc_0.25_4e5':
+                        index = 2
+                    else:
+                        index = 3
+
+                if iter%3 == 1:
+                    real_time = (line[iter][49:57])
+                    sim_time = line[iter][72:78]
+
+                    chr_it = 0
+                    cropped = False
+                    for chr_ in real_time:
+                        print(chr_)
+                        if chr_ == ']':
+                            cor_times[index].append(float(real_time[:chr_it-1])*1e-6)
+                            cropped = True
+                        chr_it += 1
+                    if not cropped:
+                        cor_times[index].append(float(real_time)*1e-6)
+                        sim_time = line[iter][72:78]
+                    if (cropped):
+                        sim_time = line[iter][71:77]
+
+                    chr_it = 0
+                    cropped = False
+                    print(sim_time)
+                    for chr_ in sim_time:
+                        if chr_ == ']':
+                            sim_times[index].append(float(sim_time[:chr_it-1])*1e-3)
+                            cropped = True
+                        chr_it += 1
+                    if not cropped:
+                        sim_times[index].append(float(sim_time)*1e-3)
+                        
+        for int_ in range(np.shape(stab_time)[0]):
+            for wrong_ in range(len(sim_times[int_])):
+                index = np.where(stab_time[int_] == sim_times[int_][wrong_])[0][0]
+                stab_time[int_][index] = cor_times[int_][wrong_]
+
         data_size = [30, 40, 50]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
