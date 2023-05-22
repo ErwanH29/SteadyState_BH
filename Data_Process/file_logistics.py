@@ -284,7 +284,7 @@ def sphere_of_influence():
                                 line_z = (sim_snap[2][2] - SMBH_coords[2][2])
                                 dist = np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)
 
-                                if dist >= 3.00:
+                                if dist >= 6.00:
                                     distance.append(dist)
                                     time_snap.append(j*1000)
 

@@ -86,7 +86,7 @@ def ecc_semi_histogram(integrator):
     IMBH_sema = [ ]
 
     pop_checker = 0
-    no_files = 2
+    no_files = 60
     no_samples = 0
     
     total_data = 0
@@ -215,7 +215,7 @@ def global_properties():
     IMBH_ecc = [[ ], [ ]]
     IMBH_sem = [[ ], [ ]]
 
-    no_files = 2
+    no_files = 60
     dir = os.path.join('figures/steady_time/Sim_summary_rc_0.25_4e6_GRX.txt')
     with open(dir) as f:
         line = f.readlines()
@@ -364,7 +364,7 @@ def global_properties_GRX_pops():
         popG = np.asarray([float(i) for i in popG_data])
         avgG = np.asarray([float(i) for i in avgG_data])
             
-        no_files = 2
+        no_files = 60
         val = 59
         iterf = 0 
         

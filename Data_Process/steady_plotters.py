@@ -93,6 +93,7 @@ class stability_plotters(object):
         
         cor_times = [[ ], [ ], [ ], [ ]]
         sim_times = [[ ], [ ], [ ], [ ]]
+        pops_temp = [[ ], [ ], [ ], [ ]]
 
         dir = os.path.join('figures/sphere_of_influence.txt')
         with open(dir) as f:
@@ -102,13 +103,32 @@ class stability_plotters(object):
                     if line[iter][54:65] == 'rc_0.25_4e6':
                         if line[iter][66:73] == 'Hermite':
                             index = 0
+                            popt = line[iter][117:121]
+                            crop = False
+                            for chr_ in popt:
+                                if chr_ == '_':
+                                    crop = True
+                                else:
+                                    crop = False
+                            if (crop):
+                                pops_temp[index].append(float(line[iter][117:119]))
+                            else:
+                                pops_temp[index].append(float(line[iter][117:119]))
+
                         else:
                             index = 1
+                            popt = line[iter][113:115]
+                            pops_temp[index].append(float(popt))
+
                     elif line[iter][54:65] == 'rc_0.25_4e5':
                         index = 2
+                        popt = line[iter][113:115]
+                        pops_temp[index].append(float(popt))
                     else:
                         index = 3
-
+                        popt = line[iter][113:115]
+                        pops_temp[index].append(float(pop))
+                
                 if iter%3 == 1:
                     real_time = (line[iter][49:57])
                     sim_time = line[iter][72:78]
@@ -116,9 +136,9 @@ class stability_plotters(object):
                     chr_it = 0
                     cropped = False
                     for chr_ in real_time:
-                        print(chr_)
                         if chr_ == ']':
-                            cor_times[index].append(float(real_time[:chr_it-1])*1e-6)
+                            cor_times[index].append(float(real_time[:chr_it-1])*1e-5)
+                            print(float(real_time[:chr_it-1])*1e-5)
                             cropped = True
                         chr_it += 1
                     if not cropped:
@@ -129,20 +149,30 @@ class stability_plotters(object):
 
                     chr_it = 0
                     cropped = False
-                    print(sim_time)
                     for chr_ in sim_time:
                         if chr_ == ']':
                             sim_times[index].append(float(sim_time[:chr_it-1])*1e-3)
                             cropped = True
                         chr_it += 1
                     if not cropped:
-                        sim_times[index].append(float(sim_time)*1e-3)
-                        
+                        sim_times[index].append(float(sim_time)*1e-3)  
+
+        tol = 1e-10
         for int_ in range(np.shape(stab_time)[0]):
             for wrong_ in range(len(sim_times[int_])):
-                index = np.where(stab_time[int_] == sim_times[int_][wrong_])[0][0]
-                stab_time[int_][index] = cor_times[int_][wrong_]
+                print('Population: ', pops_temp[int_][wrong_])
+                calib = True
 
+                index = np.where(abs(stab_time[int_] - float('%.5g' % sim_times[int_][wrong_])) <= tol)[0]
+                index_pop = np.where(abs(fparti[int_] - pops_temp[int_][wrong_]) <= tol)[0]
+
+                for idx_ in index:
+                    if idx_ in index_pop and (calib):
+                        print("Old time:   ", stab_time[int_][idx_])
+                        stab_time[int_][idx_] = cor_times[int_][wrong_]
+                        print("New time:   ", stab_time[int_][idx_])
+                        calib = False
+                        
         data_size = [30, 40, 50]
         xshift = [-0.75, -0.25, 0.25, 0.75]
 
