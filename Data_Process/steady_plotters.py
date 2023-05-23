@@ -100,6 +100,7 @@ class stability_plotters(object):
             line = f.readlines()
             for iter in range(len(line)):
                 if iter%3 == 0:
+                    print(line[iter][99:130])
                     if line[iter][54:65] == 'rc_0.25_4e6':
                         if line[iter][66:73] == 'Hermite':
                             index = 0
@@ -117,16 +118,16 @@ class stability_plotters(object):
 
                         else:
                             index = 1
-                            popt = line[iter][113:115]
+                            popt = line[iter][109:111]
                             pops_temp[index].append(float(popt))
 
                     elif line[iter][54:65] == 'rc_0.25_4e5':
                         index = 2
-                        popt = line[iter][113:115]
+                        popt = line[iter][109:111]
                         pops_temp[index].append(float(popt))
                     else:
                         index = 3
-                        popt = line[iter][113:115]
+                        popt = line[iter][109:111]
                         pops_temp[index].append(float(pop))
                 
                 if iter%3 == 1:
@@ -138,7 +139,6 @@ class stability_plotters(object):
                     for chr_ in real_time:
                         if chr_ == ']':
                             cor_times[index].append(float(real_time[:chr_it-1])*1e-5)
-                            print(float(real_time[:chr_it-1])*1e-5)
                             cropped = True
                         chr_it += 1
                     if not cropped:

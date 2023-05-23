@@ -811,101 +811,105 @@ def spatial_plotter(int_string):
         else:
             outcome = 'ejection'
             bool = chaos_data.iloc[0][merger_idx].number
-            
-        with open(ptracker_files[file_], 'rb') as input_file:
-            file_size = os.path.getsize(ptracker_files[file_])
-            if file_size < 2e9:
-                print('Reading File ', file_, ' : ', input_file)
-                ptracker = pkl.load(input_file)
+        
+        if bool > 0:
+            with open(ptracker_files[file_], 'rb') as input_file:
+                file_size = os.path.getsize(ptracker_files[file_])
+                if file_size < 2e9:
+                    print('Reading File ', file_, ' : ', input_file)
+                    ptracker = pkl.load(input_file)
 
-                if np.shape(ptracker)[0] > 15:
-                    col_len = min(150, round(np.shape(ptracker)[1]))
-                else:
-                    col_len = 150
+                    if np.shape(ptracker)[0] > 15:
+                        col_len = min(150, round(np.shape(ptracker)[1]))
+                    else:
+                        col_len = 150
 
-                line_x = np.empty((len(ptracker), col_len))
-                line_y = np.empty((len(ptracker), col_len))
-                line_z = np.empty((len(ptracker), col_len))
-                for i in range(len(ptracker)):
-                    tptracker = ptracker.iloc[i]
-                    for j in range(col_len):
-                        data_it = col_len - j
-                        coords = tptracker.iloc[-data_it][2]
-                        line_x[i][j] = coords[0].value_in(units.pc)
-                        line_y[i][j] = coords[1].value_in(units.pc)
-                        line_z[i][j] = coords[2].value_in(units.pc)
+                    line_x = np.empty((len(ptracker), col_len))
+                    line_y = np.empty((len(ptracker), col_len))
+                    line_z = np.empty((len(ptracker), col_len))
+                    for i in range(len(ptracker)):
+                        tptracker = ptracker.iloc[i]
+                        for j in range(col_len):
+                            data_it = col_len - j
+                            coords = tptracker.iloc[-data_it][2]
+                            line_x[i][j] = coords[0].value_in(units.pc)
+                            line_y[i][j] = coords[1].value_in(units.pc)
+                            line_z[i][j] = coords[2].value_in(units.pc)
 
-                    if outcome == 'merger':       
-                        if i != 0 and math.isnan(line_x[i][-1]) or tptracker.iloc[-1][1].value_in(units.kg) > 1e36:
-                            idx = i
+                        if outcome == 'merger':       
+                            if i != 0 and math.isnan(line_x[i][-1]) or tptracker.iloc[-1][1].value_in(units.kg) > 1e36:
+                                idx = i
 
-                c = colour_picker()
-                fig, ax = plt.subplots()
-                plot_ini.tickers(ax, 'plot') 
+                    c = colour_picker()
+                    fig, ax = plt.subplots()
+                    plot_ini.tickers(ax, 'plot') 
 
-                xaxis_lim = 1.05*np.nanmax(abs(line_x-line_x[0]))
-                yaxis_lim = 1.05*np.nanmax(abs(line_y-line_y[0]))
+                    xaxis_lim = 1.05*np.nanmax(abs(line_x-line_x[0]))
+                    yaxis_lim = 1.05*np.nanmax(abs(line_y-line_y[0]))
 
-                ax.set_xlim(-abs(xaxis_lim), abs(xaxis_lim))
-                ax.set_ylim(-abs(yaxis_lim), yaxis_lim)
+                    ax.set_xlim(-abs(xaxis_lim), abs(xaxis_lim))
+                    ax.set_ylim(-abs(yaxis_lim), yaxis_lim)
 
-                ax.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
-                ax.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
-                
-                iter = 0
-                for i in range(len(ptracker)):
-                    if iter > len(c):
-                        iter = 0
+                    ax.set_xlabel(r'$x$ [pc]', fontsize = axlabel_size)
+                    ax.set_ylabel(r'$y$ [pc]', fontsize = axlabel_size)
+                    
+                    iter = 0
+                    for i in range(len(ptracker)):
+                        if iter > len(c):
+                            iter = 0
 
-                    for j in range(len(line_z[i])):
-                        if i != 0 and line_z[i][j] - line_z[0][j] >= 0:
-                            plot_bool = True
-                        elif i != 0 and np.sqrt((line_x[i][j] - line_x[0][j])**2 + (line_z[i][j] - line_z[0][j])**2 + (line_y[i][j] - line_y[0][j])**2) >= 0.125:
-                            plot_bool = True
-                        elif i == 0:
-                            plot_bool = True
-                        else:
-                            plot_bool = False
-                        if (plot_bool):
-                            if i == 0:
-                                adapt_c = 'black'
-                                ax.scatter((line_x[i][j]-line_x[0][j]), (line_y[i][j]-line_y[0][j]), 
-                                            c = adapt_c, zorder = 1, s = 400)
-                                
+                        for j in range(len(line_z[i])):
+                            if i != 0 and line_z[i][j] - line_z[0][j] >= 0:
+                                plot_bool = True
+                            elif i != 0 and np.sqrt((line_x[i][j] - line_x[0][j])**2 + (line_z[i][j] - line_z[0][j])**2 + (line_y[i][j] - line_y[0][j])**2) >= 0.125:
+                                plot_bool = True
+                            elif i == 0:
+                                plot_bool = True
                             else:
-                                ax.scatter(line_x[i][j]-line_x[0][j], line_y[i][j]-line_y[0][j], 
-                                            c = c[iter-2], s = 1, zorder = 1) 
-                                if outcome == 'merger':
-                                    if i == idx:
-                                        ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
-                                                c = c[iter-2], edgecolors = 'black', s = 100, zorder = 3)
-                                    else:
-                                        ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
-                                                c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
+                                plot_bool = False
+                            if (plot_bool):
+                                if i == 0:
+                                    adapt_c = 'black'
+                                    ax.scatter((line_x[i][j]-line_x[0][j]), (line_y[i][j]-line_y[0][j]), 
+                                                c = adapt_c, zorder = 1, s = 400)
+                                    
                                 else:
-                                    ax.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
-                                                c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
-                    iter += 1
-                plot_ini.tickers(ax, 'plot')
-                plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'1.pdf', dpi=300, bbox_inches='tight')
-                plt.clf()
-                plt.close()
+                                    ax.scatter(line_x[i][j]-line_x[0][j], line_y[i][j]-line_y[0][j], 
+                                                c = c[iter-2], s = 1, zorder = 1) 
+                                    if outcome == 'merger':
+                                        if i == idx:
+                                            ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
+                                                    c = c[iter-2], edgecolors = 'black', s = 100, zorder = 3)
+                                        else:
+                                            ax.scatter(line_x[i][-2]-line_x[0][-2], line_y[i][-2]-line_y[0][-2], 
+                                                    c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
+                                    else:
+                                        ax.scatter(line_x[i][-1]-line_x[0][-1], line_y[i][-1]-line_y[0][-1], 
+                                                    c = c[iter-2], edgecolors = 'black', s = 30, zorder = 3)
+                        iter += 1
+                    plot_ini.tickers(ax, 'plot')
+                    plt.savefig('figures/system_evolution/Overall_System/simulation_evolution_pop_'+str(integrator)+str(len(ptracker))+'_'+str(file_)+'_'+outcome+'1.pdf', dpi=300, bbox_inches='tight')
+                    plt.clf()
+                    plt.close()
 
-    ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/'+(int_string)+'/particle_trajectory_2/*'))
-    ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/data/'+str(int_string)+'/chaotic_simulation_2/*'))
 
     print('Spatial evolution plotter')
     bools = [True, False]
-    for bool_ in bools:
-        merger_bool = bool_
-        if (merger_bool):
-            outcome_idx = -4
-        else:
-            outcome_idx = 3
+    integ = ['Hermite', 'GRX']
 
-        for file_ in range(len(ptracker_files)):
-            with open(ctracker_files[file_], 'rb') as input_file:
-                ctracker = pkl.load(input_file)
-                plotter_code(outcome_idx, ctracker, file_, int_string)
+    for int_ in integ:
+        ptracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/'+(int_)+'/particle_trajectory_2/*'))
+        ctracker_files = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e5/data/'+str(int_)+'/chaotic_simulation_2/*'))
+        for bool_ in bools:
+            merger_bool = bool_
+            if (merger_bool):
+                outcome_idx = -4
+            else:
+                outcome_idx = 3
+
+            for file_ in range(len(ptracker_files)):
+                with open(ctracker_files[file_], 'rb') as input_file:
+                    ctracker = pkl.load(input_file)
+                    plotter_code(outcome_idx, ctracker, file_, int_)
             
     return
