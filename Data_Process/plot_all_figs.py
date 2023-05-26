@@ -5,6 +5,23 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
+print('...sustainable_bintert_plotters...')
+cls = sustainable_sys()
+cls.new_data_extractor()   
+STOP
+cls.combine_data()
+cls.GW_emissions()
+cls.single_streak_plotter()
+cls.sys_occupancy_plotter()
+STOP
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
+STOP
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
 spatial_plotter('GRX')
@@ -18,30 +35,11 @@ end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
 STOP
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
-STOP
+
 sphere_of_influence()
 STOP
 
-
-
-
-
-
 # ======================================================================= #
-
-print('...sustainable_bintert_plotters...')
-cls = sustainable_sys()
-#cls.new_data_extractor()   
-cls.combine_data()
-cls.GW_emissions()
-cls.single_streak_plotter()
-cls.sys_occupancy_plotter()
 
 print('... ejection_stat_plotters ...')
 start_ejec = cpu_time.time()

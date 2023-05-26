@@ -7,6 +7,8 @@ import numpy as np
 def calc_momentum(indivp):
     """
     Function which calculates the momentum of the particles in collision
+    Inputs:
+    indivp: The colliding particles
     """
 
     return (indivp.mass * indivp.velocity).sum()
@@ -14,7 +16,6 @@ def calc_momentum(indivp):
 def find_nearest(array, value):
     """
     Function to find the nearest value in an array for a particular element.
-
     Inputs:
     array:  The array for which has all the elements
     value:  The value to compare the elements with
@@ -24,10 +25,10 @@ def find_nearest(array, value):
     index = (np.abs(array - value)).argmin()
     return index
 
+
 def indiv_PE_all(indivp, set):
     """
     Finding a particles' individual PE based on its closest binary
-
     Input:
     indivp:  The individual particle computing BE for
     set:     The complete particle set
@@ -35,7 +36,9 @@ def indiv_PE_all(indivp, set):
 
     array = []
     for comp_ in set:
-        if indivp != comp_:
+        if indivp == comp_:
+            pass
+        else:
             distance = (indivp.position-comp_.position).length()
             temp_PE = (-constants.G*indivp.mass*comp_.mass)/abs(distance)
             array.append(temp_PE)
@@ -94,7 +97,9 @@ def nearest_neighbour(indivp, pset):
 
     min_dist = [ ]
     for i in range(len(pset)):
-        if indivp != pset[i]:
+        if indivp == pset[i]:
+            pass
+        else:
             rel_pos = indivp.position - pset[i].position
             min_dist.append(rel_pos.length().value_in(units.parsec))
             
@@ -105,4 +110,28 @@ def nearest_neighbour(indivp, pset):
     return min(min_dist), pset[index], pset[index2]
 
 def SMBH_filter(pset):
-    return pset[pset.mass < max(0.8*pset.mass)]
+    return pset[pset.mass < 5*10**4 | units.MSun]
+
+def tidal_radius(pset):
+    """
+    Function to outline the tidal radius. Uses equation 5.8 and 5.10 of Spitzer 1969.
+    
+    Inputs:
+    pset:  The complete particle set
+    """
+
+    SMBH = MW_SMBH()
+    gc_code = globular_cluster()
+    com_particle = Particles(1)
+    com_particle.mass = SMBH_filter(pset).total_mass()
+    com_particle.radius = 0 | units.RSun
+    com_particle.velocity = SMBH_filter(pset).center_of_mass_velocity()
+    com_particle.position = SMBH_filter(pset).center_of_mass() - pset[0].position
+
+    m1, m2, semimajor, ecc, inc, argp, ascn, tanom = bin_global(pset[0], com_particle)
+    perigal = semimajor*(1-ecc)
+    xe = ((3+ecc)**-1 * (com_particle.mass)/SMBH.mass * (perigal)**3)**(1/3)
+#    xe = ((pset[1].mass)/SMBH.mass * gc_code.gc_dist**3)**(1/3)
+
+    return xe
+

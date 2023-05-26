@@ -9,7 +9,6 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
-import pandas as pd
 import statsmodels.api as sm
 import warnings
 

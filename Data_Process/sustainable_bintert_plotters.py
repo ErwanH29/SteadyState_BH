@@ -24,7 +24,7 @@ class sustainable_sys(object):
                         r'$M_{\rm{SMBH}} = 4\times10^{5}M_{\odot}$',
                         r'$M_{\rm{SMBH}} = 4\times10^{7}M_{\odot}$']
         self.legend_id = [3, 4]
-        self.vdisp = 150000
+        self.vdisp = 150000/3
 
         self.fcrop = True
         if (self.fcrop):
@@ -50,204 +50,202 @@ class sustainable_sys(object):
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            #filename[1] = filename[1][::-1] 
-            #filenameC[1] = filenameC[1][::-1]
+            #filename[0] = filename[0][::-1] 
+            #filenameC[0] = filenameC[0][::-1]
             for int_ in range(1):
-                int_ += 1
+                #int_ += 1
                 for file_ in range(len(filename[int_])):
-                    with open(filenameC[int_][file_], 'rb') as input_file:
-                        chaotic_tracker = pkl.load(input_file)
-                        if int_ == 0 and file_ >= 71 and file_ <= 99:
+                    if file_ > 43:
+                    #if file_ > 242:
+                        with open(filenameC[int_][file_], 'rb') as input_file:
+                            chaotic_tracker = pkl.load(input_file)
                             proceed = True
-                        elif int_ == 1:
-                            proceed = True
-                        else:
-                            proceed = False
-                        if chaotic_tracker.iloc[0][6] <= pop_tracker and (proceed):
-                            with open(filename[int_][file_], 'rb') as input_file:
-                                file_size = os.path.getsize(filename[int_][file_])
-                                if file_size < 2.8e9:
-                                    data = pkl.load(input_file)
-                                    pop = 5*round(0.2*np.shape(data)[0])
-                                    print('Reading file', file_, ':', input_file)
-                                    for parti_ in range(np.shape(data)[0]):
-                                        pop_bin = [ ]
-                                        pop_ter = [ ]
+                            if chaotic_tracker.iloc[0][6] <= pop_tracker and (proceed):
+                                with open(filename[int_][file_], 'rb') as input_file:
+                                    file_size = os.path.getsize(filename[int_][file_])
+                                    if file_size < 2.8e9:
+                                        data = pkl.load(input_file)
+                                        pop = 5*round(0.2*np.shape(data)[0])
+                                        print('Reading file', file_, ':', input_file)
+                                        for parti_ in range(np.shape(data)[0]):
+                                            pop_bin = [ ]
+                                            pop_ter = [ ]
 
-                                        semi_NN_avg = [ ]
-                                        semi_NN_min = [ ]
-                                        semi_t_avg = [ ]
-                                        semi_t_min = [ ]
+                                            semi_NN_avg = [ ]
+                                            semi_NN_min = [ ]
+                                            semi_t_avg = [ ]
+                                            semi_t_min = [ ]
 
-                                        bsys_time = [ ]
-                                        bform_time = [ ]
-                                        bin_key = [ ]
-                                        new_bin_sys = [ ]
-                                        tsys_time = [ ]
-                                        tform_time = [ ]
-                                        ter_key = [ ]
-                                        new_ter_sys = [ ]
+                                            bsys_time = [ ]
+                                            bform_time = [ ]
+                                            bin_key = [ ]
+                                            new_bin_sys = [ ]
+                                            tsys_time = [ ]
+                                            tform_time = [ ]
+                                            ter_key = [ ]
+                                            new_ter_sys = [ ]
 
-                                        GW_freqbin = [ ]
-                                        GW_strainbin = [ ]
-                                        GW_timeb = [ ]
-                                        GW_bmass = [ ]
-                                        GW_freqter = [ ]
-                                        GW_strainter = [ ]
-                                        GW_timet = [ ]
-                                        GW_tmass = [ ]
+                                            GW_freqbin = [ ]
+                                            GW_strainbin = [ ]
+                                            GW_timeb = [ ]
+                                            GW_bmass = [ ]
+                                            GW_freqter = [ ]
+                                            GW_strainter = [ ]
+                                            GW_timet = [ ]
+                                            GW_tmass = [ ]
 
-                                        hard_bin = [ ]
-                                        hard_ter = [ ]
-                                        dedt = [ ]
-                                        dadt = [ ]
+                                            hard_bin = [ ]
+                                            hard_ter = [ ]
+                                            dedt = [ ]
+                                            dadt = [ ]
 
-                                        bin_sys = False
-                                        ter_sys = False
-                                        semi_nn_avg_temp = []
-                                        semi_t_avg_temp = []
-                                        temp_dedt = [] 
-                                        temp_dadt = []
-                                        bform_time.append(-5)
-                                        tform_time.append(-5)
+                                            bin_sys = False
+                                            ter_sys = False
+                                            semi_nn_avg_temp = []
+                                            semi_t_avg_temp = []
+                                            temp_dedt = [] 
+                                            temp_dadt = []
+                                            bform_time.append(-5)
+                                            tform_time.append(-5)
 
-                                        if parti_ != 0:
-                                            for col_ in range(np.shape(data)[1]-1):
-                                                nn_semi = abs(data.iloc[parti_][col_][7][1])
-                                                nn_ecc = data.iloc[parti_][col_][8][1]
-                                                mass1 = data.iloc[parti_][0][1]
+                                            if parti_ != 0:
+                                                for col_ in range(np.shape(data)[1]-1):
+                                                    nn_semi = abs(data.iloc[parti_][col_][7][1])
+                                                    nn_ecc = data.iloc[parti_][col_][8][1]
+                                                    mass1 = data.iloc[parti_][0][1]
 
-                                                for part_ in range(np.shape(data)[0]):
-                                                    if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][1]:
-                                                        mass2 = data.iloc[part_][0][1]
-                                                        mass = max(mass1, mass2)
-                                                        hard = False
-                                                        bin = False
-                                                        if nn_semi < (constants.G*mass)/(4*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
-                                                            hard = True
-                                                            bin = True
-                                                            hard_bin.append(1)
+                                                    for part_ in range(np.shape(data)[0]):
+                                                        if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][1]:
+                                                            mass2 = data.iloc[part_][0][1]
+                                                            mass = max(mass1, mass2)
+                                                            hard = False
+                                                            bin = False
+                                                            if nn_semi < (constants.G*mass)/(2*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
+                                                                hard = True
+                                                                bin = True
+                                                                hard_bin.append(1)
+                                                                
+                                                            if not (hard) and nn_semi < (constants.G*mass)/(2*(0.1*self.vdisp*(1 | units.ms))**2) and abs(nn_ecc) < 1:  #Value chosen for a < 1000AU
+                                                                hard_bin.append(-5)
+                                                                bin = True
+
+                                                            if (bin):
+                                                                if not (bin_sys):  #First formation time
+                                                                    formation_time = col_*1e3
+                                                                    bform_time[-1] = formation_time
+                                                                    bin_sys = True
+                                                                bin_key.append(data.iloc[parti_][col_][6][1])
+                                                                if data.iloc[parti_][col_][6][1] != bin_key[-1] or len(new_bin_sys) < 1:
+                                                                    new_bin_sys.append(1)
+                                                                else:
+                                                                    new_bin_sys.append(-5)
+
+                                                                bsys_time.append(col_)
+                                                                semi_nn_avg_temp.append(nn_semi.value_in(units.pc))
+                                                                pop_bin.append(pop)
+
+                                                                strain = GW_calcs.gw_strain(nn_semi, nn_ecc, mass1, mass2)
+                                                                freq = GW_calcs.gw_freq(nn_semi, nn_ecc, mass1, mass2)
+                                                                GW_time = GW_calcs.gw_timescale(nn_semi, nn_ecc, mass1, mass2)
+                                                                GW_strainbin.append(strain)
+                                                                GW_freqbin.append(freq)
+                                                                GW_timeb.append(float(GW_time.value_in(units.Myr)))
+                                                                GW_bmass.append(mass2.value_in(units.MSun))
+
+                                                                semi_outer = abs(data.iloc[parti_][col_][7][2])
+                                                                ecc_outer = data.iloc[parti_][col_][8][2]
+
+                                                                #Calculate tertiary. The stability equality is based on Mardling and Aarseth 2001
+                                                                if ecc_outer < 1:
+                                                                    for part_ in range(np.shape(data)[0]):
+                                                                        if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][2]:
+                                                                            mass_outer = data.iloc[part_][0][1]
+
+                                                                    semi_ratio = semi_outer / nn_semi
+                                                                    equality = 2.8 * ((1+mass_outer/(mass1+mass2))*(1+ecc_outer)/(1-ecc_outer)**0.5)**0.4
+                                                                    if semi_ratio > equality:
+                                                                        if not (ter_sys):
+                                                                            formation_time = col_*1e3
+                                                                            tform_time[-1] = formation_time
+                                                                            ter_sys = True
+                                                                        ter_key.append([i for i in data.iloc[parti_][col_][6][2]][0])
+                                                                        if data.iloc[parti_][col_][6][2] != ter_key[-1] or len(new_ter_sys) < 2:
+                                                                            new_ter_sys.append(1)
+                                                                        else:
+                                                                            new_ter_sys.append(-5)
+
+                                                                        tsys_time.append(col_)
+                                                                        semi_t_avg_temp.append(semi_outer.value_in(units.pc))
+                                                                        pop_ter.append(pop)
+
+                                                                        GW_time = GW_calcs.gw_timescale(semi_outer, ecc_outer, mass1, mass_outer)
+                                                                        strain = GW_calcs.gw_strain(semi_outer, ecc_outer, mass1, mass_outer)
+                                                                        freq = GW_calcs.gw_freq(semi_outer, ecc_outer, mass1, mass_outer)
+                                                                        GW_strainter.append(strain)
+                                                                        GW_freqter.append(freq)
+                                                                        GW_timet.append(float(GW_time.value_in(units.Myr)))
+                                                                        GW_tmass.append([mass2.value_in(units.MSun), mass_outer.value_in(units.MSun)])
+
+                                                                        if (hard):
+                                                                            hard_ter.append(1)
+                                                                        else:
+                                                                            hard_ter.append(-5)
+
+                                                bin_sys = np.shape(np.unique(bin_key))[0]
+                                                ter_sys = np.shape(np.unique(ter_key))[0]
+
+                                                if len(semi_nn_avg_temp) > 0:
+                                                    semi_NN_avg.append(np.mean(semi_nn_avg_temp))
+                                                    semi_NN_min.append(np.min(semi_nn_avg_temp))
+                                                else:
+                                                    semi_NN_avg.append(-5)
+                                                    semi_NN_min.append(-5)
+
+                                                if len(semi_t_avg_temp) > 0:
+                                                    semi_t_avg.append(np.mean(semi_t_avg_temp))
+                                                    semi_t_min.append(np.min(semi_t_avg_temp))
+                                                else:
+                                                    semi_t_avg.append(-5)
+                                                    semi_t_min.append(-5)
                                                             
-                                                        if not (hard) and nn_semi < (constants.G*mass)/(4*(0.1*self.vdisp*(1 | units.ms))**2) and abs(nn_ecc) < 1:  #Value chosen for a < 1000AU
-                                                            hard_bin.append(-5)
-                                                            bin = True
+                                                bsys_time.append((len(np.unique(bsys_time)))/(col_))
+                                                tsys_time.append((len(np.unique(tsys_time)))/(col_))
+                                                dedt.append(np.mean(temp_dedt))
+                                                dadt.append(np.mean(temp_dadt))
 
-                                                        if (bin):
-                                                            if not (bin_sys):  #First formation time
-                                                                formation_time = col_*1e3
-                                                                bform_time[-1] = formation_time
-                                                                bin_sys = True
-                                                            bin_key.append(data.iloc[parti_][col_][6][1])
-                                                            if data.iloc[parti_][col_][6][1] != bin_key[-1] or len(new_bin_sys) < 1:
-                                                                new_bin_sys.append(1)
-                                                            else:
-                                                                new_bin_sys.append(-5)
-
-                                                            bsys_time.append(col_)
-                                                            semi_nn_avg_temp.append(nn_semi.value_in(units.pc))
-                                                            pop_bin.append(pop)
-
-                                                            strain = GW_calcs.gw_strain(nn_semi, nn_ecc, mass1, mass2)
-                                                            freq = GW_calcs.gw_freq(nn_semi, nn_ecc, mass1, mass2)
-                                                            GW_time = GW_calcs.gw_timescale(nn_semi, nn_ecc, mass1, mass2)
-                                                            GW_strainbin.append(strain)
-                                                            GW_freqbin.append(freq)
-                                                            GW_timeb.append(float(GW_time.value_in(units.Myr)))
-                                                            GW_bmass.append(mass2.value_in(units.MSun))
-
-                                                            semi_outer = abs(data.iloc[parti_][col_][7][2])
-                                                            ecc_outer = data.iloc[parti_][col_][8][2]
-
-                                                            #Calculate tertiary. The stability equality is based on Mardling and Aarseth 2001
-                                                            if ecc_outer < 1:
-                                                                for part_ in range(np.shape(data)[0]):
-                                                                    if data.iloc[part_][0][0] == data.iloc[parti_][col_][6][2]:
-                                                                        mass_outer = data.iloc[part_][0][1]
-
-                                                                semi_ratio = semi_outer / nn_semi
-                                                                equality = 2.8 * ((1+mass_outer/(mass1+mass2))*(1+ecc_outer)/(1-ecc_outer)**0.5)**0.4
-                                                                if semi_ratio > equality:
-                                                                    if not (ter_sys):
-                                                                        formation_time = col_*1e3
-                                                                        tform_time[-1] = formation_time
-                                                                        ter_sys = True
-                                                                    ter_key.append([i for i in data.iloc[parti_][col_][6][2]][0])
-                                                                    if data.iloc[parti_][col_][6][2] != ter_key[-1] or len(new_ter_sys) < 2:
-                                                                        new_ter_sys.append(1)
-                                                                    else:
-                                                                        new_ter_sys.append(-5)
-
-                                                                    tsys_time.append(col_)
-                                                                    semi_t_avg_temp.append(semi_outer.value_in(units.pc))
-                                                                    pop_ter.append(pop)
-
-                                                                    GW_time = GW_calcs.gw_timescale(semi_outer, ecc_outer, mass1, mass_outer)
-                                                                    strain = GW_calcs.gw_strain(semi_outer, ecc_outer, mass1, mass_outer)
-                                                                    freq = GW_calcs.gw_freq(semi_outer, ecc_outer, mass1, mass_outer)
-                                                                    GW_strainter.append(strain)
-                                                                    GW_freqter.append(freq)
-                                                                    GW_timet.append(float(GW_time.value_in(units.Myr)))
-                                                                    GW_tmass.append([mass2.value_in(units.MSun), mass_outer.value_in(units.MSun)])
-
-                                                                    if (hard):
-                                                                        hard_ter.append(1)
-                                                                    else:
-                                                                        hard_ter.append(-5)
-
-                                            bin_sys = np.shape(np.unique(bin_key))[0]
-                                            ter_sys = np.shape(np.unique(ter_key))[0]
-
-                                            if len(semi_nn_avg_temp) > 0:
-                                                semi_NN_avg.append(np.mean(semi_nn_avg_temp))
-                                                semi_NN_min.append(np.min(semi_nn_avg_temp))
-                                            else:
-                                                semi_NN_avg.append(-5)
-                                                semi_NN_min.append(-5)
-
-                                            if len(semi_t_avg_temp) > 0:
-                                                semi_t_avg.append(np.mean(semi_t_avg_temp))
-                                                semi_t_min.append(np.min(semi_t_avg_temp))
-                                            else:
-                                                semi_t_avg.append(-5)
-                                                semi_t_min.append(-5)
-                                                        
-                                            bsys_time.append((len(np.unique(bsys_time)))/(col_))
-                                            tsys_time.append((len(np.unique(tsys_time)))/(col_))
-                                            dedt.append(np.mean(temp_dedt))
-                                            dadt.append(np.mean(temp_dadt))
-
-                                            path = '/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/'
-                                            stab_tracker = pd.DataFrame()
-                                            df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                                    'Population': pop,
-                                                                    'Binary Pop.': pop_bin,
-                                                                    '# Binary Sys.': bin_sys,
-                                                                    'First bin. form': bform_time,
-                                                                    'Binary System Delineate': new_bin_sys,
-                                                                    'Tertiary Pop.': pop_ter,
-                                                                    '# Tertiary Sys.': ter_sys,
-                                                                    'First ter. form': tform_time,
-                                                                    'Tertiary System Delineate': new_ter_sys,
-                                                                    'Hard Bin. Bool': hard_bin,
-                                                                    'Hard Ter. Bool': hard_ter,
-                                                                    'Bin. GW freq': GW_freqbin,
-                                                                    'Bin. GW strain': GW_strainbin,
-                                                                    'Bin. GW time': GW_timeb,           #Merging time in Myr
-                                                                    'Bin. GW mass': GW_bmass,           #Constituent mass in MSun
-                                                                    'Ter. GW freq': GW_freqter,
-                                                                    'Ter. GW strain': GW_strainter,
-                                                                    'Ter. GW time': GW_timet,
-                                                                    'Ter. GW mass': GW_tmass,
-                                                                    'Average dedt': dedt,
-                                                                    'Average dadt': dadt,
-                                                                    'Bin. Semi-major Avg': semi_NN_avg,
-                                                                    'Bin. Semi-major Min': semi_NN_min,
-                                                                    'Ter. Semi-major Avg': semi_t_avg,
-                                                                    'Ter. Semi-major Min': semi_t_min,
-                                                                    'Total sim. length': col_ * 1000,
-                                                                    })
-                                            stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_file_'+str(file_)+'_'+str(parti_)+'_local2.pkl'))
+                                                path = '/media/erwanh/Elements/'+fold_+'/data/bin_hier_systems/'
+                                                stab_tracker = pd.DataFrame()
+                                                df_stabtime = pd.Series({'File_number': file_,
+                                                                        'Integrator': integrator[int_],
+                                                                        'Population': pop,
+                                                                        'Binary Pop.': pop_bin,
+                                                                        '# Binary Sys.': bin_sys,
+                                                                        'First bin. form': bform_time,
+                                                                        'Binary System Delineate': new_bin_sys,
+                                                                        'Tertiary Pop.': pop_ter,
+                                                                        '# Tertiary Sys.': ter_sys,
+                                                                        'First ter. form': tform_time,
+                                                                        'Tertiary System Delineate': new_ter_sys,
+                                                                        'Hard Bin. Bool': hard_bin,
+                                                                        'Hard Ter. Bool': hard_ter,
+                                                                        'Bin. GW freq': GW_freqbin,
+                                                                        'Bin. GW strain': GW_strainbin,
+                                                                        'Bin. GW time': GW_timeb,           #Merging time in Myr
+                                                                        'Bin. GW mass': GW_bmass,           #Constituent mass in MSun
+                                                                        'Ter. GW freq': GW_freqter,
+                                                                        'Ter. GW strain': GW_strainter,
+                                                                        'Ter. GW time': GW_timet,
+                                                                        'Ter. GW mass': GW_tmass,
+                                                                        'Average dedt': dedt,
+                                                                        'Average dadt': dadt,
+                                                                        'Bin. Semi-major Avg': semi_NN_avg,
+                                                                        'Bin. Semi-major Min': semi_NN_min,
+                                                                        'Ter. Semi-major Avg': semi_t_avg,
+                                                                        'Ter. Semi-major Min': semi_t_min,
+                                                                        'Total sim. length': col_ * 1000,
+                                                                        })
+                                                stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_system_data_indiv_parti_file_'+str(file_)+'_'+str(parti_)+'_local2.pkl'))
             iterf += 1
 
     def array_rewrite(self, arr, arr_type, filt):
@@ -766,29 +764,3 @@ class sustainable_sys(object):
                 file.write('Data for      '+str(integrator[int_]))
                 file.write('\nFactor:       '+str(best_fit[0]))
                 file.write('\ny-intercept:  '+str(best_fit[1])+'\n\n')
-                    
-    
-        """for sim_ in range(2):
-            ini_pop = np.unique(self.pop[sim_+2])
-
-            fig, ax = plt.subplots()
-            best_fit = np.polyfit(ini_pop, np.log10(self.binary_occupation[sim_+2]), 1)
-            curve = np.poly1d(best_fit)
-            print('Factor:       ', best_fit[0])
-            print('y-intercept:  ', best_fit[1])
-            params = curve_fit(log_fit, ini_pop, np.log10(self.binary_occupation[sim_]))
-            [a] = params[0]
-            y_fit_data = [(a)*i for i in xtemp]
-            print(a)
-
-            ax.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$', fontsize = axlabel_size)
-            ax.set_ylim(-7, 0)
-            #ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
-            ax.plot(xtemp, y_fit_data, color = 'black', linestyle = '-.', zorder = 1)
-            ax.scatter(ini_pop, np.log10(self.binary_occupation[sim_+2]), edgecolors  = 'black', c = (self.colors[sim_+2]), label = self.labelsD[sim_+2], zorder = 2)
-            ax.scatter(ini_pop, np.log10(self.tertiary_occupation[sim_+2]), edgecolors  = 'black', c = (self.colors[sim_+2]), marker = 's', zorder = 3)
-            print('Number of tertiary: ', self.tertiary_systems[sim_+2])
-            plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-            ax.legend()
-        ax.plot(xtemp, y_fit)
-        plt.savefig('figures/binary_hierarchical/sys_form_GRX.pdf', dpi=300, bbox_inches='tight')"""

@@ -27,12 +27,20 @@ class IMBH_init(object):
     def __init__(self):
         self.N = 0
         self.mass = 1000 | units.MSun
+
+    def N_count(self):
+        """
+        Function which counts the number of particles in the simulation
+        """
+        return int(self.N)
     
     def IMBH_radius(self, mass):
         """
         Function which sets the IMBH radius based on the Schwarzschild radius
+        
+        Inputs:
+        mass:   The mass of the input particle
         """
-
         return (2*constants.G*mass)/(constants.c**2)
 
     def coll_radius(self, radius):
@@ -40,12 +48,14 @@ class IMBH_init(object):
         Function which sets the collision radius. 
         Based on the rISCO.
         """
-
         return 3*radius
 
     def ProbFunc(self, vel):
         """
         Function which initialises the velocity distribution [Maxwell distribution]
+        
+        Inputs:
+        vel:    The velocity range for which to sample the weights from
         """
 
         sigmaV = 150 # in kms (if changing, change line 26 of physics_func.py)
@@ -70,6 +80,14 @@ class IMBH_init(object):
  
         return np.concatenate((vx,vy,vz))
 
+    def kroupa_mass(self, pset, vseed):
+        """
+        Function to set particle masses based on the Kroupa function
+        """
+        np.random.seed(vseed)
+
+        return new_kroupa_mass_distribution(pset, 50 | units.MSun, 10**5 | units.MSun)
+
     def plummer_distr(self, N, vseed):
         """
         Function to initialise the particles position based on the Plummer model
@@ -84,7 +102,7 @@ class IMBH_init(object):
         rhmass = LagrangianRadii(distr)[6].in_(units.parsec)
         return distr, rhmass
 
-    def IMBH_first(self, init_parti, seed):
+    def IMBH_first(self, init_parti, seed, bool, ptracker):
         """
         Function to initialise the first IMBH population.
         The first particle forms the center of the cluster
@@ -92,44 +110,68 @@ class IMBH_init(object):
         Inputs:
         init_parti: The (2+N) number of IMBH particles you wish to simulate
         seed:       Seed which defines the initial configuration of the system
+        bool:       Boolean to see if using data from previous ALICE run
+        ptracker:   Previous ALICE run data file
         """
         
         SMBH_parti = MW_SMBH()
         self.N += init_parti+1
         self.code_conv = nbody_system.nbody_to_si(self.N * self.mass, SMBH_parti.distance)
+        crazy_ecc = True
 
-        particles, rhmass = self.plummer_distr(self.N, seed)
-        vseed = 0
-        for parti_ in particles:
-            vseed += 1
-            parti_.velocity = self.velocityList(vseed) * (1 | units.kms)
+        if (bool):
+            particles, rhmass = self.plummer_distr(self.N, seed)
+            vseed = 0
+            for parti_ in particles:
+                vseed += 1
+                parti_.velocity = self.velocityList(vseed) * (1 | units.kms)
+            particles.z *= 0.1
+            particles[0].position = SMBH_parti.position
+            particles[0].velocity = SMBH_parti.velocity
+            particles[1:].mass = self.mass
+            #particles[1:round(self.N/3)].mass = self.mass
+            #particles[round(self.N/3):].mass = self.kroupa_mass(len(particles[round(self.N/3):]), seed)
+
+            min_dist = 0.15 | units.parsec
+            max_dist = 0.25 | units.parsec
+            
+            for parti_ in particles[1:]:
+                if parti_.position.length() < min_dist:
+                    parti_.position *= min_dist/parti_.position.length()
+                if parti_.position.length() > max_dist:
+                    parti_.position *= max_dist/parti_.position.length()
+            particles.scale_to_standard(convert_nbody=self.code_conv)
+
+            if (crazy_ecc):
+                for parti_ in particles[1:]:
+                    parti_.vx += (constants.G*SMBH_parti.mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
+                    parti_.vy += (constants.G*SMBH_parti.mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
+            else:
+                for parti_ in particles[1:]:
+                    parti_.vx = (constants.G*SMBH_parti.mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
+                    parti_.vy = (constants.G*SMBH_parti.mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
+
+            particles[1:].mass = self.mass
+            particles[0].mass = SMBH_parti.mass
+
+        else:
+            self.N -= 1
+            particles, rhmass = self.plummer_distr(self.N, seed)
+            for parti_ in range(np.shape(ptracker)[0]):
+                part_params = ptracker.iloc[parti_][-1]
+
+                particles[parti_].vx = part_params[3][0]
+                particles[parti_].vy = part_params[3][1]
+                particles[parti_].vz = part_params[3][2]
+                particles[parti_].x = part_params[2][0]
+                particles[parti_].y = part_params[2][1]
+                particles[parti_].z = part_params[2][2]
+                particles[parti_].mass = part_params[1]
+                
+        particles.radius = self.IMBH_radius(particles.mass)
+        particles.collision_radius = self.coll_radius(particles.radius)
         particles.ejection = 0
         particles.coll_events = 0
-        particles.z *= 0.1
         particles.key_tracker = particles.key
-        particles[0].position = SMBH_parti.position
-        particles[0].velocity = SMBH_parti.velocity
-        particles[1:].mass = self.mass
-        particles.radius = self.IMBH_radius(particles.mass)
-        particles.collision_radius = self.coll_radius(particles.radius)
-
-        min_dist = 0.15 | units.parsec
-        max_dist = 0.25 | units.parsec
-        
-        for parti_ in particles[1:]:
-            if parti_.position.length() < min_dist:
-                parti_.position *= min_dist/parti_.position.length()
-            if parti_.position.length() > max_dist:
-                parti_.position *= max_dist/parti_.position.length()
-        particles.scale_to_standard(convert_nbody=self.code_conv)
-
-        for parti_ in particles[1:]:
-            parti_.vx += (constants.G*SMBH_parti.mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
-            parti_.vy += (constants.G*SMBH_parti.mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
-
-        particles[1:].mass = self.mass
-        particles[0].mass = SMBH_parti.mass
-        particles.radius = self.IMBH_radius(particles.mass)
-        particles.collision_radius = self.coll_radius(particles.radius)
         
         return particles, rhmass

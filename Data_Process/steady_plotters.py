@@ -100,7 +100,6 @@ class stability_plotters(object):
             line = f.readlines()
             for iter in range(len(line)):
                 if iter%3 == 0:
-                    print(line[iter][99:130])
                     if line[iter][54:65] == 'rc_0.25_4e6':
                         if line[iter][66:73] == 'Hermite':
                             index = 0

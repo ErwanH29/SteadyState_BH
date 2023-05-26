@@ -6,9 +6,8 @@ import pandas as pd
 import os
 
 class data_initialiser(object):
-    def chaotic_sim_tracker(self, pset, init_pop, Nmerge, cum_mergermass, time, ejected_key, 
-                            stab_time, added_mass, ejected_mass, comp_time, ejected, int_string, 
-                            pert, init_IMBH, kit):
+    def chaotic_sim_tracker(self, pset, init_pop, Nmerge, cum_mergermass, time, ejected_key, stab_time, 
+                            added_mass, ejected_mass, comp_time, ejected, int_string, pert, kit):
 
         """
         Data set which tracks statistics on the simulations resulting in ejections
@@ -27,13 +26,11 @@ class data_initialiser(object):
         ejected:        0 for not ejected (sim. ended with merger) or 1 for ejection away from SMBH
         int_string:     String describing integrator used
         pert:           The PN term simulated
-        init_IMBH:      The number of IMBH initially
-        kit:            The simulation iteration number of the process
         """
 
         SMBH_code = MW_SMBH()
         count = file_counter(int_string)
-        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7'
+        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e5'
         stab_tracker = pd.DataFrame()
         df_stabtime = pd.Series({'Added Particle Mass': added_mass.in_(units.MSun),
                                  'Computation Time': str(comp_time),
@@ -42,14 +39,14 @@ class data_initialiser(object):
                                  'Ejected Particle': ejected_key, 
                                  'Ejection': ejected, 'Final Particles': (len(pset)-1),
                                  'Initial Distance': SMBH_code.distance.in_(units.parsec),
-                                 'Initial Particle Mass': init_pop[2:].mass.in_(units.MSun),
+                                 'Initial Particle Mass': pset[2:].mass.in_(units.MSun),
                                  'Initial Particles': (len(pset)-1), 
                                  'Number of Mergers': Nmerge, 
                                  'PN Term': str(pert),
                                  'Simulated Till': time.in_(units.yr),
                                  'Stability Time': stab_time})
         stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-        stab_tracker.to_pickle(os.path.join(path+str('/no_addition/chaotic_simulation'), 'IMBH_'+str(int_string)+'_'+str(pert)+'_'+str(init_IMBH)
+        stab_tracker.to_pickle(os.path.join(path+str('/no_addition/chaotic_simulation'), 'IMBH_'+str(int_string)+'_'+str(pert)+'_'+str(init_pop)
                                             +'_sim'+str(count)+'_init_dist'+str('{:.3f}'.format(SMBH_code.distance.value_in(units.parsec)))
                                             +'_equal_mass_'+str('{:.3f}'.format(pset[2].mass.value_in(units.MSun)))+str(kit)+'.pkl'))
 
@@ -59,7 +56,6 @@ class data_initialiser(object):
         
         Inputs:
         int_string:    Hermite or Hermite GRX to separate the data
-        init_IMBH:     Cluster population
         count:         The simulation #
         init_dist:     Initial distance of particles to SMBH
         pset:          The complete particle set
@@ -70,7 +66,7 @@ class data_initialiser(object):
         pert:          The PN term simulated
         """
 
-        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7/'
+        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e5/'
         file_names = 'IMBH_'+str(int_string)+'_'+str(pert)+'_'+str(init_IMBH)+'_sim'+str(count) \
                      +'_init_dist'+str('{:.3f}'.format(init_dist.value_in(units.parsec)))+'_equal_mass_' \
                      +str('{:.3f}'.format(pset[2].mass.value_in(units.MSun)))+'.pkl'
@@ -98,10 +94,13 @@ class data_initialiser(object):
         df_energy_tracker = pd.Series({'Appearance': app_time,
                                        'Collision Mass': 0 | units.MSun,
                                        'Collision Time': 0 | units.s, 
-                                       'Et': E0, 'Kinetic E': Ek.in_(units.J),
+                                       'Et': E0, 
+                                       'Kinetic E': Ek.in_(units.J),
                                        'Pot. E': Ep.in_(units.J), 
                                        'Time': time.in_(units.kyr), 
-                                       'dE': 0, 'dEs': 0, 'Pot. E': Ep.in_(units.J)
+                                       'dE': 0,  
+                                       'dEs': 0,
+                                       'Pot. E': Ep.in_(units.J)
                                         })
         energy_tracker = energy_tracker.append(df_energy_tracker, ignore_index=True)
 
@@ -161,11 +160,12 @@ class data_initialiser(object):
        
         return IMBH_array
 
-    def LG_tracker(self, time, gravity):
+    def LG_tracker(self, pset, time, gravity):
         """
         Data set which tracks the Lagrangian radius and tidal radius of the cluster.
         
         Inputs:
+        pset:       The particle set
         time:       The initial time of the simulation
         gravity:    The integrator used for the simulation
         """
@@ -197,7 +197,7 @@ class data_initialiser(object):
 
         count = file_counter(int_string)
         SMBH_code = MW_SMBH()
-        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7'
+        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e5'
 
         stable_sim_tracker = pd.DataFrame()
         df_stablesim = pd.Series({'Initial Particles': (len(pset)-1), 'Injected Event': Ninj,

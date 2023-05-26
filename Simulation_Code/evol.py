@@ -1,12 +1,12 @@
-from amuse.community.hermite_grx.interface import *
-from amuse.ext.LagrangianRadii import LagrangianRadii
-from amuse.ext.orbital_elements import orbital_elements_from_binary
 from amuse.lab import *
 from amuse.units import units
+from parti_initialiser import *
 from data_init import *
 from evol_func import *
-from parti_initialiser import *
+from amuse.ext.LagrangianRadii import LagrangianRadii
 
+from amuse.ext.orbital_elements import orbital_elements_from_binary
+from amuse.community.hermite_grx.interface import *
 
 import numpy as np
 import pandas as pd
@@ -18,7 +18,7 @@ import time as cpu_time
 #   - ENSURE CORRECT FILE SAVING FORMAT (NAME)
 #   - WHEN USING GRX ENSURE THAT THE INT_STRING IS CHANGED + UNCOMMENT LINES 47 - 54
 
-def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, kit):
+def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, kit, init_time, past_time):
     """
     Bulk of the simulation. Uses Hermite integrator to evolve the system while bridging it.
     Keeps track of the particles' position and stores it in a pickle file.
@@ -30,14 +30,11 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
     init_dist:   The initial distance between IMBH and SMBH
     converter:   Variable used to convert between nbody units and SI
     int_string:  String to dictate whether using Hermite or Hermite GRX
-    kit:            The simulation iteration number of the process.
     """
     
     set_printing_strategy("custom", preferred_units = [units.MSun, units.pc, units.kyr, units.AU/units.yr, units.J],
                                                        precision = 20, prefix = "", separator = " ", suffix = "")
 
-    comp_start = cpu_time.time()
-    initial_set = parti.copy()
 
     if int_string == 'Hermite':
         code = Hermite(converter, number_of_workers = 6)
@@ -50,7 +47,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
         particles.add_particle(parti[1:])
         parti = particles
 
-        code = HermiteGRX(converter, number_of_workers = 9)
+        code = HermiteGRX(converter, number_of_workers = 18)
         perturbations = ["1PN_Pairwise", "1PN_EIH", "2.5PN_EIH"]
         pert = perturbations[2]
         code.parameters.perturbation = pert
@@ -97,22 +94,21 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
     IMBH_tracker = data_trackers.IMBH_tracker(parti, time, N_parti)
     ejected_key_track = 000   
     rhmass = []
-    lagrangians = data_trackers.LG_tracker(time, code)
-
+    lagrangians = data_trackers.LG_tracker(parti, time, code)
+    eject_bool = False
     while time < tend:
-        iter += 1
-        time += eta*tend
-
         eject  = 0
+        iter += 1
         app_time = 0 | units.s
         merger_mass = 0 | units.MSun
         added_mass = 0 | units.MSun
         ejected_mass = 0 | units.MSun
         tcoll = 0 | units.yr
 
-        rhmass_val = LagrangianRadii(parti[1:])[6].in_(units.pc)
+        rhmass_val = LagrangianRadii(parti[1:])[6].in_(units.parsec)
         rhmass.append(rhmass_val)
 
+        time += eta*tend
         channel_IMBH["to_gravity"].copy()
             
         code.evolve_model(time)
@@ -131,9 +127,11 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
             bin_sys.add_particle(particle)
             bin_sys.add_particle(parti[0])
             kepler_elements = orbital_elements_from_binary(bin_sys, G=constants.G)
-            ecc = kepler_elements[3]
+            eccentricity = kepler_elements[3]
 
-            if parti_KE > abs(parti_BE) and dist_core.length() > 2 | units.pc and curr_traj > 0 and ecc > 1:
+            if parti_KE > abs(parti_BE) and dist_core.length() > 2 | units.parsec and curr_traj > 0 and eccentricity > 1:
+                eject_bool = True
+            if (eject_bool):
                 eject = 1
                 ejected_key_track = particle.key_tracker
                 ejected_mass = particle.mass
@@ -151,6 +149,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
                 merge = 1
                 for ci in range(len(stopping_condition.particles(0))):
                     Nenc += 1
+
                     if pert == 'Newtonian':
                         energy_before = code.potential_energy + code.kinetic_energy
                         enc_particles_set = Particles(particles=[stopping_condition.particles(0)[ci],
@@ -213,6 +212,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
                         neigh_key = [0, 0, 0]
 
                     else:
+                                      # First elements of the orbital arrays will be parti + SMBH
                         if Nenc == 0:
                             SMBH_parti = parti[0]
                         else:
@@ -222,7 +222,7 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
                             bin_sys.add_particle(parti[j])
                             bin_sys.add_particle(part_)
                             kepler_elements = orbital_elements_from_binary(bin_sys, G=constants.G)
-                            semimajor.append(kepler_elements[2].value_in(units.pc))
+                            semimajor.append(kepler_elements[2].value_in(units.parsec))
                             eccentric.append(kepler_elements[3])
                             inclinate.append(kepler_elements[4])
                             arg_peri.append(kepler_elements[5])
@@ -240,13 +240,13 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
                     parti_PE = np.sum(indiv_PE_all(parti[j], parti))
 
                     df_IMBH_vals = pd.Series({'{}'.format(time): [parti[j].key_tracker, parti[j].mass, parti[j].position, parti[j].velocity, 
-                                                                  parti_KE, parti_PE, neigh_key, semimajor * 1 | units.pc, 
+                                                                  parti_KE, parti_PE, neigh_key, semimajor * 1 | units.parsec, 
                                                                   eccentric, inclinate, arg_peri, asc_node, true_anom, neighbour_dist]})
                     break
 
                 else:
                     df_IMBH_vals = pd.Series({'{}'.format(time): [np.NaN, np.NaN | units.MSun,
-                                                                 [np.NaN | units.pc, np.NaN | units.pc, np.NaN | units.pc],
+                                                                 [np.NaN | units.parsec, np.NaN | units.parsec, np.NaN | units.parsec],
                                                                  [np.NaN | units.kms, np.NaN | units.kms, np.NaN | units.kms],
                                                                   np.NaN | units.J, np.NaN | units.J, np.NaN | units.m, np.NaN,
                                                                   np.NaN, np.NaN, np.NaN , np.NaN, np.NaN]})
@@ -264,69 +264,86 @@ def evolve_system(parti, tend, eta, init_dist, converter, int_string, GRX_set, k
             Et = code.get_total_energy_with(pert)[0]
         de = abs(Et-E0)/abs(E0)
         
-        df_energy_tracker = pd.Series({'Appearance': app_time, 'Collision Mass': merger_mass, 'Collision Time': tcoll, 
-                                       'Et': Et, 'Kinetic E': parti_KE.in_(units.J), 'Pot.E': parti_BE.in_(units.J),
-                                       'Time': time.in_(units.kyr), 'dE': de, 'dEs': 0, 'Pot.E': parti_BE.in_(units.J) })
+        if 20 < iter:
+            dEs = abs(Et-energy_tracker.iloc[19][3])/abs(energy_tracker.iloc[19][3])
+            df_energy_tracker = pd.Series({'Appearance': app_time, 'Collision Mass': merger_mass, 'Collision Time': tcoll, 
+                                           'Et': Et, 'Kinetic E': parti_KE.in_(units.J), 'Pot.E': parti_BE.in_(units.J),
+                                           'Time': time.in_(units.kyr), 'dE': de, 'dEs': dEs, 'Pot.E': parti_BE.in_(units.J)})
+        else:
+            df_energy_tracker = pd.Series({'Appearance': app_time, 'Collision Mass': merger_mass, 'Collision Time': tcoll, 
+                                           'Et': Et, 'Kinetic E': parti_KE.in_(units.J), 'Pot.E': parti_BE.in_(units.J),
+                                           'Time': time.in_(units.kyr), 'dE': de, 'dEs': 0, 'Pot.E': parti_BE.in_(units.J) })
         energy_tracker = energy_tracker.append(df_energy_tracker, ignore_index=True)
 
         df_lagrangians = pd.Series({'Time': time.in_(units.kyr),
-                                   'LG25': LagrangianRadii(code.particles[1:])[5].in_(units.pc),
-                                   'LG50': LagrangianRadii(code.particles[1:])[6].in_(units.pc),
-                                   'LG75': LagrangianRadii(code.particles[1:])[7].in_(units.pc)})
+                                   'LG25': LagrangianRadii(code.particles[1:])[5].in_(units.parsec),
+                                   'LG50': LagrangianRadii(code.particles[1:])[6].in_(units.parsec),
+                                   'LG75': LagrangianRadii(code.particles[1:])[7].in_(units.parsec)})
+
         lagrangians = lagrangians.append(df_lagrangians, ignore_index = True)
-
         time1 = time
-        if eject > 0 or Nenc > 0:
-            time = tend 
 
+
+        comp_end = cpu_time.time()
+        comp_time = comp_end-init_time
+        if eject > 0 or Nenc > 0 or comp_time >= 80:#>= 590400:
+            time = tend 
+    time1 += past_time
     code.stop()
-    comp_end = cpu_time.time()
-    comp_time = comp_end-comp_start 
     
-    if iter > 10:
+    if iter > 1:
         print('Saving Data')
         no_plot = False
         chaos_stab_timescale = time1
         count = file_counter(int_string)
 
-        if time1 == tend:
-            ejected_key_track = parti[1].key_tracker
-       
-        path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7/'
-        file_names = 'IMBH_'+str(int_string)+'_'+str(pert)+'_'+str(init_IMBH)+'_sim'+str(count)+ \
-                     '_init_dist'+str('{:.3f}'.format(init_dist.value_in(units.pc)))+'_equal_mass_' \
-                     +str('{:.3f}'.format(parti[2].mass.value_in(units.MSun)))+str(kit)+'.pkl'
+        if (comp_time >= 590400):
+            if time1 == tend:
+                ejected_key_track = parti[1].key_tracker
+        
+            path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7/'
+            file_names = 'IMBH_'+str(int_string)+'_'+str(pert)+'_'+str(init_IMBH)+'_sim'+str(count)+ \
+                        '_init_dist'+str('{:.3f}'.format(init_dist.value_in(units.parsec)))+'_equal_mass_' \
+                        +str('{:.3f}'.format(parti[2].mass.value_in(units.MSun)))+str(kit)+'.pkl'
 
-        IMBH_tracker.to_pickle(os.path.join(path+str('particle_trajectory'), file_names))
-        energy_tracker.to_pickle(os.path.join(path+str('energy'), file_names))
-        lagrangians.to_pickle(os.path.join(path+str('lagrangians'), file_names))
-        data_trackers.chaotic_sim_tracker(parti, initial_set, Nenc, cum_merger_mass, time1, ejected_key_track, chaos_stab_timescale, 
-                                          added_mass, ejected_mass, comp_time, eject, int_string, pert, init_IMBH, kit)
-                                          
-        if Nenc > 0:
-            data_trackers.coll_tracker(int_string, init_IMBH, count, init_dist, parti, tcoll, 
-                                       enc_particles_set, ejected_key_track, merger_mass, pert)
+            IMBH_tracker.to_pickle(os.path.join(path+str('particle_trajectory'), file_names))
+            energy_tracker.to_pickle(os.path.join(path+str('energy'), file_names))
+            lagrangians.to_pickle(os.path.join(path+str('lagrangians'), file_names))
+            data_trackers.chaotic_sim_tracker(parti, init_IMBH, Nenc, cum_merger_mass, time1, ejected_key_track, chaos_stab_timescale, 
+                                            added_mass, ejected_mass, comp_time, eject, int_string, pert, kit)
+                                            
+            if Nenc > 0:
+                data_trackers.coll_tracker(int_string, init_IMBH, count, init_dist, parti, tcoll, 
+                                        enc_particles_set, ejected_key_track, merger_mass, pert)
 
-        lines = ['Simulation: ', "Total CPU Time: "+str(comp_end-comp_start)+' seconds', 
-                 'Timestep: '+str(eta),
-                 'Simulated until: '+str(time1.value_in(units.yr))+str(' years'), 
-                 'Cluster Distance: '+str(init_dist.value_in(units.pc))+' pcs', 
-                 'Masses of IMBH: '+str(parti.mass.value_in(units.MSun))+' MSun',
-                 "No. of initial IMBH: "+str(init_IMBH), 
-                 'Number of new particles: '+str(len(parti)-1-init_IMBH),
-                 'Total Number of (Final) IMBH: '+str(len(parti)-2),
-                 'Number of mergers: '+str(Nenc), 'End Time: '+str(tend.value_in(units.yr))+' years', 
-                 'Integrator: '+str(int_string),
-                 'Extra Notes: ', extra_note]
+            lines = ['Simulation: ', "Total CPU Time: "+str(comp_time)+' seconds', 
+                    'Timestep: '+str(eta),
+                    'Simulated until: '+str(time1.value_in(units.yr))+str(' years'), 
+                    'Cluster Distance: '+str(init_dist.value_in(units.parsec))+' parsecs', 
+                    'Masses of IMBH: '+str(parti.mass.value_in(units.MSun))+' MSun',
+                    "No. of initial IMBH: "+str(init_IMBH), 
+                    'Number of new particles: '+str(len(parti)-1-init_IMBH),
+                    'Total Number of (Final) IMBH: '+str(len(parti)-2),
+                    'Number of mergers: '+str(Nenc), 'End Time: '+str(tend.value_in(units.yr))+' years', 
+                    'Integrator: Hermite (NO PN)',
+                    'Extra Notes: ', extra_note]
 
-        with open(os.path.join(path+str('simulation_stats'), 'simulation_'+str(count)+'.txt'), 'w') as f:
-            for line in lines:
-                f.write(line)
-                f.write('\n')
-        print('End time: ', time1)
+            with open(os.path.join(path+str('simulation_stats'), 'simulation_'+str(count)+'.txt'), 'w') as f:
+                for line in lines:
+                    f.write(line)
+                    f.write('\n')
+            print('End time: ', time1)
+        
+        else:
+            path = '/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7_paused/'
+            file_names = 'IMBH_'+str(int_string)+'_'+str(pert)+'_'+str(init_IMBH)+'_sim'+str(count)+ \
+                         '_init_dist'+str('{:.3f}'.format(init_dist.value_in(units.parsec)))+'_equal_mass_' \
+                         +str('{:.3f}'.format(parti[2].mass.value_in(units.MSun)))+str(kit)+'.pkl'
+            IMBH_tracker.to_pickle(os.path.join(path+str('particle_trajectory'), file_names))
 
     else:
         no_plot = True
         print('...No stability timescale - simulation ended too quick...')
+        
 
     return no_plot

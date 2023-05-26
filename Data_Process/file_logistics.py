@@ -261,7 +261,7 @@ def sphere_of_influence():
             integrator = ['GRX']
         
         for int_ in range(drange):
-            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+integrator[int_]+'/particle_trajectory/*'))
+            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+integrator[int_]+'/particle_trajectory_2/*'))
             for file_ in range(len(data)):
                 with open(data[file_], 'rb') as input_file:
                     file_size = os.path.getsize(data[file_])
