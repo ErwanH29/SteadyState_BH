@@ -38,7 +38,7 @@ class sustainable_sys(object):
         """
         
         GW_calcs = gw_calcs()
-        pop_tracker = int(input('What should be the upper limit of the population for simulations sampled? '))
+        pop_tracker = 40#int(input('What should be the upper limit of the population for simulations sampled? '))
 
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
         iterf = 0
@@ -50,13 +50,12 @@ class sustainable_sys(object):
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            #filename[0] = filename[0][::-1] 
-            #filenameC[0] = filenameC[0][::-1]
+            filename[0] = filename[0][::-1] 
+            filenameC[0] = filenameC[0][::-1]
             for int_ in range(1):
                 #int_ += 1
                 for file_ in range(len(filename[int_])):
-                    if file_ > 43:
-                    #if file_ > 242:
+                    if file_ >= 243:
                         with open(filenameC[int_][file_], 'rb') as input_file:
                             chaotic_tracker = pkl.load(input_file)
                             proceed = True
@@ -120,7 +119,7 @@ class sustainable_sys(object):
                                                             mass = max(mass1, mass2)
                                                             hard = False
                                                             bin = False
-                                                            if nn_semi < (constants.G*mass)/(2*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
+                                                            if nn_semi < 0.1*(constants.G*mass)/(2*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
                                                                 hard = True
                                                                 bin = True
                                                                 hard_bin.append(1)
@@ -287,6 +286,7 @@ class sustainable_sys(object):
         GW_calcs = gw_calcs()
         integrator = ['Hermite', 'GRX']
 
+        self.file_names = [[ ], [ ], [ ], [ ], [ ]]
         self.integrator = [[ ], [ ], [ ], [ ], [ ]]
         self.pop = [[ ], [ ], [ ], [ ], [ ]]
         self.pop_bin = [[ ], [ ], [ ], [ ], [ ]]
@@ -319,35 +319,38 @@ class sustainable_sys(object):
             for file_ in range(len(system_data)):
                 with open(system_data[file_], 'rb') as input_file:
                     data_file = pkl.load(input_file)
-                    if data_file.iloc[0][0] == 'Hermite':
+                    if data_file.iloc[0][1] == 'Hermite':
                         int_ = 0
                     else:
                         int_ = iterf + 1
-                    self.integrator[int_].append(data_file.iloc[0][0][0])
-                    self.pop[int_].append(int(data_file.iloc[0][1]))
-                    self.pop_bin[int_].append(data_file.iloc[0][2])
-                    self.bin_sys[int_].append(data_file.iloc[0][3])
-                    self.bform_time[int_].append(data_file.iloc[0][4])
-                    self.new_bin_sys[int_].append(data_file.iloc[0][5])
-                    self.pop_ter[int_].append(data_file.iloc[0][6])
-                    self.ter_sys[int_].append(data_file.iloc[0][7])
-                    self.tform_time[int_].append(data_file.iloc[0][8])
-                    self.new_ter_sys[int_].append(data_file.iloc[0][9])
-                    self.hard_bin[int_].append(data_file.iloc[0][10])
-                    self.hard_ter[int_].append(data_file.iloc[0][11])
-                    self.GW_freqbin[int_].append(data_file.iloc[0][12])
-                    self.GW_strainbin[int_].append(data_file.iloc[0][13])
-                    self.GW_timeb[int_].append(data_file.iloc[0][14])
-                    self.GW_bmass[int_].append(data_file.iloc[0][15])
-                    self.GW_freqter[int_].append(data_file.iloc[0][16])
-                    self.GW_strainter[int_].append(data_file.iloc[0][17])
-                    self.GW_timet[int_].append(data_file.iloc[0][18])
-                    self.GW_tmass[int_].append(data_file.iloc[0][19])
-                    self.semi_NN_avg[int_].append(data_file.iloc[0][22])
-                    self.semi_NN_min[int_].append(data_file.iloc[0][23])
-                    self.semi_t_avg[int_].append(data_file.iloc[0][24])
-                    self.semi_t_min[int_].append(data_file.iloc[0][25])
-                    self.tot_sim[int_].append(data_file.iloc[0][26])
+
+                    self.file_names[int_].append(data_file.iloc[0][0])
+                    self.integrator[int_].append(data_file.iloc[0][1])
+                    self.pop[int_].append(int(data_file.iloc[0][2]))
+                    self.pop_bin[int_].append(data_file.iloc[0][3])
+                    self.bin_sys[int_].append(data_file.iloc[0][4])
+                    self.bform_time[int_].append(data_file.iloc[0][5])
+                    self.new_bin_sys[int_].append(data_file.iloc[0][6])
+                    self.pop_ter[int_].append(data_file.iloc[0][7])
+                    self.ter_sys[int_].append(data_file.iloc[0][8])
+                    self.tform_time[int_].append(data_file.iloc[0][9])
+                    self.new_ter_sys[int_].append(data_file.iloc[0][10])
+                    self.hard_bin[int_].append(data_file.iloc[0][11])
+                    self.hard_ter[int_].append(data_file.iloc[0][12])
+                    self.GW_freqbin[int_].append(data_file.iloc[0][13])
+                    self.GW_strainbin[int_].append(data_file.iloc[0][14])
+                    self.GW_timeb[int_].append(data_file.iloc[0][15])
+                    self.GW_bmass[int_].append(data_file.iloc[0][16])
+                    self.GW_freqter[int_].append(data_file.iloc[0][17])
+                    self.GW_strainter[int_].append(data_file.iloc[0][18])
+                    self.GW_timet[int_].append(data_file.iloc[0][19])
+                    self.GW_tmass[int_].append(data_file.iloc[0][20])
+                    self.semi_NN_avg[int_].append(data_file.iloc[0][23])
+                    self.semi_NN_min[int_].append(data_file.iloc[0][24])
+                    self.semi_t_avg[int_].append(data_file.iloc[0][25])
+                    self.semi_t_min[int_].append(data_file.iloc[0][26])
+                    self.tot_sim[int_].append(data_file.iloc[0][27])
+
             iterf += 1
             
         self.GWfreq_bin = [[ ], [ ], [ ], [ ], [ ]]
@@ -388,7 +391,7 @@ class sustainable_sys(object):
         self.GWstra_binHardIMBH = [[ ], [ ], [ ], [ ], [ ]]
         
         sims = [[40, 40, 40, 40], 
-                [40, 40, 40, 40, 40, 40, 40], 
+                [60, 60, 60, 60, 60, 60, 60], 
                 [40, 40, 40, 40, 40, 40, 40],
                 [40, 40, 40, 40, 40, 40, 40],
                 [40, 40, 40, 40, 40, 40, 40]]   #TO CHANGE
@@ -401,17 +404,13 @@ class sustainable_sys(object):
                     print('Collecting data for: ', fold_, integrator[int_])
                     sim_ = folder_data_loop(iterf, int_)
                         
-                    bform_stat = [ ]
-                    bform_std  = [ ]
-                    tform_stat = [ ]
-                    tform_std  = [ ]
-                    minGWtime = [ ]
-                    semi_NN_astat = [ ]
-                    semi_NN_mstat = [ ]
-                    semi_t_astat = [ ]
-                    semi_t_mstat = [ ]
-                    binHubble = [ ]
-                    totalbin = [ ]
+                    bform_med = [ ]
+                    bform_higq = [ ]
+                    bform_lowq = [ ]
+
+                    tform_med = [ ]
+                    tform_higq = [ ]
+                    tform_lowq = [ ]
 
                     pop_arr = np.unique(self.pop[sim_])
                     file.write('Data for '+str(integrator[int_]+' in pc'))
@@ -516,9 +515,6 @@ class sustainable_sys(object):
                         bform_time = np.asarray(bform_time)
                         tform_time = np.asarray(tform_time)
 
-                        binHubble.append(bin_data_merge)
-                        totalbin.append(bin_data)
-
                         self.binary_total[sim_].append(bin_data)
                         self.binary_IMBH[sim_].append(IMBH_bin)
                         self.binary_hard[sim_].append(hard_bin)
@@ -529,55 +525,133 @@ class sustainable_sys(object):
                         self.GWt_mergers[sim_].append(ter_data_merge)
 
                         self.binary_systems[sim_].append(bin_data/sims[sim_][iter])
-                        self.binary_occupation[sim_].append(np.mean(bin_occ))
+                        self.binary_occupation[sim_].append(np.median(bin_occ))
                         self.tertiary_systems[sim_].append(ter_data/sims[sim_][iter])
-                        self.tertiary_occupation[sim_].append(np.mean(ter_occ))
+                        self.tertiary_occupation[sim_].append(np.median(ter_occ))
 
-                        bform_stat.append('{:.7f}'.format(np.mean(bform_time)))
-                        bform_std.append('{:.7f}'.format(np.std(bform_time)))
-                        tform_stat.append('{:.7f}'.format(np.mean(tform_time)))
-                        tform_std.append('{:.7f}'.format(np.std(tform_time)))
-                        minGWtime.append(np.sort(GWb_time))
-                        semi_NN_astat.append('{:.7f}'.format(np.mean(semi_NN_avg)))
-                        semi_NN_mstat.append('{:.7f}'.format(np.mean(semi_NN_min)))
-                        semi_t_astat.append('{:.7f}'.format(np.mean(semi_t_avg)))
-                        semi_t_mstat.append('{:.7f}'.format(np.mean(semi_t_min)))
+                        median_binform = np.median(bform_time)
+                        q1, q3 = np.percentile(bform_time, [25, 75])
+                        bform_med.append('{:.7f}'.format(median_binform))
+                        bform_higq.append('{:.7f}'.format(q3))
+                        bform_lowq.append('{:.7f}'.format(q1))
+
+                        median_terform = np.median(tform_time)
+                        if median_terform > 0:
+                            q1, q3 = np.percentile(tform_time, [25, 75])
+                        else:
+                            q1, q3 = 0, 0
+                        tform_med.append('{:.7f}'.format(median_terform))
+                        tform_higq.append('{:.7f}'.format(q3))
+                        tform_lowq.append('{:.7f}'.format(q1))
 
                         self.binary_init[sim_].append(len(bform_time[bform_time <= 1000]))
                         self.tertiary_init[sim_].append(len(tform_time[tform_time <= 1000]))
 
-                    file.write('\nAverage binary formation time [yrs]:             '+str(pop_arr)+' : '+str(bform_stat))
-                    file.write('\nStd binary formation time [yrs]:                 '+str(pop_arr)+' : '+str(bform_stat))
-                    file.write('\nAverage tertiary formation time [yrs]:           '+str(pop_arr)+' : '+str(tform_stat))
-                    file.write('\nStd tertiary formation time [yrs]:               '+str(pop_arr)+' : '+str(tform_stat))
-                    file.write('\nFinal GW timescale (only tGW < tH) [Myr]:        '+str(pop_arr)+' : '+str(minGWtime))
-                    file.write('\nFraction of mergers within Hubble time:          '+str(pop_arr)+' : '+str(binHubble)+' / '+str(totalbin))
-                    file.write('\nAverage binary semi-major axis per population:   '+str(pop_arr)+' : '+str(semi_NN_astat))
-                    file.write('\nMinimum binary semi-major axis per population:   '+str(pop_arr)+' : '+str(semi_NN_mstat))
-                    file.write('\nAverage tertiary semi-major axis per population: '+str(pop_arr)+' : '+str(semi_t_astat))
-                    file.write('\nMinimum tertiary semi-major axis per population: '+str(pop_arr)+' : '+str(semi_t_mstat)+'\n\n')
-            iterf += 1
+                    nbin = [[ ], [ ], [ ], [ ], [ ], [ ], [ ]]
+                    nSMBHbin = [[ ], [ ], [ ], [ ], [ ], [ ], [ ]]
+                    nIMBHbin = [[ ], [ ], [ ], [ ], [ ], [ ], [ ]]
+                    nhardbin = [[ ], [ ], [ ], [ ], [ ], [ ], [ ]]
+                    nter = [[ ], [ ], [ ], [ ], [ ], [ ], [ ]]
+                    nhardter = [[ ], [ ], [ ], [ ], [ ], [ ], [ ]]
+                    
+                    for file_ in np.unique(self.file_names[sim_]):
+                        bin_syst = 0
+                        SMBH_bin = 0
+                        IMBH_bin = 0
+                        hard_bin = 0
+                        ter_syst = 0
+                        hard_ter = 0
 
-        iterf = 0
-        for fold_ in self.folders[:self.frange]:
-            integrator, drange = folder_loop(iterf)
-            for int_ in range(drange):
-                sim_ = folder_data_loop(iterf, int_)
-                self.GW_bmass[sim_] = np.asarray(self.GW_bmass[sim_])
-                with open('figures/binary_hierarchical/output/'+str(integrator[int_])+'bin_ter_systems_'+fold_+'.txt', 'w') as file:
-                    file.write(str(integrator[int_])+'\nBINARY DATA')
-                    file.write('\n# Binary systems at initialisation:             '+str(self.unique_pops[sim_])+' : '+str(self.binary_init[sim_])+' / '+str(self.binary_total[sim_]))
-                    file.write('\nFraction of IMBH-IMBH binaries:                 '+str(self.unique_pops[sim_])+' : '+str(self.binary_IMBH[sim_])+' / '+str(self.binary_total[sim_]))
-                    file.write('\nFraction of hard binaries:                      '+str(self.unique_pops[sim_])+' : '+str(self.binary_hard[sim_])+' / '+str(self.binary_total[sim_]))
-                    file.write('\nFraction of mergers within Hubble time:         '+str(self.unique_pops[sim_])+' : '+str(self.GWb_mergers[sim_])+' / '+str(self.binary_total[sim_]))
+                        idx_file = np.argwhere(self.file_names[sim_] == file_).flatten()
+                        iter = np.argwhere(5*round(0.2*self.pop[sim_][idx_file[0]]) == pop_arr)[0][0]
+                        for data_ in idx_file:
+                            idx_nbin = np.argwhere(np.asarray(self.new_bin_sys[sim_][data_]) > 0).flatten()
+                            idx_tbin = np.argwhere(np.asarray(self.new_ter_sys[sim_][data_]) > 0).flatten()
+                            bin_syst += len(idx_nbin)
+                            ter_syst += len(idx_tbin)
+
+                            for idx_ in idx_nbin:
+                                if np.asarray(self.GW_bmass[sim_][data_])[idx_-1] < 1e6:
+                                    IMBH_bin += 1
+                                else:
+                                    SMBH_bin += 1
+                                if np.asarray(self.hard_bin[sim_][data_])[idx_-1] > 0:
+                                    hard_bin += 1
+                                    hard_Bool = True
+                                    
+                            for idx_ in idx_tbin:
+                                if np.asarray(self.hard_ter[sim_][data_])[idx_-1] > 0:
+                                    hard_ter += 1
+
+                        nbin[iter].append(bin_syst)
+                        nSMBHbin[iter].append(SMBH_bin)
+                        nIMBHbin[iter].append(IMBH_bin)
+                        nhardbin[iter].append(hard_bin)
+                        nter[iter].append(ter_syst)
+                        nhardter[iter].append(hard_ter)
+
+                    median_bin = [ ]
+                    lower_bin = [ ]
+                    upper_bin = [ ]
+                    hard_bin = [ ]
+                    lower_hard = [ ]
+                    upper_hard = [ ]
+                    median_ter = [ ]
+                    lower_ter = [ ]
+                    upper_ter = [ ]
+                    for idx_ in range(np.shape(nbin)[0]):
+                        median_bin.append(np.median(nbin[idx_]))
+                        if np.median(nbin[idx_]) > 0:
+                            q1, q3 = np.percentile(nbin[idx_], [25, 75])
+                        else:
+                            q1, q3 = 0, 0
+                        lower_bin.append(q1)
+                        upper_bin.append(q3)
+
+                        hard_bin.append(np.median(nhardbin[idx_]))
+                        if np.median(nhardbin[idx_]) > 0:
+                            q1, q3 = np.percentile(nhardbin[idx_], [25, 75])
+                        else:
+                            q1, q3 = 0, 0
+                        lower_hard.append(q1)
+                        upper_hard.append(q3)
+
+                        median_ter.append(np.median(nter[idx_]))
+                        if np.median(nter[idx_]) > 0:
+                            q1, q3 = np.percentile(nter[idx_], [25, 75])
+                        else:
+                            q1, q3 = 0, 0
+                        lower_ter.append(q1)
+                        upper_ter.append(q3)
+
+                    file.write('\nBINARY DATA')
+                    file.write('\nAverage binary formation time [yrs]:             '+str(pop_arr)+' : '+str(bform_med))
+                    file.write('\nLower binary formation time [yrs]:               '+str(pop_arr)+' : '+str(bform_lowq))
+                    file.write('\nHigher binary formation time [yrs]:              '+str(pop_arr)+' : '+str(bform_higq))
+                    file.write('\n# Binary systems at initialisation:              '+str(pop_arr)+' : '+str(self.binary_init[sim_])+' / '+str(self.binary_total[sim_]))
+                    file.write('\nFraction of IMBH-IMBH binaries:                  '+str(pop_arr)+' : '+str(self.binary_IMBH[sim_])+' / '+str(self.binary_total[sim_]))
+                    file.write('\nFraction of hard binaries:                       '+str(pop_arr)+' : '+str(self.binary_hard[sim_])+' / '+str(self.binary_total[sim_]))
+                    file.write('\nFraction of mergers within Hubble time:          '+str(pop_arr)+' : '+str(self.GWb_mergers[sim_])+' / '+str(self.binary_total[sim_]))
+                    file.write('\nMedian # binaries:                               '+str(pop_arr)+' : '+str(median_bin))
+                    file.write('\nLower percentile # binaries:                     '+str(pop_arr)+' : '+str(lower_bin))
+                    file.write('\nUpper percentile # binaries:                     '+str(pop_arr)+' : '+str(upper_bin))
+                    file.write('\nMedian # hard binaries:                          '+str(pop_arr)+' : '+str(hard_bin))
+                    file.write('\nLower percentile # hard binaries:                '+str(pop_arr)+' : '+str(lower_hard))
+                    file.write('\nUpper percentile # hard binaries:                '+str(pop_arr)+' : '+str(upper_hard))
 
                     file.write('\n\nTERTIARY DATA')
-                    file.write('\n# Tertiary systems at initialisation:           '+str(self.unique_pops[sim_])+' : '+str(self.tertiary_init[sim_])+' / '+str(self.tertiary_total[sim_]))
-                    file.write('\nFraction of IMBH-IMBH tertiaries:               '+str(self.unique_pops[sim_])+' : '+str(self.tertiary_IMBH[sim_])+' / '+str(self.tertiary_total[sim_]))
-                    file.write('\nFraction of hard tertiaries:                    '+str(self.unique_pops[sim_])+' : '+str(self.tertiary_hard[sim_])+' / '+str(self.tertiary_total[sim_]))
-                    file.write('\nFraction of mergers within Hubble time:         '+str(self.unique_pops[sim_])+' : '+str(self.GWt_mergers[sim_])+' / '+str(self.tertiary_total[sim_]))
+                    file.write('\n# Tertiary systems at initialisation:            '+str(pop_arr)+' : '+str(self.tertiary_init[sim_])+' / '+str(self.tertiary_total[sim_]))
+                    file.write('\nFraction of IMBH-IMBH tertiaries:                '+str(pop_arr)+' : '+str(self.tertiary_IMBH[sim_])+' / '+str(self.tertiary_total[sim_]))
+                    file.write('\nFraction of hard tertiaries:                     '+str(pop_arr)+' : '+str(self.tertiary_hard[sim_])+' / '+str(self.tertiary_total[sim_]))
+                    file.write('\nFraction of mergers within Hubble time:          '+str(pop_arr)+' : '+str(self.GWt_mergers[sim_])+' / '+str(self.tertiary_total[sim_]))
+                    file.write('\nAverage tertiary formation time [yrs]:           '+str(pop_arr)+' : '+str(tform_med))
+                    file.write('\nLower tertiary formation time [yrs]:             '+str(pop_arr)+' : '+str(tform_lowq))
+                    file.write('\nHigher tertiary formation time [yrs]:            '+str(pop_arr)+' : '+str(tform_higq))
+                    file.write('\nMedian # tertiary:                               '+str(pop_arr)+' : '+str(median_ter))
+                    file.write('\nLower percentile # tertiary:                     '+str(pop_arr)+' : '+str(lower_ter))
+                    file.write('\nUpper percentile # tertiary:                     '+str(pop_arr)+' : '+str(upper_ter))
             iterf += 1
-
+            
     def GW_emissions(self):
         
         GW_calcs = gw_calcs()
@@ -621,15 +695,6 @@ class sustainable_sys(object):
                 ax.set_xlim(-13.8, 0.2)
                 plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'GW_scatter_allbins__diagram.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
-
-                # Reactivate with full data set
-                """vals = 0
-                for k in range(len(self.GWstra_ter[int_])):
-                    if np.asarray(self.pop_bin[int_][k]) <= 20:
-                        if self.GWstra_ter[int_][k] < 10**-30 or self.GWfreq_ter[int_][k] < 10**-12:
-                            vals += 1
-
-                print('Data ', int_, ' :', vals)"""
                 
                 fig = plt.figure(figsize=(8, 6))
                 gs = fig.add_gridspec(2, 2,  width_ratios=(4, 2), height_ratios=(2, 4),
@@ -659,7 +724,7 @@ class sustainable_sys(object):
                     plot_ini.tickers(ax_, 'plot')
                     ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
                     ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-                ax.set_ylim(-38, -12.2)
+                ax.set_ylim(-34.8, -12.2)
                 ax.set_xlim(-13.8, 0.2)
                 plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'_GW_hardbins_diagram.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
@@ -739,7 +804,7 @@ class sustainable_sys(object):
 
         xtemp = np.linspace(10, 40, 1000)
 
-        with open('figures/binary_hierarchical/output/line_of_best_fit'+fold_+'.txt', 'w') as file:
+        with open('figures/binary_hierarchical/output/line_of_best_fit_m4e6.txt', 'w') as file:
             for int_ in range(2):
                 ini_pop = np.unique(self.pop[int_])
 
@@ -760,7 +825,7 @@ class sustainable_sys(object):
                 cbar = plt.colorbar(colour_axes, ax=ax)
                 cbar.set_label(label = r'$\langle N_{\rm{sys}} \rangle$ ', fontsize =  axlabel_size)
                 cbar.ax.tick_params(labelsize = axlabel_size)
-                plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[int_]+'_'+fold_+'.pdf', dpi=300, bbox_inches='tight')
+                plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[int_]+'_m4e6.pdf', dpi=300, bbox_inches='tight')
                 file.write('Data for      '+str(integrator[int_]))
                 file.write('\nFactor:       '+str(best_fit[0]))
                 file.write('\ny-intercept:  '+str(best_fit[1])+'\n\n')

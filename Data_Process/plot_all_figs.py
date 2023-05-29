@@ -5,14 +5,26 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
+
 print('...sustainable_bintert_plotters...')
 cls = sustainable_sys()
-cls.new_data_extractor()   
-STOP
+#cls.new_data_extractor()
 cls.combine_data()
 cls.GW_emissions()
 cls.single_streak_plotter()
 cls.sys_occupancy_plotter()
+STOP
+
+print('...tGW_plotters...')
+start_tgw = cpu_time.time()
+cls = gw_calcs()
+#ecc_mergers()
+#cls.new_data_extractor()
+#cls.strain_freq_plotter()
+cls.GW_event_tracker()
+#cls.orbital_hist_plotter()
+end_tgw = cpu_time.time()
+print('Plotting time: ', end_tgw - start_tgw, ' seconds')
 STOP
 
 print('...steady_plotter...')
@@ -49,14 +61,3 @@ cls = ejection_stats()
 cls.vejec_plotters()
 end_ejec = cpu_time.time()
 print('Plotting time: ', end_ejec - start_ejec, ' seconds')
-
-print('...tGW_plotters...')
-start_tgw = cpu_time.time()
-cls = gw_calcs()
-#ecc_mergers()
-cls.new_data_extractor()
-#cls.strain_freq_plotter()
-#cls.GW_event_tracker()
-cls.orbital_hist_plotter()
-end_tgw = cpu_time.time()
-print('Plotting time: ', end_tgw - start_tgw, ' seconds')

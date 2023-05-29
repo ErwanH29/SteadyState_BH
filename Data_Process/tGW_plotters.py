@@ -268,7 +268,7 @@ class gw_calcs(object):
                 sys_pop = int(data_file.iloc[0][2])
                 pops, counts = np.unique(self.pop, return_counts=True)
                 if sys_pop <= upperpop and integrator == integ:
-                    if (integrator == 'Hermite' and counts[sys_pop == pops] <= [(20*(1+sys_pop))]) or \
+                    if (integrator == 'Hermite' and counts[sys_pop == pops] <= [(40*(1+sys_pop))]) or \
                         (integrator == 'GRX' and counts[sys_pop == pops] <= (80*(1+sys_pop))) or \
                             (np.shape(pops[sys_pop == pops])[0] == 0):
 
@@ -565,7 +565,6 @@ class gw_calcs(object):
         cluster_pop = [10, 15, 20, 25, 30, 35, 40]
         pop_tracker = 40#int(input('What should be the upper limit of the population for simulations sampled? '))
 
-        iterf = 0
         for fold_ in self.folders[:self.frange]:
             dir = os.path.join('figures/steady_time/Sim_summary_'+fold_+'_GRX.txt')
             with open(dir) as f:
@@ -579,7 +578,7 @@ class gw_calcs(object):
                 avgG_data = np.concatenate([avgG_data, avgG2_data])
                 popG = np.asarray([float(i) for i in popG_data])
                 avgG = np.asarray([float(i) for i in avgG_data])
-
+                
             tot_sims = [0, 0, 0, 0, 0, 0, 0]
              
             IMBH_tot_arr  = [0, 0, 0, 0, 0, 0, 0]
@@ -589,18 +588,19 @@ class gw_calcs(object):
             SMBH_tot_arr  = [0, 0, 0, 0, 0, 0, 0]
             SMBH_detL_arr = [0, 0, 0, 0, 0, 0, 0]
             SMBH_detA_arr = [0, 0, 0, 0, 0, 0, 0]
-            drange = 1
-            integrator = ['GRX']
+            drange = 2
+            integrator = ['Hermite', 'GRX']
 
-            with open('figures/gravitational_waves/output/detectable_events'+fold_+'.txt', 'w') as file:
+            with open('figures/gravitational_waves/output/detectable_events_'+fold_+'.txt', 'w') as file:
                 file.write('Double counts sustainable binaries and discrete events (every thousand years).')
                 for int_ in range(drange):
-                    int_ += 1
-                    self.combine_data(integrator[0], fold_, pop_tracker)
+                    self.combine_data(integrator[int_], fold_, pop_tracker)
                     for parti_ in range(len(self.freq_flyby_nn)): #Looping through every individual particle
                         pop = self.pop[parti_]
+                        if pop%10 != 0:
+                            print(pop)
                         idx = cluster_pop.index(pop)
-                        tot_sims[idx] = 420#+= 1
+                        tot_sims[idx] = 420
 
                         for event_ in range(len(self.freq_flyby_nn[parti_])): #Looping through every detected event
                             freq_nn = self.freq_flyby_nn[parti_][event_]
@@ -663,13 +663,15 @@ class gw_calcs(object):
                                     SMBH_detA_arr[idx] += 1
                     
                     tot_sims = [i/j for i, j in zip(tot_sims, cluster_pop)]
+                    print("tot sims", tot_sims)
+                    print("cluster_pop", cluster_pop)
                     IMBH_tot_arr  = [i/(j*k*1e3) for i, j, k in zip(IMBH_tot_arr, tot_sims, avgG)]
                     IMBH_detL_arr = [i/(j*k*1e3) for i, j, k in zip(IMBH_detL_arr, tot_sims, avgG)]
                     IMBH_detA_arr = [i/(j*k*1e3) for i, j, k in zip(IMBH_detA_arr, tot_sims, avgG)]
                     SMBH_tot_arr  = [i/(j*k*1e3) for i, j, k in zip(SMBH_tot_arr, tot_sims, avgG)]
                     SMBH_detL_arr = [i/(j*k*1e3) for i, j, k in zip(SMBH_detL_arr, tot_sims, avgG)]
                     SMBH_detA_arr = [i/(j*k*1e3) for i, j, k in zip(SMBH_detA_arr, tot_sims, avgG)]
-                    file.write(' For '+str(integrator[0])+': \n\n')
+                    file.write('\n\nFor '+str(integrator[int_])+': \n')
                     file.write('Populations:                         '+str(cluster_pop))
                     file.write('\nTotal IMBH events /yr:             '+str(IMBH_tot_arr))
                     file.write('\nLISA Detectable IMBH events /yr:   '+str(IMBH_detL_arr))
