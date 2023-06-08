@@ -76,13 +76,14 @@ def bulk_stat_extractor(file_string):
 
     return data
 
-def ejected_extract_final(set, ejected):
+def ejected_extract_final(set, ejected, file):
     """
     Extracts the final info on the ejected particle into an array
     
     Inputs:
     set:        The complete particle set plotting
     ejected:    The ejected particle
+    file:       File name
     """
 
     for parti_ in range(len(set)):
@@ -90,7 +91,38 @@ def ejected_extract_final(set, ejected):
             ejec_data = set.iloc[parti_]   #Make data set of only ejected particle
             ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
             ejec_vel = []
-            tot_steps = min(round(len(ejec_data)**0.5), 10)
+
+            fixed_crop = len(ejec_data)
+
+            dir = os.path.join('figures/sphere_of_influence.txt')
+            with open(dir) as f:
+                line = f.readlines()
+                for iter in range(len(line)):
+                    if iter%3 == 0 and line[iter][90:159] == file[59:]:
+                        if line[iter][54:65] == 'rc_0.25_4e6':
+                            if line[iter][66:73] == 'Hermite':
+                                popt = line[iter][117:121]
+                                crop = False
+                                for chr_ in popt:
+                                    if chr_ == '_':
+                                        crop = True
+                                    else:
+                                        crop = False
+                                if (crop):
+                                    fixed_crop = int(line[iter][117:119])
+                                else:
+                                    fixed_crop = int(line[iter][117:119])
+
+                        elif line[iter][54:65] == 'rc_0.25_4e5':
+                            sim_time = line[iter+1][49:57]
+                            for chr_ in sim_time:
+                                if chr_ == ']':
+                                    crop = -2
+                                else:
+                                    crop = -1
+                            fixed_crop = int(round(float(line[iter+1][49:57+crop]) * 10**-2))
+            tot_steps = min(round(len(ejec_data[:fixed_crop])**0.5), 10)
+            ejec_data = ejec_data.iloc[:len(ejec_data[:fixed_crop])]
             
             for steps_ in range(tot_steps):
                 vel_ = ejec_data.iloc[(-steps_)][3].value_in(units.kms)
@@ -250,7 +282,7 @@ def simulation_stats_checker(dist_dir, int_string, file_crop):
 
 def sphere_of_influence():
     folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
-
+    #folders = ['rc_0.25_4e5']
     iterf = 0
     for fold_ in folders:
         if iterf == 0:
@@ -261,7 +293,7 @@ def sphere_of_influence():
             integrator = ['GRX']
         
         for int_ in range(drange):
-            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+integrator[int_]+'/particle_trajectory_2/*'))
+            data = natsort.natsorted(glob.glob('/media/erwanh/Elements/'+fold_+'/'+integrator[int_]+'/particle_trajectory/*'))
             for file_ in range(len(data)):
                 with open(data[file_], 'rb') as input_file:
                     file_size = os.path.getsize(data[file_])

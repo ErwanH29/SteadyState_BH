@@ -29,6 +29,7 @@ class ejection_stats(object):
         """
 
         iterf = 0
+        dir = os.path.join('figures/sphere_of_influence.txt')
         for fold_ in self.folders[:self.frange]:
             if fold_ != 'rc_0.25_4e6':
                 pass
@@ -47,7 +48,7 @@ class ejection_stats(object):
                                     print('Ejection detected. Reading File :', input_file)
                                     count = len(fnmatch.filter(os.listdir(path), '*.*'))
                                     ptracker = pkl.load(input_file)
-                                    vesc = ejected_extract_final(ptracker, ctracker)
+                                    vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_])
 
                                     stab_tracker = pd.DataFrame()
                                     df_stabtime = pd.Series({'Integrator': integrator[int_],
@@ -56,6 +57,24 @@ class ejection_stats(object):
                                                             'vesc': vesc})
                                     stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
                                     stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                            else:
+                                with open(dir) as f:
+                                    line = f.readlines()
+                                    for iter in range(len(line)):
+                                        if iter%3 == 0 and line[iter][90:159] == filename[59:]:
+                                            print('Ejection detected. Reading File :', input_file)
+                                            count = len(fnmatch.filter(os.listdir(path), '*.*'))
+                                            ptracker = pkl.load(input_file)
+                                            vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_])
+
+                                            stab_tracker = pd.DataFrame()
+                                            df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                                    'Population': np.shape(ptracker)[0],
+                                                                    'Simulation Time': np.shape(ptracker)[1] * 1e-3,
+                                                                    'vesc': vesc})
+                                            stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                                            
             iterf += 1
 
     def combine_data(self, folder):

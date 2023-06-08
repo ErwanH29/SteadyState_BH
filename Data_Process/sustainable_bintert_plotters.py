@@ -119,12 +119,12 @@ class sustainable_sys(object):
                                                             mass = max(mass1, mass2)
                                                             hard = False
                                                             bin = False
-                                                            if nn_semi < 0.1*(constants.G*mass)/(2*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
+                                                            if nn_semi < (constants.G*mass)/(2*50*(self.vdisp*(1 | units.ms))**2) and nn_ecc < 1:   #Hard binary conditions (Quinlan 1996b)
                                                                 hard = True
                                                                 bin = True
                                                                 hard_bin.append(1)
                                                                 
-                                                            if not (hard) and nn_semi < (constants.G*mass)/(2*(0.1*self.vdisp*(1 | units.ms))**2) and abs(nn_ecc) < 1:  #Value chosen for a < 1000AU
+                                                            if not (hard) and nn_semi < 0.1*(constants.G*mass)/(2*(self.vdisp*(1 | units.ms))**2) and abs(nn_ecc) < 1:  #Value chosen for a < 1000AU
                                                                 hard_bin.append(-5)
                                                                 bin = True
 
@@ -525,9 +525,9 @@ class sustainable_sys(object):
                         self.GWt_mergers[sim_].append(ter_data_merge)
 
                         self.binary_systems[sim_].append(bin_data/sims[sim_][iter])
-                        self.binary_occupation[sim_].append(np.median(bin_occ))
+                        self.binary_occupation[sim_].append(np.mean(bin_occ))
                         self.tertiary_systems[sim_].append(ter_data/sims[sim_][iter])
-                        self.tertiary_occupation[sim_].append(np.median(ter_occ))
+                        self.tertiary_occupation[sim_].append(np.mean(ter_occ))
 
                         median_binform = np.median(bform_time)
                         q1, q3 = np.percentile(bform_time, [25, 75])
@@ -823,7 +823,7 @@ class sustainable_sys(object):
                 plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
                 ax.legend(prop={'size': axlabel_size})
                 cbar = plt.colorbar(colour_axes, ax=ax)
-                cbar.set_label(label = r'$\langle N_{\rm{sys}} \rangle$ ', fontsize =  axlabel_size)
+                cbar.set_label(label = r'$\mathrm{med}(N_{\rm{sys}})$ ', fontsize =  axlabel_size)
                 cbar.ax.tick_params(labelsize = axlabel_size)
                 plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[int_]+'_m4e6.pdf', dpi=300, bbox_inches='tight')
                 file.write('Data for      '+str(integrator[int_]))
