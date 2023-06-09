@@ -112,7 +112,7 @@ def ecc_semi_histogram(integrator):
                                     ecc_data += 1
                                 if sim_snap[8][1] < 1:
                                     ecc_data += 1
-
+                                
                                 SMBH_ecca.append(np.log10(sim_snap[8][0]))
                                 SMBH_sema.append(np.log10(abs(sim_snap[7][0]).value_in(units.pc)))
 
@@ -268,8 +268,8 @@ def global_properties():
                                             ecc_data += 1
                                             
                                         if j == col_len - 2:
-                                            SMBH_ecc[iter].append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
-                                            SMBH_sem[iter].append(np.log10(1-sim_snap[8][0]))
+                                            SMBH_sem[iter].append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
+                                            SMBH_ecc[iter].append(np.log10(1-sim_snap[8][0]))
 
                                             if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
                                                 IMBH_sem[iter].append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
@@ -782,7 +782,7 @@ def lagrangian_tracker():
     plot_ini.tickers(ax, 'plot')
     plt.savefig('figures/system_evolution/GRX_Lagrangians_Evolution.pdf', dpi=300, bbox_inches='tight')
 
-def spatial_plotter(int_string):
+def spatial_plotter():
     """
     Function to plot the evolution of the system
     """

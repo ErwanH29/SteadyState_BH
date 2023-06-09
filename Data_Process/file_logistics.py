@@ -76,7 +76,7 @@ def bulk_stat_extractor(file_string):
 
     return data
 
-def ejected_extract_final(set, ejected, file):
+def ejected_extract_final(set, ejected, file, folder):
     """
     Extracts the final info on the ejected particle into an array
     
@@ -88,55 +88,65 @@ def ejected_extract_final(set, ejected, file):
 
     for parti_ in range(len(set)):
         if set.iloc[parti_][0][0] == ejected.iloc[0][4]: 
-            ejec_data = set.iloc[parti_]   #Make data set of only ejected particle
-            ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
-            ejec_vel = []
+            ejec_idx = parti_
+    
+    dir = os.path.join('figures/sphere_of_influence.txt')
+    fixed_crop = 1e6
+    with open(dir) as f:
+        line = f.readlines()
+        for iter in range(len(line)):
+            if iter%3 == 0 and line[iter][90:159] == file[59:]:
+                file_path = os.path.join('/media/erwanh/Elements/'+folder+'/GRX/particle_trajectory/'+str(file[59:]))
+                with open(file_path, 'rb') as input_file:
+                    ptracker = pkl.load(input_file)
 
-            fixed_crop = len(ejec_data)
+                if line[iter][54:65] == 'rc_0.25_4e5':
+                    sim_time = line[iter+1][49:57]
+                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-2))
 
-            dir = os.path.join('figures/sphere_of_influence.txt')
-            with open(dir) as f:
-                line = f.readlines()
-                for iter in range(len(line)):
-                    if iter%3 == 0 and line[iter][90:159] == file[59:]:
-                        if line[iter][54:65] == 'rc_0.25_4e6':
-                            if line[iter][66:73] == 'Hermite':
-                                popt = line[iter][117:121]
-                                crop = False
-                                for chr_ in popt:
-                                    if chr_ == '_':
-                                        crop = True
-                                    else:
-                                        crop = False
-                                if (crop):
-                                    fixed_crop = int(line[iter][117:119])
-                                else:
-                                    fixed_crop = int(line[iter][117:119])
+                elif line[iter][54:65] == 'rc_0.25_4e6':
+                    sim_time = line[iter+1][49:57]
+                    print(sim_time)
+                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-2))
 
-                        elif line[iter][54:65] == 'rc_0.25_4e5':
-                            sim_time = line[iter+1][49:57]
-                            for chr_ in sim_time:
-                                if chr_ == ']':
-                                    crop = -2
-                                else:
-                                    crop = -1
-                            fixed_crop = int(round(float(line[iter+1][49:57+crop]) * 10**-2))
-            tot_steps = min(round(len(ejec_data[:fixed_crop])**0.5), 10)
-            ejec_data = ejec_data.iloc[:len(ejec_data[:fixed_crop])]
-            
-            for steps_ in range(tot_steps):
-                vel_ = ejec_data.iloc[(-steps_)][3].value_in(units.kms)
-                vx = vel_[0] - set.iloc[0][(-steps_)][3][0].value_in(units.kms)
-                vy = vel_[1] - set.iloc[0][(-steps_)][3][1].value_in(units.kms)
-                vz = vel_[2] - set.iloc[0][(-steps_)][3][2].value_in(units.kms)
-                ejec_vel.append(np.sqrt(vx**2+vy**2+vz**2))
+                distance = line[iter+2][50:61]
+                distance = float(''.join(chr_ for chr_ in distance if chr_.isdigit())) * 10**-7
                 
-            idx = np.where(ejec_vel == np.nanmax(ejec_vel))[0]
-            idx -= tot_steps
-            ejec_vel = np.asarray(ejec_vel)
-            esc_vel = ejec_vel[idx]
-                        
-            return esc_vel
+                for parti_ in range(np.shape(ptracker)[0]):
+                    if parti_ != 0:
+                        for j in range(np.shape(ptracker)[1] - 1):
+                            sim_snap = ptracker.iloc[parti_][j]
+                            SMBH_coords = ptracker.iloc[0][j]
+
+                            line_x = (sim_snap[2][0] - SMBH_coords[2][0])
+                            line_y = (sim_snap[2][1] - SMBH_coords[2][1])
+                            line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                            dist = np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)
+
+                            if abs(distance - dist) <= 10**-5:
+                                ejec_idx = parti_
+
+        ejec_data = set.iloc[ejec_idx]
+        ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
+        ejec_vel = []
+
+        time_step = min(len(ejec_data), fixed_crop)
+        ejec_data = ejec_data.iloc[:time_step]
+        tot_steps = min(round(time_step**0.5), 10)
+        
+        for steps_ in range(tot_steps):
+            vel_ = ejec_data.iloc[(-steps_)][3].value_in(units.kms)
+            vx = vel_[0] - set.iloc[0][(-steps_)][3][0].value_in(units.kms)
+            vy = vel_[1] - set.iloc[0][(-steps_)][3][1].value_in(units.kms)
+            vz = vel_[2] - set.iloc[0][(-steps_)][3][2].value_in(units.kms)
+            ejec_vel.append(np.sqrt(vx**2+vy**2+vz**2))
+            
+        idx = np.where(ejec_vel == np.nanmax(ejec_vel))[0]
+        idx -= tot_steps
+        ejec_vel = np.asarray(ejec_vel)
+        esc_vel = ejec_vel[idx]
+                    
+        return esc_vel
 
 def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
     """

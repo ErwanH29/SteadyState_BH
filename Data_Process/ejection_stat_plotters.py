@@ -40,6 +40,12 @@ class ejection_stats(object):
                 filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
 
                 for int_ in range(drange):
+                    if fold_ == 'rc_0.25_4e6':
+                        crop_L = 94
+                        crop_U = 165
+                    if int_ == 1:
+                        crop_L = 90
+                        crop_U = 157
                     for file_ in range(len(filename[int_])):
                         with open(filenameC[int_][file_], 'rb') as input_file:
                             ctracker = pkl.load(input_file)
@@ -48,7 +54,7 @@ class ejection_stats(object):
                                     print('Ejection detected. Reading File :', input_file)
                                     count = len(fnmatch.filter(os.listdir(path), '*.*'))
                                     ptracker = pkl.load(input_file)
-                                    vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_])
+                                    vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], fold_)
 
                                     stab_tracker = pd.DataFrame()
                                     df_stabtime = pd.Series({'Integrator': integrator[int_],
@@ -61,11 +67,15 @@ class ejection_stats(object):
                                 with open(dir) as f:
                                     line = f.readlines()
                                     for iter in range(len(line)):
-                                        if iter%3 == 0 and line[iter][90:159] == filename[59:]:
-                                            print('Ejection detected. Reading File :', input_file)
+                                        if iter%3 == 0 and line[iter][crop_L:crop_U] == filename[int_][file_][63:]:
+                                            with open(filenameC[int_][file_], 'rb') as input_file:
+                                                ctracker = pkl.load(input_file)
+                                            with open(filename[int_][file_], 'rb') as input_file:
+                                                ptracker = pkl.load(input_file)
+                                            print('Ejection detected from sphere. Reading File :', input_file)
+                                            
                                             count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                            ptracker = pkl.load(input_file)
-                                            vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_])
+                                            vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], fold_)
 
                                             stab_tracker = pd.DataFrame()
                                             df_stabtime = pd.Series({'Integrator': integrator[int_],

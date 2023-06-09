@@ -7,26 +7,6 @@ from spatial_plotters import *
 
 #sphere_of_influence()
 
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
-STOP
-
-print('...spatial_plotters...')
-start_spatial = cpu_time.time()
-spatial_plotter('GRX')
-#lagrangian_tracker()
-#energy_scatter()
-#global_vels_GRX_pops()
-#global_properties()
-global_properties_GRX_pops()
-#ecc_semi_histogram('GRX')
-end_spatial = cpu_time.time()
-print('Plotting time: ', end_spatial - start_spatial, ' seconds')
-
 print('... ejection_stat_plotters ...')
 start_ejec = cpu_time.time()
 event_tracker()
@@ -37,16 +17,36 @@ end_ejec = cpu_time.time()
 print('Plotting time: ', end_ejec - start_ejec, ' seconds')
 STOP
 
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
+STOP
+
+
+print('...spatial_plotters...')
+start_spatial = cpu_time.time()
+#spatial_plotter()
+#lagrangian_tracker()
+#energy_scatter()
+#global_vels_GRX_pops()
+global_properties()
+global_properties_GRX_pops()
+#ecc_semi_histogram('GRX')
+end_spatial = cpu_time.time()
+print('Plotting time: ', end_spatial - start_spatial, ' seconds')
+
+
 print('...sustainable_bintert_plotters...')
 cls = sustainable_sys()
-#cls.new_data_extractor()
-cls.combine_data()
+cls.new_data_extractor()
+#cls.combine_data()
 #cls.GW_emissions()
 #cls.single_streak_plotter()
 cls.sys_occupancy_plotter()
 STOP
-
-
 
 
 # ======================================================================= #

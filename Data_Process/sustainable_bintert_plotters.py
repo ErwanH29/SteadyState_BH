@@ -42,20 +42,18 @@ class sustainable_sys(object):
 
         print('!!!!!! WARNING THIS WILL TAKE A WHILE !!!!!!!')
         iterf = 0
-        count = 0
-        drange = 2
         for fold_ in self.folders[:self.frange]:
             print('Files for: ', fold_)
             tcropG = 59
             GRX_data = glob.glob('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*')
             chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[tcropG:]) for i in GRX_data]
             filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-            filename[0] = filename[0][::-1] 
-            filenameC[0] = filenameC[0][::-1]
+            #filename[0] = filename[0][::-1] 
+            #filenameC[0] = filenameC[0][::-1]
             for int_ in range(1):
                 #int_ += 1
                 for file_ in range(len(filename[int_])):
-                    if file_ >= 243:
+                    #if file_ >= 243:
                         with open(filenameC[int_][file_], 'rb') as input_file:
                             chaotic_tracker = pkl.load(input_file)
                             proceed = True

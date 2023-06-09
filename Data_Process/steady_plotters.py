@@ -104,57 +104,31 @@ class stability_plotters(object):
                         if line[iter][66:73] == 'Hermite':
                             index = 0
                             popt = line[iter][117:121]
-                            crop = False
-                            for chr_ in popt:
-                                if chr_ == '_':
-                                    crop = True
-                                else:
-                                    crop = False
-                            if (crop):
-                                pops_temp[index].append(float(line[iter][117:119]))
-                            else:
-                                pops_temp[index].append(float(line[iter][117:119]))
+                            population = float(''.join(chr_ for chr_ in popt if chr_.isdigit()))
+                            pops_temp[index].append(population)
 
                         else:
                             index = 1
-                            popt = line[iter][109:111]
-                            pops_temp[index].append(float(popt))
+                            population = float(''.join(chr_ for chr_ in popt if chr_.isdigit()))
+                            pops_temp[index].append(population)
 
                     elif line[iter][54:65] == 'rc_0.25_4e5':
                         index = 2
                         popt = line[iter][109:111]
-                        pops_temp[index].append(float(popt))
+                        population = float(''.join(chr_ for chr_ in popt if chr_.isdigit()))
+                        pops_temp[index].append(population)
                     else:
                         index = 3
                         popt = line[iter][109:111]
-                        pops_temp[index].append(float(pop))
+                        population = float(''.join(chr_ for chr_ in popt if chr_.isdigit()))
+                        pops_temp[index].append(population)
                 
-                if iter%3 == 1:
-                    real_time = (line[iter][49:57])
-                    sim_time = line[iter][72:78]
+                if iter % 3 == 1:
+                    real_time = line[iter][49:57]
+                    cor_times[index].append(float(''.join(chr_ for chr_ in real_time if chr_.isdigit()))*10**-6)
 
-                    chr_it = 0
-                    cropped = False
-                    for chr_ in real_time:
-                        if chr_ == ']':
-                            cor_times[index].append(float(real_time[:chr_it-1])*1e-5)
-                            cropped = True
-                        chr_it += 1
-                    if not cropped:
-                        cor_times[index].append(float(real_time)*1e-6)
-                        sim_time = line[iter][72:78]
-                    if (cropped):
-                        sim_time = line[iter][71:77]
-
-                    chr_it = 0
-                    cropped = False
-                    for chr_ in sim_time:
-                        if chr_ == ']':
-                            sim_times[index].append(float(sim_time[:chr_it-1])*1e-3)
-                            cropped = True
-                        chr_it += 1
-                    if not cropped:
-                        sim_times[index].append(float(sim_time)*1e-3)  
+                    sim_time = line[iter][70:78]
+                    sim_times[index].append(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit()))*10**-3)
 
         tol = 1e-10
         for int_ in range(np.shape(stab_time)[0]):
