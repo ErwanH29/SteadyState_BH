@@ -51,9 +51,9 @@ class sustainable_sys(object):
             #filename[0] = filename[0][::-1] 
             #filenameC[0] = filenameC[0][::-1]
             for int_ in range(1):
-                #int_ += 1
                 for file_ in range(len(filename[int_])):
-                    #if file_ >= 243:
+                    #if file_ > 93:
+                    if file_ == 133: #Reading file 254 : IMBH_Hermite_Newtonian_40_sim292_init_dist0.200_equal_mass_1000.000.pkl'>
                         with open(filenameC[int_][file_], 'rb') as input_file:
                             chaotic_tracker = pkl.load(input_file)
                             proceed = True
@@ -387,6 +387,11 @@ class sustainable_sys(object):
         self.GWstra_binHard = [[ ], [ ], [ ], [ ], [ ]]
         self.GWfreq_binHardIMBH = [[ ], [ ], [ ], [ ], [ ]]
         self.GWstra_binHardIMBH = [[ ], [ ], [ ], [ ], [ ]]
+
+        self.bocc_lower = [[ ], [ ], [ ], [ ], [ ]]
+        self.bocc_highr = [[ ], [ ], [ ], [ ], [ ]]
+        self.hocc_lower = [[ ], [ ], [ ], [ ], [ ]]
+        self.hocc_highr = [[ ], [ ], [ ], [ ], [ ]]
         
         sims = [[40, 40, 40, 40], 
                 [60, 60, 60, 60, 60, 60, 60], 
@@ -523,15 +528,24 @@ class sustainable_sys(object):
                         self.GWt_mergers[sim_].append(ter_data_merge)
 
                         self.binary_systems[sim_].append(bin_data/sims[sim_][iter])
-                        self.binary_occupation[sim_].append(np.mean(bin_occ))
+                        median_bocc = np.median(bin_occ)
+                        q1, q3 = np.percentile(bin_occ, [25, 75])
+                        self.binary_occupation[sim_].append(median_bocc)
+                        self.bocc_highr[sim_].append(q3)
+                        self.bocc_lower[sim_].append(q1)
+
                         self.tertiary_systems[sim_].append(ter_data/sims[sim_][iter])
-                        self.tertiary_occupation[sim_].append(np.mean(ter_occ))
+                        median_tocc = np.median(ter_occ)
+                        q1, q3 = np.percentile(ter_occ, [25, 75])
+                        self.tertiary_occupation[sim_].append(median_tocc)
+                        self.hocc_highr[sim_].append(q3)
+                        self.hocc_lower[sim_].append(q1)
 
                         median_binform = np.median(bform_time)
                         q1, q3 = np.percentile(bform_time, [25, 75])
                         bform_med.append('{:.7f}'.format(median_binform))
-                        bform_higq.append('{:.7f}'.format(q3))
-                        bform_lowq.append('{:.7f}'.format(q1))
+                        bform_higq.append('{:.7f}'.format(q3 - median_binform))
+                        bform_lowq.append('{:.7f}'.format(q1 - median_binform))
 
                         median_terform = np.median(tform_time)
                         if median_terform > 0:
@@ -539,8 +553,8 @@ class sustainable_sys(object):
                         else:
                             q1, q3 = 0, 0
                         tform_med.append('{:.7f}'.format(median_terform))
-                        tform_higq.append('{:.7f}'.format(q3))
-                        tform_lowq.append('{:.7f}'.format(q1))
+                        tform_higq.append('{:.7f}'.format(q3 - median_terform))
+                        tform_lowq.append('{:.7f}'.format(q1 - median_terform))
 
                         self.binary_init[sim_].append(len(bform_time[bform_time <= 1000]))
                         self.tertiary_init[sim_].append(len(tform_time[tform_time <= 1000]))
@@ -642,7 +656,7 @@ class sustainable_sys(object):
                     file.write('\nFraction of IMBH-IMBH tertiaries:                '+str(pop_arr)+' : '+str(self.tertiary_IMBH[sim_])+' / '+str(self.tertiary_total[sim_]))
                     file.write('\nFraction of hard tertiaries:                     '+str(pop_arr)+' : '+str(self.tertiary_hard[sim_])+' / '+str(self.tertiary_total[sim_]))
                     file.write('\nFraction of mergers within Hubble time:          '+str(pop_arr)+' : '+str(self.GWt_mergers[sim_])+' / '+str(self.tertiary_total[sim_]))
-                    file.write('\nAverage tertiary formation time [yrs]:           '+str(pop_arr)+' : '+str(tform_med))
+                    file.write('\nMEdian tertiary formation time [yrs]:            '+str(pop_arr)+' : '+str(tform_med))
                     file.write('\nLower tertiary formation time [yrs]:             '+str(pop_arr)+' : '+str(tform_lowq))
                     file.write('\nHigher tertiary formation time [yrs]:            '+str(pop_arr)+' : '+str(tform_higq))
                     file.write('\nMedian # tertiary:                               '+str(pop_arr)+' : '+str(median_ter))
@@ -722,7 +736,7 @@ class sustainable_sys(object):
                     plot_ini.tickers(ax_, 'plot')
                     ax_.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
                     ax_.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
-                ax.set_ylim(-34.8, -12.2)
+                ax.set_ylim(-28.5, -12.2)
                 ax.set_xlim(-13.8, 0.2)
                 plt.savefig('figures/binary_hierarchical/'+str(integrator[int_])+'_'+fold_+'_GW_hardbins_diagram.png', dpi = 500, bbox_inches='tight')
                 plt.clf()
@@ -758,9 +772,9 @@ class sustainable_sys(object):
             ax.plot(np.log10(x_temp), np.log10(np.sqrt(x_temp*Sn)), color = 'slateblue', zorder = 1)
             ax.plot(np.log10(Ares_freq), np.log10(np.sqrt(Ares_freq*Ares_strain)), linewidth='1.5', color='red', zorder = 3)
             ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), linewidth='1.5', color='orangered', zorder = 4)
-            ax.text(-9.3, -15.9, 'SKA', fontsize = axlabel_size, rotation = 319, color = 'orangered')
-            ax.text(-4.28, -18.2, 'LISA', fontsize = axlabel_size, rotation = 308, color = 'slateblue')
-            ax.text(-5.98, -19, r'$\mu$Ares', fontsize = axlabel_size, rotation = 306, color = 'red')
+            ax.text(-9, -15.9, 'SKA', fontsize = axlabel_size, rotation = 280, color = 'orangered')
+            ax.text(-3.7, -18.2, 'LISA', fontsize = axlabel_size, rotation = 280, color = 'slateblue')
+            ax.text(-5, -19, r'$\mu$Ares', fontsize = axlabel_size, rotation = 280, color = 'red')
 
             idx = [7, 134]  #Hardcoded values
             GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[int_][idx[int_]], 'not', False)
@@ -816,13 +830,22 @@ class sustainable_sys(object):
                 #ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
                 ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
                 colour_axes = ax.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = (self.binary_systems[int_]), norm = (normalise_p1), label = 'Stable Binary', zorder = 2)
-                ax.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = (self.tertiary_systems[int_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
+                ax.scatter(ini_pop, np.log10(self.bocc_highr[int_]), c = 'black', marker = '_')
+                ax.scatter(ini_pop, np.log10(self.bocc_lower[int_]), c = 'black', marker = '_')
+                ax.plot([ini_pop, ini_pop], [np.log10(self.bocc_lower[int_]), np.log10(self.binary_occupation[int_])], c = 'black', zorder = 1)
+                ax.plot([ini_pop, ini_pop], [np.log10(self.binary_occupation[int_]), np.log10(self.bocc_highr[int_])], c = 'black', zorder = 1)
+
+                #ax.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = (self.tertiary_systems[int_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
+                #ax.scatter(ini_pop, np.log10(self.hocc_highr[int_]), c = 'black', marker = '_')
+                #ax.scatter(ini_pop, np.log10(self.hocc_lower[int_]), c = 'black', marker = '_')
+                #ax.plot([ini_pop, ini_pop], [np.log10(self.hocc_lower[int_]), np.log10(self.hocc_highr[int_])], c = 'black', zorder = 1)
                 print('Number of tertiary: ', self.tertiary_systems[int_])
                 plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
                 ax.legend(prop={'size': axlabel_size})
                 cbar = plt.colorbar(colour_axes, ax=ax)
                 cbar.set_label(label = r'$\mathrm{med}(N_{\rm{sys}})$ ', fontsize =  axlabel_size)
                 cbar.ax.tick_params(labelsize = axlabel_size)
+                ax.set_ylim(-4, 0)
                 plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[int_]+'_m4e6.pdf', dpi=300, bbox_inches='tight')
                 file.write('Data for      '+str(integrator[int_]))
                 file.write('\nFactor:       '+str(best_fit[0]))

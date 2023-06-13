@@ -7,15 +7,26 @@ from spatial_plotters import *
 
 #sphere_of_influence()
 
+
+print('...sustainable_bintert_plotters...')
+cls = sustainable_sys()
+#cls.new_data_extractor()
+cls.combine_data()
+#cls.GW_emissions()
+#cls.single_streak_plotter()
+cls.sys_occupancy_plotter()
+STOP
+
 print('... ejection_stat_plotters ...')
 start_ejec = cpu_time.time()
 event_tracker()
 cls = ejection_stats()
-cls.new_data_extractor()
+#cls.new_data_extractor()
 cls.vejec_plotters()
 end_ejec = cpu_time.time()
 print('Plotting time: ', end_ejec - start_ejec, ' seconds')
 STOP
+
 
 print('...steady_plotter...')
 start_steady = cpu_time.time()
@@ -38,15 +49,6 @@ global_properties_GRX_pops()
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
 
-
-print('...sustainable_bintert_plotters...')
-cls = sustainable_sys()
-cls.new_data_extractor()
-#cls.combine_data()
-#cls.GW_emissions()
-#cls.single_streak_plotter()
-cls.sys_occupancy_plotter()
-STOP
 
 
 # ======================================================================= #

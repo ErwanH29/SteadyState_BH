@@ -76,7 +76,7 @@ def bulk_stat_extractor(file_string):
 
     return data
 
-def ejected_extract_final(set, ejected, file, folder):
+def ejected_extract_final(pset, ejected, file, crop):
     """
     Extracts the final info on the ejected particle into an array
     
@@ -85,68 +85,85 @@ def ejected_extract_final(set, ejected, file, folder):
     ejected:    The ejected particle
     file:       File name
     """
+    ejec_idx = None
 
-    for parti_ in range(len(set)):
-        if set.iloc[parti_][0][0] == ejected.iloc[0][4]: 
+    for parti_ in range(len(pset)):
+        if pset.iloc[parti_][0][0] == ejected.iloc[0][4]: 
             ejec_idx = parti_
     
     dir = os.path.join('figures/sphere_of_influence.txt')
     fixed_crop = 1e6
+    dist = -5
+    tol = 10**-6
+
     with open(dir) as f:
         line = f.readlines()
         for iter in range(len(line)):
-            if iter%3 == 0 and line[iter][90:159] == file[59:]:
-                file_path = os.path.join('/media/erwanh/Elements/'+folder+'/GRX/particle_trajectory/'+str(file[59:]))
-                with open(file_path, 'rb') as input_file:
-                    ptracker = pkl.load(input_file)
+            if iter%3 == 0 and line[iter][90+crop:-3] == file[59+crop:]:
 
                 if line[iter][54:65] == 'rc_0.25_4e5':
                     sim_time = line[iter+1][49:57]
-                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-2))
+                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-3))
 
                 elif line[iter][54:65] == 'rc_0.25_4e6':
                     sim_time = line[iter+1][49:57]
-                    print(sim_time)
-                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-2))
+                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-3))
 
-                distance = line[iter+2][50:61]
-                distance = float(''.join(chr_ for chr_ in distance if chr_.isdigit())) * 10**-7
+                distance = line[iter+2][48:65]
+                distance = ''.join(chr_ for chr_ in distance if chr_.isdigit())
+                digits = len(distance) - 1
+                distance = float(distance)
+                distance /= 10**digits
+                print('Target distance: ', distance)
                 
-                for parti_ in range(np.shape(ptracker)[0]):
-                    if parti_ != 0:
-                        for j in range(np.shape(ptracker)[1] - 1):
-                            sim_snap = ptracker.iloc[parti_][j]
-                            SMBH_coords = ptracker.iloc[0][j]
+                ejec_parti = False
+                j = 0
+                while not (ejec_parti):
+                    j += 1
+                    for parti_ in range(np.shape(pset)[0]):
+                        if parti_ != 0:
+                            sim_snap = pset.iloc[parti_][j]
+                            SMBH_coords = pset.iloc[0][j]
 
                             line_x = (sim_snap[2][0] - SMBH_coords[2][0])
                             line_y = (sim_snap[2][1] - SMBH_coords[2][1])
                             line_z = (sim_snap[2][2] - SMBH_coords[2][2])
                             dist = np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)
 
-                            if abs(distance - dist) <= 10**-5:
+                            if abs(distance - dist) <= tol:
+                                print('Detected new ejectee.')
+                                ejec_parti = True
                                 ejec_idx = parti_
 
-        ejec_data = set.iloc[ejec_idx]
-        ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
-        ejec_vel = []
 
-        time_step = min(len(ejec_data), fixed_crop)
-        ejec_data = ejec_data.iloc[:time_step]
-        tot_steps = min(round(time_step**0.5), 10)
-        
-        for steps_ in range(tot_steps):
-            vel_ = ejec_data.iloc[(-steps_)][3].value_in(units.kms)
-            vx = vel_[0] - set.iloc[0][(-steps_)][3][0].value_in(units.kms)
-            vy = vel_[1] - set.iloc[0][(-steps_)][3][1].value_in(units.kms)
-            vz = vel_[2] - set.iloc[0][(-steps_)][3][2].value_in(units.kms)
-            ejec_vel.append(np.sqrt(vx**2+vy**2+vz**2))
+        if ejec_idx != None:
+            ejec_data = pset.iloc[ejec_idx]
+            ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
+            ejec_vel  = []
+
+            time_step = min(len(ejec_data), fixed_crop)
+            ejec_data = ejec_data.iloc[:time_step]
             
-        idx = np.where(ejec_vel == np.nanmax(ejec_vel))[0]
-        idx -= tot_steps
-        ejec_vel = np.asarray(ejec_vel)
-        esc_vel = ejec_vel[idx]
-                    
-        return esc_vel
+            if dist < 0:
+                tot_steps = min(time_step, 15)
+            else:
+                tot_steps = min(time_step, 45)
+            for steps_ in range(tot_steps):
+                vel_ = ejec_data.iloc[(-steps_)][3].value_in(units.kms)
+                vx = vel_[0] - pset.iloc[0][(-steps_)][3][0].value_in(units.kms)
+                vy = vel_[1] - pset.iloc[0][(-steps_)][3][1].value_in(units.kms)
+                vz = vel_[2] - pset.iloc[0][(-steps_)][3][2].value_in(units.kms)
+                ejec_vel.append(np.sqrt(vx**2+vy**2+vz**2))
+                
+            idx = np.where(ejec_vel == np.nanmax(ejec_vel))[0]
+            ejec_vel = np.asarray(ejec_vel)
+            esc_vel = ejec_vel[idx]
+            print('vesc: ', esc_vel)
+                        
+            return esc_vel
+        else:
+            print('Ejected DNE')
+            return ejec_idx
 
 def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
     """
@@ -236,22 +253,30 @@ def ndata_chaos(iterf, dataG, chaosG, fold_):
 
     return filename, filenameC, integrator, drange
 
-def simulation_stats_checker(dist_dir, int_string, file_crop):
+def simulation_stats_checker(folder, int_string, file_crop, crop):
     """
     Function to check the final outcomes of all the simulations
+
+    Inputs:
+    folder:     Directory containing data
+    int_string: Integrator
+    file_crop:  Number of data sets
+    crop:       Text crop for sphere_of_influence.txt
     """
 
-    filename = glob.glob('/media/erwanh/Elements/'+dist_dir+'/data/'+int_string+'/simulation_stats/*')
+    filename = glob.glob('/media/erwanh/Elements/'+folder+'/data/'+int_string+'/simulation_stats/*')
     filename = natsort.natsorted(filename)
+    pfile = glob.glob(os.path.join('/media/erwanh/Elements/'+folder+'/data/'+int_string+'/chaotic_simulation/*'))
+    pfile = natsort.natsorted(pfile)
+
+    pops = np.arange(10, 105, 5).tolist()
+    pop_samp = [0, 0, 0, 0, 0, 0, 0]
+
     SMBH_merger = 0 
     IMBH_merger = 0
     ejection = 0
     tot_sims = 0
     complete = 0
-
-    pops = [10, 15, 20, 25, 30, 35, 40, 
-            45, 50, 60, 70, 80, 90, 100]
-    pop_samp = [0, 0, 0, 0, 0, 0, 0]
 
     for file_ in range(len(filename)):
         with open(filename[file_]) as f:
@@ -269,20 +294,39 @@ def simulation_stats_checker(dist_dir, int_string, file_crop):
                 line1 = line[-9][:-7]
                 line2 = line[3][17:]
                 data = line1.split()
-                data2 = line2.split()
-                data = [float(i) for i in data]
-                data = max(data)
+                mass = max([float(i) for i in data])
+                sim_time = int(''.join(chr_ for chr_ in line2 if chr_.isdigit()))
 
-                if data == 4001000 or data == 40001000 or data == 401000:
+                if mass == 4001000 or mass == 40001000 or mass == 401000:
                     SMBH_merger += 1
                 elif data == 2000:
                     IMBH_merger += 1
-                elif '100000000.0' in data2:
+                elif sim_time == 1e9:
                     complete += 1
                 else:
                     ejection += 1
 
-    with open('figures/'+int_string+'_'+dist_dir+'_summary.txt', 'w') as file:
+
+    dir = os.path.join('figures/sphere_of_influence.txt')
+    with open(dir) as f:
+        line = f.readlines()
+        for file_ in pfile:
+            for iter in range(len(line)):
+                if iter%3 == 0 and line[iter][90+crop:-3] == file_[63+crop:]:
+                    with open(file_, 'rb') as input_file:
+                        ctracker = pkl.load(input_file)
+                        if 5*round(0.2*ctracker.iloc[0][6]) <= 40:
+                            if ctracker.iloc[0][2] > 0 | units.MSun:
+                                SMBH_merger -= 1
+                                ejection += 1
+                            elif ctracker.iloc[0][-4] > 0 :
+                                None
+                            elif ctracker.iloc[0][-2] == 100 | units.Myr :
+                                complete -= 1
+                                ejection += 1
+                        
+
+    with open('figures/'+int_string+'_'+folder+'_summary.txt', 'w') as file:
         file.write('Simulation outcomes for '+str(int_string))
         file.write('\nTotal simulations:   '+str(tot_sims))
         file.write('\nSMBH merging events: '+str(SMBH_merger))
@@ -309,14 +353,14 @@ def sphere_of_influence():
                     file_size = os.path.getsize(data[file_])
                     if file_size < 2.9e9:
                         print('Reading File ', file_, ' : ', input_file)
-                        ptracker = pkl.load(input_file)
+                        pset = pkl.load(input_file)
                         distance = [ ]
                         time_snap = [ ]
 
-                        for parti_, j in itertools.product(range(np.shape(ptracker)[0]), range(np.shape(ptracker)[1]-1)):
+                        for parti_, j in itertools.product(range(np.shape(pset)[0]), range(np.shape(pset)[1]-1)):
                             if parti_ != 0:
-                                particle = ptracker.iloc[parti_]
-                                SMBH_data = ptracker.iloc[0]
+                                particle = pset.iloc[parti_]
+                                SMBH_data = pset.iloc[0]
 
                                 sim_snap = particle.iloc[j]
                                 SMBH_coords = SMBH_data.iloc[j]
@@ -336,7 +380,7 @@ def sphere_of_influence():
                             with open('figures/sphere_of_influence.txt', 'a') as file:
                                 index = np.where(time_snap == np.min(time_snap))
                                 file.write('File '+str(input_file)+'\n')
-                                file.write('Particle reaches beyond sphere of influence at: '+str(time_snap[index])+' (End time: ) '+str(np.shape(ptracker)[1]-1)+'\n')
+                                file.write('Particle reaches beyond sphere of influence at: '+str(time_snap[index])+' (End time: ) '+str(np.shape(pset)[1]-1)+'\n')
                                 file.write('Particle distance:                              '+str(distance[index])+'\n')
         iterf += 1
 
@@ -361,4 +405,10 @@ integr = ['Hermite', 'GRX', 'GRX', 'GRX', 'GRX']
 data_files = [40, 60, 30, 30]
 
 for fold_, integ_, nofiles_ in zip(folders, integr, data_files):
-    simulation_stats_checker(fold_, integ_, nofiles_)
+    if fold_ == 'rc_0.25_4e6' and integ_ == 'Hermite':
+        crop_L = 94
+        file_crop = 4
+    else:
+        crop_L = 90
+        file_crop = 0
+    simulation_stats_checker(fold_, integ_, nofiles_, file_crop)

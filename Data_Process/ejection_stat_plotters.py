@@ -31,59 +31,60 @@ class ejection_stats(object):
         iterf = 0
         dir = os.path.join('figures/sphere_of_influence.txt')
         for fold_ in self.folders[:self.frange]:
-            if fold_ != 'rc_0.25_4e6':
-                pass
-            else:
+            if fold_ == 'rc_0.25_4e6':
                 path = '/media/erwanh/Elements/'+fold_+'/data/ejection_stats/'
                 GRX_data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/GRX/particle_trajectory/*'))
                 chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
                 filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
-
                 for int_ in range(drange):
-                    if fold_ == 'rc_0.25_4e6':
+                    int_ += 1
+                    if fold_ == 'rc_0.25_4e6' and int_ == 0:
                         crop_L = 94
-                        crop_U = 165
-                    if int_ == 1:
+                        file_crop = 4
+                    else:
                         crop_L = 90
-                        crop_U = 157
+                        file_crop = 0
                     for file_ in range(len(filename[int_])):
-                        with open(filenameC[int_][file_], 'rb') as input_file:
-                            ctracker = pkl.load(input_file)
-                            if ctracker.iloc[0][3].number > 0:
-                                with open(filename[int_][file_], 'rb') as input_file:
-                                    print('Ejection detected. Reading File :', input_file)
-                                    count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                    ptracker = pkl.load(input_file)
-                                    vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], fold_)
-
-                                    stab_tracker = pd.DataFrame()
-                                    df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                            'Population': np.shape(ptracker)[0],
-                                                            'Simulation Time': np.shape(ptracker)[1] * 1e-3,
-                                                            'vesc': vesc})
-                                    stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                    stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
-                            else:
-                                with open(dir) as f:
-                                    line = f.readlines()
-                                    for iter in range(len(line)):
-                                        if iter%3 == 0 and line[iter][crop_L:crop_U] == filename[int_][file_][63:]:
-                                            with open(filenameC[int_][file_], 'rb') as input_file:
-                                                ctracker = pkl.load(input_file)
-                                            with open(filename[int_][file_], 'rb') as input_file:
-                                                ptracker = pkl.load(input_file)
-                                            print('Ejection detected from sphere. Reading File :', input_file)
-                                            
+                        if file_ >= 147:
+                            with open(filenameC[int_][file_], 'rb') as input_file:
+                                ctracker = pkl.load(input_file)
+                                if ctracker.iloc[0][3].number > 0:
+                                        with open(filename[int_][file_], 'rb') as input_file:
+                                            print('Ejection detected. Reading File :', input_file)
                                             count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                            vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], fold_)
+                                            ptracker = pkl.load(input_file)
+                                            vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], file_crop)
+                                            if vesc != None:
+                                                stab_tracker = pd.DataFrame()
+                                                df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                                        'Population': np.shape(ptracker)[0],
+                                                                        'Simulation Time': np.shape(ptracker)[1] * 1e-3,
+                                                                        'vesc': vesc})
+                                                stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                                else:
+                                    with open(dir) as f:
+                                        line = f.readlines()
+                                        for iter in range(len(line)):
+                                            if iter%3 == 0 and line[iter][crop_L:-3] == filename[int_][file_][file_crop+59:]:
+                                                with open(filenameC[int_][file_], 'rb') as input_file:
+                                                    ctracker = pkl.load(input_file)
+                                                with open(filename[int_][file_], 'rb') as input_file:
+                                                    ptracker = pkl.load(input_file)
+                                                print('Ejection detected. Reading File :', input_file)
+                                                print('Sphere_of_Influence.txt detection')
+                                                
+                                                count = len(fnmatch.filter(os.listdir(path), '*.*'))
+                                                vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], file_crop)
 
-                                            stab_tracker = pd.DataFrame()
-                                            df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                                    'Population': np.shape(ptracker)[0],
-                                                                    'Simulation Time': np.shape(ptracker)[1] * 1e-3,
-                                                                    'vesc': vesc})
-                                            stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                            stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                                                if vesc != None:
+                                                    stab_tracker = pd.DataFrame()
+                                                    df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                                            'Population': np.shape(ptracker)[0],
+                                                                            'Simulation Time': np.shape(ptracker)[1] * 1e-3,
+                                                                            'vesc': vesc})
+                                                    stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                                    stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
                                             
             iterf += 1
 
@@ -175,13 +176,13 @@ class ejection_stats(object):
 
                         avg_vesc[iter] = np.nanmedian(vesc[idx])
                         q1, q3 = np.percentile(vesc[idx], [25, 75])
-                        vesc_low[iter] = q1
-                        vesc_upp[iter] = q3
+                        vesc_low[iter] = q1 #- np.nanmedian(vesc[idx])
+                        vesc_upp[iter] = q3 #- np.nanmedian(vesc[idx])
 
                         avg_surv[iter] = np.nanmedian(sim_time[idx])
                         q1, q3 = np.percentile(sim_time[idx], [25, 75])
-                        surv_low[iter] = q1
-                        surv_upp[iter] = q3
+                        surv_low[iter] = q1 #- np.nanmedian(sim_time[idx])
+                        surv_upp[iter] = q3 #- np.nanmedian(sim_time[idx])
 
                         iter += 1
 
@@ -189,9 +190,12 @@ class ejection_stats(object):
                     pops = np.asarray(pops)
                     avg_vesc = np.asarray(avg_vesc)
 
-                    fig, ax = plt.subplots()
+                    fig, ax = plt.subplots()   
                     ax.set_ylabel(r'med$(v_{\rm{ejec}})$ [km s$^{-1}$]', fontsize = axlabel_size)
                     colour_axes = ax.scatter(pops, avg_vesc, edgecolors='black', c = np.log10(avg_surv), norm = normalise, zorder = 3)
+                    ax.scatter(pops, vesc_low, color = 'black', marker = '_')
+                    ax.scatter(pops, vesc_upp, color = 'black', marker = '_')
+                    ax.plot([pops, pops], [vesc_low, vesc_upp], color = 'black', zorder = 1)
                     cbar = plt.colorbar(colour_axes, ax=ax)
                     plot_ini.tickers_pop(ax, self.tot_pop[int_], integrator[int_])
                     cbar.set_label(label = r'$\rm{med}(\log_{10}t_{\rm{ejec}})$ [Myr]', fontsize =  axlabel_size)
