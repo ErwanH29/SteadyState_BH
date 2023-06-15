@@ -7,6 +7,18 @@ from spatial_plotters import *
 
 #sphere_of_influence()
 
+# ======================================================================= #
+print('...tGW_plotters...')
+start_tgw = cpu_time.time()
+cls = gw_calcs()
+#ecc_mergers()
+#cls.new_data_extractor()
+#cls.strain_freq_plotter()
+cls.GW_event_tracker()
+#cls.orbital_hist_plotter()
+end_tgw = cpu_time.time()
+print('Plotting time: ', end_tgw - start_tgw, ' seconds')
+STOP
 
 print('...sustainable_bintert_plotters...')
 cls = sustainable_sys()
@@ -49,16 +61,3 @@ global_properties_GRX_pops()
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
 
-
-
-# ======================================================================= #
-print('...tGW_plotters...')
-start_tgw = cpu_time.time()
-cls = gw_calcs()
-#ecc_mergers()
-#cls.new_data_extractor()
-#cls.strain_freq_plotter()
-cls.GW_event_tracker()
-#cls.orbital_hist_plotter()
-end_tgw = cpu_time.time()
-print('Plotting time: ', end_tgw - start_tgw, ' seconds')
