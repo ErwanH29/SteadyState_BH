@@ -29,6 +29,9 @@ class plotter_setup(object):
         if plot_type == 'plot':
             ax.tick_params(axis="y", which = 'both', direction="in", labelsize = self.tick_size)
             ax.tick_params(axis="x", which = 'both', direction="in", labelsize = self.tick_size)
+        else:
+            ax.tick_params(axis="y", labelsize = self.tick_size)
+            ax.tick_params(axis="x", labelsize = self.tick_size)
 
         return ax
 
@@ -284,7 +287,7 @@ def simulation_stats_checker(folder, int_string, file_crop, crop):
             substring= 'No. of initial IMBH'
             for i, item in enumerate(line):
                 if substring in item:
-                    line_pop = line[i][21:24]
+                    line_pop = line[i][21:24]   
             pop = float(line_pop)
             
             idx = pops.index(pop)

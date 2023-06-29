@@ -9,6 +9,7 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
+import scipy.stats as st
 import statsmodels.api as sm
 import warnings
 
@@ -133,7 +134,7 @@ def ecc_semi_histogram(integrator):
     fig, ax = plt.subplots()
     ax.set_xlabel(r'$\log_{10}a$ [pc]', fontsize = axlabel_size)
     ax.set_ylabel(r'$\log_{10}e$', fontsize = axlabel_size)
-    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 700, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'viridis')
+    bin2d_sim, xed, yed, image = ax.hist2d(IMBH_sema, IMBH_ecca, bins = 700, range=([-7.88, 2.5], [-4.3, 8]), cmap = 'Greys')
     bin2d_sim /= np.max(bin2d_sim)
     extent = [-7, 2, -2, 6]
     contours = ax.imshow(np.log10(bin2d_sim), extent = extent, aspect='auto', origin = 'upper')
@@ -224,7 +225,7 @@ def global_properties():
         avgG_data = avgG.split()
         popG = np.asarray([float(i) for i in popG_data])
         avgG = np.asarray([float(i) for i in avgG_data])
-        
+    
     iter = 0
     for int_ in integrator:   
         data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_)+'/particle_trajectory/*'))
@@ -255,29 +256,29 @@ def global_properties():
                                 idx = np.where(popG[popG > 5] == pop)
                                 col_len = int(min(np.round((avgG[idx])*1e3), np.shape(ptracker)[1])-1)
 
-                                for parti_, j in itertools.product(range(np.shape(ptracker)[0]), range(col_len-1)):
+                                for parti_ in range(np.shape(ptracker)[0]):# j in itertools.product(range(np.shape(ptracker)[0]), range(col_len-1)):
                                     if parti_ != 0:
                                         particle = ptracker.iloc[parti_]
 
                                         total_data += 1
-                                        sim_snap = particle.iloc[j]
+                                        sim_snap = particle.iloc[col_len-2]
 
-                                        if sim_snap[8][2] < 1:
+                                        """if sim_snap[8][2] < 1:
                                             ecc_data += 1
                                         if sim_snap[8][1] < 1:
-                                            ecc_data += 1
+                                            ecc_data += 1"""
                                             
-                                        if j == col_len - 2:
-                                            SMBH_sem[iter].append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
-                                            SMBH_ecc[iter].append(np.log10(1-sim_snap[8][0]))
+                                        #if j == col_len - 2:
+                                        SMBH_sem[iter].append(np.log10(abs(sim_snap[7][0].value_in(units.pc))))
+                                        SMBH_ecc[iter].append(np.log10(1-sim_snap[8][0]))
 
-                                            if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
-                                                IMBH_sem[iter].append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
-                                                IMBH_ecc[iter].append(np.log10(1-sim_snap[8][1]))
+                                        if not (sim_snap[8][0] == sim_snap[8][1]) or not (sim_snap[7][0] == sim_snap[7][1]):
+                                            IMBH_sem[iter].append(np.log10(abs(sim_snap[7][1].value_in(units.pc))))
+                                            IMBH_ecc[iter].append(np.log10(1-sim_snap[8][1]))
 
-                                            if not (sim_snap[8][0] == sim_snap[8][2]) or not (sim_snap[7][0] == sim_snap[7][2]):
-                                                IMBH_sem[iter].append(np.log10(abs(sim_snap[7][2].value_in(units.pc))))
-                                                IMBH_ecc[iter].append(np.log10(1-sim_snap[8][2]))
+                                        if not (sim_snap[8][0] == sim_snap[8][2]) or not (sim_snap[7][0] == sim_snap[7][2]):
+                                            IMBH_sem[iter].append(np.log10(abs(sim_snap[7][2].value_in(units.pc))))
+                                            IMBH_ecc[iter].append(np.log10(1-sim_snap[8][2]))
 
         with open('figures/system_evolution/output/ecc_events_rc_0.25_'+str(int_)+'.txt', 'w') as file:
             file.write('For '+str(int_)+' ecc < 1: '+str(ecc_data)+' / '+str(total_data)+' or '+str(100*ecc_data/total_data)+'%')
@@ -298,23 +299,44 @@ def global_properties():
 
     ##### CDF Plots #####
     c_hist = ['red', 'blue']
-    fig = plt.figure(figsize=(10, 6))
-    gs = fig.add_gridspec(2, 4,  width_ratios=(2, 2, 2, 2), height_ratios=(2, 3), left=0.1, right=0.9, bottom=0.1, 
-                            top=0.9, wspace=0.35, hspace=0.15)
-    axL = fig.add_subplot(gs[1, 0:2])
-    axL1 = fig.add_subplot(gs[0, 0:2], sharex=axL)
-    axR = fig.add_subplot(gs[1, 2:])
-    axR1 = fig.add_subplot(gs[0, 2:], sharex=axR)
-    axL.set_xlabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$', fontsize = axlabel_size)
-    axR.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]', fontsize = axlabel_size)
-    axL.set_ylabel(r'$\log_{10}$(CDF)', fontsize = axlabel_size)
-    axL1.set_ylabel(r'$\rho/\rho_{\rm{max}}$', fontsize = axlabel_size)
-    for int_ in range(2):
-        axL, axL1 = orbital_plotter_setup(SMBH_ecc, int_, axL, axL1, c_hist, integrator, True)
-        axR, axR1 = orbital_plotter_setup(SMBH_sem, int_, axR, axR1, c_hist, integrator, False)
-    plt.savefig('figures/system_evolution/ecc_SMBH_cdf_histogram_rc_0.25_4e6.pdf', dpi=300, bbox_inches='tight')
-    plt.clf()
+    cmap_colours = ['Reds', 'Blues']
 
+    inside_data = [[ ], [ ]]
+    fig, ax = plt.subplots()
+    ax.set_ylabel(r'$\log_{10}(1-e)_{\rm{SMBH}}$', fontsize = axlabel_size)
+    ax.set_xlabel(r'$\log_{10}a_{\rm{SMBH}}$ [pc]', fontsize = axlabel_size)
+    ax.set_xlim(-4,1)
+    ax.set_ylim(-7,0)
+    for int_ in range(2):
+        SMBH_ecc[int_] = np.asarray(SMBH_ecc[int_])
+        SMBH_sem[int_] = np.asarray(SMBH_sem[int_])
+        SMBH_sem[int_] = SMBH_sem[int_][np.isfinite(SMBH_ecc[int_])]
+        SMBH_ecc[int_] = SMBH_ecc[int_][np.isfinite(SMBH_ecc[int_])]
+        SMBH_ecc[int_] = SMBH_ecc[int_][np.isfinite(SMBH_sem[int_])]
+        SMBH_sem[int_] = SMBH_sem[int_][np.isfinite(SMBH_sem[int_])]
+
+        xx, yy = np.mgrid[-4:1:100j, -7:0:100j]
+        positions = np.vstack([xx.ravel(), yy.ravel()])
+        values = np.vstack([SMBH_sem[int_], SMBH_ecc[int_]])
+        kernel = st.gaussian_kde(values)
+        f = np.reshape(kernel(positions).T, xx.shape)
+
+        cfset = ax.contourf(xx, yy, f, cmap = cmap_colours[int_], alpha = (1-0.5*int_))
+        cset = ax.contour(xx, yy, f, cfset.levels[1::3], colors = c_hist[int_], label = integrator[int_])
+
+        p = cset.collections[0].get_paths()
+        inside_data[int_] = np.full_like(SMBH_ecc[int_], False, dtype = bool)
+        for level in p:
+            inside_data[int_] |= level.contains_points(list(zip(*(SMBH_sem[int_], SMBH_ecc[int_]))))
+        ax.clabel(cset, inline=1, fontsize = 10)
+    for int_ in range(2):
+        ax.scatter(SMBH_sem[int_][~inside_data[int_]], SMBH_ecc[int_][~inside_data[int_]], 
+                   color = c_hist[int_], s = 0.5)
+    ax.legend(prop={'size': axlabel_size})
+    plot_ini.tickers(ax, 'histogram')
+    plt.savefig('figures/system_evolution/sem_ecc_plot.pdf', dpi=300, bbox_inches='tight')
+    plt.clf()
+    
     fig = plt.figure(figsize=(10, 6))
     gs = fig.add_gridspec(2, 4,  width_ratios=(2, 2, 2, 2), height_ratios=(2, 3), left=0.1, right=0.9, bottom=0.1, 
                           top=0.9, wspace=0.35, hspace=0.15)
@@ -329,6 +351,7 @@ def global_properties():
     for int_ in range(2):
         axL, axL1 = orbital_plotter_setup(IMBH_ecc, int_, axL, axL1, c_hist, integrator, True)
         axR, axR1 = orbital_plotter_setup(IMBH_sem, int_, axR, axR1, c_hist, integrator, False)
+    ax.legend(prop={'size': axlabel_size})
     plt.savefig('figures/system_evolution/ecc_IMBH_cdf_histogram_rc_0.25_4e6.pdf', dpi=300, bbox_inches='tight')
     plt.clf()
 
@@ -605,8 +628,8 @@ def global_vels_GRX_pops():
                                                 particle = ptracker.iloc[parti_]
                                                 SMBH_data = ptracker.iloc[0]
 
-                                                sim_snap = particle.iloc[col_len-1]
-                                                SMBH_snap = SMBH_data.iloc[col_len-1]
+                                                sim_snap = particle.iloc[0]
+                                                SMBH_snap = SMBH_data.iloc[0]
                                                 velx = sim_snap[3][0] - SMBH_snap[3][0]
                                                 vely = sim_snap[3][1] - SMBH_snap[3][1]
                                                 velz = sim_snap[3][2] - SMBH_snap[3][2]

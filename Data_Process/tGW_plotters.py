@@ -581,8 +581,6 @@ class gw_calcs(object):
                 medH2 = line[5][4:-2]
                 medH_data = np.concatenate([medH.split(), medH2.split()])
                 medH = np.asarray([float(i) for i in medH_data])
-                
-            tot_sims = [0, 0, 0, 0, 0, 0, 0]
              
             IMBH_tot_arr  = [0, 0, 0, 0, 0, 0, 0]
             IMBH_detL_arr = [0, 0, 0, 0, 0, 0, 0]
@@ -591,6 +589,9 @@ class gw_calcs(object):
             SMBH_tot_arr  = [0, 0, 0, 0, 0, 0, 0]
             SMBH_detL_arr = [0, 0, 0, 0, 0, 0, 0]
             SMBH_detA_arr = [0, 0, 0, 0, 0, 0, 0]
+
+            GW_capture_arr = [0, 0, 0, 0, 0, 0, 0]
+            GW_inclust_arr = [0, 0, 0, 0, 0, 0, 0]
 
             drange = 2
             integrator = ['Hermite', 'GRX']
@@ -634,6 +635,11 @@ class gw_calcs(object):
                                         SMBH_detL_arr[idx] += 1
                                     if np.sqrt(freq_nn*Ares_stra[index]) < gw_strain:
                                         SMBH_detA_arr[idx] += 1
+                            
+                            if freq_nn > 10**(-3.2):
+                                GW_inclust_arr[idx] += 0.5
+                            if freq_nn <= 10**(-3.2) and self.strain_flyby_nn[parti_][event_] > 10**-23.5:
+                                GW_capture_arr[idx] += 0.5
 
                         for event_ in range(len(self.freq_flyby_t[parti_])):
                             freq_t = self.freq_flyby_t[parti_][event_] * (1+0.5292)
@@ -660,6 +666,11 @@ class gw_calcs(object):
                                     if np.sqrt(freq_t*Ares_stra[index]) < gw_strain:
                                         SMBH_detA_arr[idx] += 1
 
+                            if freq_t > 10**(-3.2):
+                                GW_inclust_arr[idx] += 0.5
+                            if freq_t <= 10**(-3.2) and self.strain_flyby_t[parti_][event_] > 10**(-23.5):
+                                GW_capture_arr[idx] += 0.5
+
                         for event_ in range(len(self.freq_flyby_SMBH[parti_])):
                             freq_SMBH = self.freq_flyby_SMBH[parti_][event_] * (1+0.5292)
                             gw_strain = scale_dist*self.strain_flyby_SMBH[parti_][event_]
@@ -671,6 +682,11 @@ class gw_calcs(object):
                                     SMBH_detL_arr[idx] += 1
                                 if np.sqrt(freq_SMBH*Ares_stra[index]) < gw_strain:
                                     SMBH_detA_arr[idx] += 1
+
+                            if freq_SMBH > 10**(-3.2):
+                                GW_inclust_arr[idx] += 1
+                            if freq_SMBH <= 10**(-3.2) and self.strain_flyby_SMBH[parti_][event_] > 10**(-23.5):
+                                GW_capture_arr[idx] += 1
                     
                     IMBH_tot_arr  = [i/(tot_sims*k*1e3) for i, k in zip(IMBH_tot_arr, med_time)]
                     IMBH_detL_arr = [i/(tot_sims*k*1e3) for i, k in zip(IMBH_detL_arr, med_time)]
@@ -678,6 +694,9 @@ class gw_calcs(object):
                     SMBH_tot_arr  = [i/(tot_sims*k*1e3) for i, k in zip(SMBH_tot_arr, med_time)]
                     SMBH_detL_arr = [i/(tot_sims*k*1e3) for i, k in zip(SMBH_detL_arr, med_time)]
                     SMBH_detA_arr = [i/(tot_sims*k*1e3) for i, k in zip(SMBH_detA_arr, med_time)]
+
+                    GW_capture_arr = [i/(tot_sims*k*1e3) for i, k in zip(GW_capture_arr, med_time)]
+                    GW_inclust_arr = [i/(tot_sims*k*1e3) for i, k in zip(GW_inclust_arr, med_time)]
 
                     file.write('\n\nFor '+str(integrator[int_])+': \n')
                     file.write('Populations:                         '+str(cluster_pop))
@@ -687,6 +706,8 @@ class gw_calcs(object):
                     file.write('\nTotal SMBH events /yr:             '+str(SMBH_tot_arr))
                     file.write('\nLISA Detectable SMBH events /yr:   '+str(SMBH_detL_arr))
                     file.write('\nmuAres Detectable SMBH events /yr: '+str(SMBH_detA_arr))
+                    file.write('\nTotal GW capture events /yr:       '+str(GW_capture_arr))
+                    file.write('\nTotal GW in-cluster events /yr:    '+str(GW_inclust_arr))
                 
     def orbital_hist_plotter(self):
         """

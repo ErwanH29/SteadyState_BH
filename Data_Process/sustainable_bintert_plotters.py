@@ -810,43 +810,43 @@ class sustainable_sys(object):
         axlabel_size, tick_size = plot_ini.font_size()
 
         integrator = ['Hermite', 'GRX']
+        colors = ['red', 'blue']
+        markers = ['o', 's']
+        xshift = [-1, 1]
 
-        normalise_p1 = plt.Normalize(0, (max(self.binary_systems[0])))#, max(self.binary_systems[1])))
-        normalise_p2 = plt.Normalize(10, 40)
+        normalise_p1 = plt.Normalize(0, (max(self.binary_systems[0])))
 
         xtemp = np.linspace(10, 40, 1000)
 
         with open('figures/binary_hierarchical/output/line_of_best_fit_m4e6.txt', 'w') as file:
+            fig, ax = plt.subplots()
             for int_ in range(2):
-                ini_pop = np.unique(self.pop[int_])
 
-                fig, ax = plt.subplots()
+                ini_pop = np.unique(self.pop[int_])
+                if int_ == 0:
+                    ini_pop = [i+xshift[int_] for i in ini_pop]
+                else:
+                    for i in range(len(ini_pop)):
+                        if (ini_pop[i]/2)%5 == 0:
+                            ini_pop[i] += +xshift[int_]
+
                 best_fit = np.polyfit(ini_pop, np.log10(self.binary_occupation[int_]), 1)
                 curve = np.poly1d(best_fit)
-
+                file.write('Data for      '+str(integrator[int_]))
+                file.write('\nFactor:       '+str(best_fit[0]))
+                file.write('\ny-intercept:  '+str(best_fit[1])+'\n\n')
 
                 ax.set_ylabel(r'$\log_{10}(t_{\rm{sys}} / t_{\rm{sim}})$', fontsize = axlabel_size)
-                ax.set_ylim(-7, 0)
-                #ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
-                ax.plot(xtemp, curve(xtemp), color = 'black', linestyle = ':', zorder = 1)
-                colour_axes = ax.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', c = (self.binary_systems[int_]), norm = (normalise_p1), label = 'Stable Binary', zorder = 2)
+                ax.plot(xtemp, curve(xtemp), color = colors[int_], linestyle = ':', zorder = 1)
+                colour_axes = ax.scatter(ini_pop, np.log10(self.binary_occupation[int_]), edgecolors  = 'black', s = 88, marker = markers[int_],
+                                         c = (self.binary_systems[int_]), norm = (normalise_p1), label = integrator[int_], zorder = 2)
                 ax.scatter(ini_pop, np.log10(self.bocc_highr[int_]), c = 'black', marker = '_')
                 ax.scatter(ini_pop, np.log10(self.bocc_lower[int_]), c = 'black', marker = '_')
                 ax.plot([ini_pop, ini_pop], [np.log10(self.bocc_lower[int_]), np.log10(self.binary_occupation[int_])], c = 'black', zorder = 1)
                 ax.plot([ini_pop, ini_pop], [np.log10(self.binary_occupation[int_]), np.log10(self.bocc_highr[int_])], c = 'black', zorder = 1)
-
-                #ax.scatter(ini_pop, np.log10(self.tertiary_occupation[int_]), edgecolors  = 'black', c = (self.tertiary_systems[int_]), norm = (normalise_p1), marker = 's', label = 'Stable Triple', zorder = 3)
-                #ax.scatter(ini_pop, np.log10(self.hocc_highr[int_]), c = 'black', marker = '_')
-                #ax.scatter(ini_pop, np.log10(self.hocc_lower[int_]), c = 'black', marker = '_')
-                #ax.plot([ini_pop, ini_pop], [np.log10(self.hocc_lower[int_]), np.log10(self.hocc_highr[int_])], c = 'black', zorder = 1)
-                print('Number of tertiary: ', self.tertiary_systems[int_])
-                plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
-                ax.legend(prop={'size': axlabel_size})
-                cbar = plt.colorbar(colour_axes, ax=ax)
-                cbar.set_label(label = r'$\mathrm{med}(N_{\rm{sys}})$ ', fontsize =  axlabel_size)
-                cbar.ax.tick_params(labelsize = axlabel_size)
-                ax.set_ylim(-4, 0)
-                plt.savefig('figures/binary_hierarchical/sys_form_'+integrator[int_]+'_m4e6.pdf', dpi=300, bbox_inches='tight')
-                file.write('Data for      '+str(integrator[int_]))
-                file.write('\nFactor:       '+str(best_fit[0]))
-                file.write('\ny-intercept:  '+str(best_fit[1])+'\n\n')
+            plot_ini.tickers_pop(ax, self.pop[1], 'GRX')
+            ax.legend(prop={'size': axlabel_size})
+            cbar = plt.colorbar(colour_axes, ax=ax)
+            cbar.set_label(label = r'$\mathrm{med}(N_{\rm{sys}})$ ', fontsize =  axlabel_size)
+            cbar.ax.tick_params(labelsize = axlabel_size)
+            plt.savefig('figures/binary_hierarchical/sys_form_m4e6.pdf', dpi=300, bbox_inches='tight')

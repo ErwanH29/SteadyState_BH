@@ -42,13 +42,13 @@ def plotter():
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rcParams["mathtext.fontset"] = "cm"
     plot_ini = plotter_setup()
-    dummy1, dummy2, axlabel_size, tick_size = plot_ini.font_size()
+    axlabel_size, tick_size = plot_ini.font_size()
         
 
     # Data from Furlong et al. (2015)
     merger_rate = np.linspace(1e-3, 1, 100) #0.9/7 -> 7 / 0.9 merge per Myr
     mrate_fixed = [1e-3, 1e-2, 1e-1, 1]
-    zrange = [0, 0.5, 1, 2, 3]
+    zrange = [0, 0.5, 1, 2, 3.5]
     phi0 = np.asarray([8.4, 8.4, 7.4, 4.5, 2.2]) 
     phi0 *= 1e-4
     mcluster = [10**11.14, 10**11.11, 10**11.06, 10**10.91, 10**10.78]
@@ -58,7 +58,7 @@ def plotter():
     ps_int = []
     cmove_dist_int = []
     for i in range(len(zrange)-1):
-        ps_int.append(quad(PS_function, 1e8, 1e14, args=(phi0[i], mcluster[i], alpha[i]))[0])
+        ps_int.append(quad(PS_function, 10**8, 10**12, args=(phi0[i], mcluster[i], alpha[i]))[0])
         cmove_dist_int.append(quad(cmove_dist, zrange[i], zrange[i+1])[0])
 
     ytext = r'$\Gamma_{\rm{events}}$ [yr$^{-1}$]'
@@ -68,7 +68,7 @@ def plotter():
     ax.set_ylabel(r'$\log_{10}$'+ytext, fontsize = axlabel_size)
     ax.set_xlabel(r'$\log_{10}$'+xtext, fontsize = axlabel_size)
     ax.tick_params(axis="y", direction="in", labelcolor='black')
-    ax.set_ylim(0.1,4.4)
+    ax.set_ylim(0.0,4.6)
     plot_ini.tickers(ax, 'plot')
 
     cum_merger = [ ]
@@ -86,6 +86,7 @@ def plotter():
         for i in range(len(ps_int)):
             mergerval_temp += (4/3)*eps*np.pi*rate_*(6e10)**-1*(ps_int[i] * cmove_dist_int[i]**3) * 1e-6
         cum_merger_fixed.append(mergerval_temp)
+        print(mergerval_temp)
         if itert <= 1:
             ax.text(np.log10(rate_)+0.05, np.log10(mergerval_temp)-0.5, 
                     xtext+' = '+r"$10^{{{0:.3g}}}$".format(np.log10(rate_))+'\n'+ytext+' = '+"{:.3f}".format(mergerval_temp)[:4], 
@@ -101,8 +102,16 @@ def plotter():
                     xtext+' = '+r"$10^{{{0:.3g}}}$".format(np.log10(rate_))+'\n'+ytext+' = '+"{:.3f}".format(merger_text)[:no_dig], 
                     horizontalalignment='right', fontsize = 13)
         itert += 1
-
     ax.scatter(np.log10(mrate_fixed), np.log10(cum_merger_fixed), color = 'black')
     plt.savefig('figures/forecast/merger_rate.pdf', dpi=300, bbox_inches='tight')
+
+    ps_int = [ ]
+    phi0 = [0.71*10**-3, 0.84*10**-3, 0.97*10**-3]
+    mcluster = [10**11.05, 10**11.14, 10**11.23]
+    alpha = [-1.44, -1.43, -1.42]
+
+    for i in range(3):
+        ps_int.append(quad(PS_function, 1e8, 1e12, args=(phi0[i], mcluster[i], alpha[i]))[0] * 4/3*np.pi*(10**3) * 10**-9)
+    print(ps_int)
     
 plotter()
