@@ -42,7 +42,7 @@ class stability_plotters(object):
         axlabel_size, tick_size = plot_ini.font_size()
         
         self.folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
-        colours = ['red', 'blue', 'deepskyblue', 'royalblue', 'slateblue', 'skyblue']
+        colours = ['red', 'blue', 'deepskyblue', 'blueviolet', 'dodgerblue', 'skyblue']
         dirH = '/data/Hermite/chaotic_simulation/*'
         dirG = '/data/GRX/chaotic_simulation/*'
         labelsD = [r'$M_{\rm{SMBH}} = 4\times10^{6}M_{\odot}$', 
@@ -202,10 +202,10 @@ class stability_plotters(object):
         N_parti_med_Nsims[-1] = [i for i in N_parti_med[1]]
         stdmax_Nsims[-1] = [i for i in std_max[1]]
         stdmin_Nsims[-1] = [i for i in std_min[1]]
-
+        
         hist_tails = np.concatenate((temp_data[0], temp_data[1]))
         fig, ax = plt.subplots()
-        ax.text((N_parti_med[0][5]+N_parti_med[0][6])/2 + 0.3, 17, r'$t_{\rm{dis}}$', rotation = 270)
+        ax.text((N_parti_med[0][5]+N_parti_med[0][6])/2 + 0.3, 17, r'$t_{\rm{loss}}$', rotation = 270)
         ax.axvline((N_parti_med[0][5]+N_parti_med[0][6])/2, color = 'black', linestyle = ':')
         n1, bins, patches = ax.hist(hist_tails, 30, histtype='step', color = 'black')
         n1, bins, patches = ax.hist(hist_tails, 30, alpha = 0.3, color = 'black')
@@ -217,7 +217,7 @@ class stability_plotters(object):
 
         ##### GRX vs. Hermite #####
         fig, ax1 = plt.subplots()
-        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
+        ax1.set_ylabel(r'$\log_{10} t_{\rm{loss}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,105)
         for int_ in range(2):
             for j, xpos in enumerate(pop[int_]):
@@ -236,15 +236,19 @@ class stability_plotters(object):
         p0 = np.asarray([40, -1, 0.11], dtype=float)
         xtemp = np.linspace(10, 100, 1000)
         slope = [[ ], [ ], [ ]]
+        slope_err = [[ ], [ ], [ ]]
         beta  = [[ ], [ ], [ ]]
+        beta_err  = [[ ], [ ], [ ]]
         log_c = [[ ], [ ], [ ]]
+        log_c_err = [[ ], [ ], [ ]]
         curve = [[ ], [ ], [ ]]
 
         pop[1] = np.asarray(pop[1], dtype=float)
         N_parti_med[1] = np.asarray(N_parti_med[1], dtype=float)
-
-        params, cv = scipy.optimize.curve_fit(log_fit, pop[1], N_parti_med[1], p0, maxfev = 100000)
+        
+        params, cv = scipy.optimize.curve_fit(log_fit, pop[1], N_parti_med[1])
         slope[0], beta[0], log_c[0] = params
+        slope_err[0], beta_err[0], log_c_err[0] = np.sqrt(np.diag(cv))
         curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
         ax1.plot(xtemp, np.log10(curve[0]), zorder = 1, color = 'black', ls = '-.')
         ax1.legend(prop={'size': axlabel_size})
@@ -255,7 +259,7 @@ class stability_plotters(object):
         ##### Only GRX #####
         ##### Make sure to fix y lims to be the same as Hermite vs. GRX plot
         fig, ax1 = plt.subplots()
-        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size)
+        ax1.set_ylabel(r'$\log_{10} t_{\rm{loss}}$ [Myr]', fontsize = axlabel_size)
         ax1.set_xlim(5,105)
         for int_ in range(2):
             int_ += 2
@@ -286,9 +290,9 @@ class stability_plotters(object):
         labels = [r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$', r'$N_{\rm{sims}} = 60$']
         
         fig, ax1 = plt.subplots()
-        ax1.set_ylabel(r'$\log_{10} t_{\rm{dis}}$ [Myr]', fontsize = axlabel_size) 
+        ax1.set_ylabel(r'$\log_{10} t_{\rm{loss}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)
-        ctemp = ['deepskyblue', 'royalblue', 'slateblue', 'blue']
+        ctemp = ['deepskyblue', 'blueviolet', 'dodgerblue', 'blue']
         for rng_ in range(len(data_size)+1):
             for j, xpos in enumerate(pop[1]):
                 pops = [i+xshift[rng_] for i in pop[1]]
@@ -310,6 +314,8 @@ class stability_plotters(object):
         plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
+        print(Nsims)
+
         frange = 0
         for data_ in range(4):
             if data_ == 0:
@@ -324,8 +330,11 @@ class stability_plotters(object):
                 file.write('\nNumber of samples:                                   '+str(psamp[data_].flatten()))
                 if data_ > 0:
                     file.write('\nThe slope of the curve goes as:                      '+str(slope[data_-1]))
+                    file.write('\nThe err. of slope goes as:                           '+str(slope_err[data_-1]))
                     file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_-1]))
+                    file.write('\nThe err. of the power-law goes as:                   '+str(beta_err[data_-1]))
                     file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_-1]))
+                    file.write('\nThe err. of the logarithmic factor goes as:          '+str(log_c_err[data_-1]))
                 file.write('\nThe final raw data:                                  '+str(pop[data_][pop[data_] > 5].flatten()))
                 file.write('\nSimulated time [Myr]                                 '+str(N_parti_med[data_][pop[data_] > 5].flatten()))
                 file.write('\nAvg. simulated time [Myr]                            '+str(N_parti_avg[data_][pop[data_] > 5].flatten())+'\n\n')

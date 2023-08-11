@@ -1,4 +1,4 @@
-from amuse.lab import *
+#from amuse.lab import *
 import numpy as np
 import glob
 import itertools
@@ -78,6 +78,39 @@ def bulk_stat_extractor(file_string):
             data.append(pkl.load(input_file))
 
     return data
+
+def comp_time():
+    folders = ['rc_0.25_4e5', 'rc_0.25_4e6', 'rc_0.25_4e7']
+
+    total_cpu = 0
+    for fold_ in folders:
+        print('...Analysing folder ', fold_, '...')
+        if fold_ == 'rc_0.25_4e6':
+            drange = 2
+            int_str = ['Hermite', 'GRX']
+        else:
+            drange = 1
+            int_str = ['GRX']
+        #data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/data/'+int_str+'/simulation_stats/*'))
+
+        for int_ in range(drange):
+            print('Integrator: ', int_str[int_])
+            data = natsort.natsorted(glob.glob(os.path.join('d:/'+fold_+'/data/'+int_str[int_]+'/simulation_stats/*')))
+        
+            for file_ in range(len(data)):
+                with open(data[file_], 'rb') as input_file:
+                    line = input_file.readlines()
+                    total_cpu += float(line[1][16:23].decode("utf-8"))
+    
+    total_cpu += 30*9*3600*24
+                    
+    total_cpu /= 3600
+    print(total_cpu/24)
+    total_con = total_cpu * 12  * 9
+    print(total_con)
+    total_emi = total_con / 0.283
+    print(total_emi)
+                
 
 def ejected_extract_final(pset, ejected, file, crop):
     """

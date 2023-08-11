@@ -5,20 +5,29 @@ from steady_plotters import *
 from ejection_stat_plotters import *
 from spatial_plotters import *
 
-#sphere_of_influence()
-
+sphere_of_influence()
+STOP
 
 # ======================================================================= #
+
+
+print('...steady_plotter...')
+start_steady = cpu_time.time()
+cls = stability_plotters()
+cls.overall_steady_plotter()
+end_steady = cpu_time.time()
+print('Plotting time: ', end_steady - start_steady, ' seconds')
+STOP
 
 print('...spatial_plotters...')
 start_spatial = cpu_time.time()
 #spatial_plotter()
 #lagrangian_tracker()
 #energy_scatter()
-global_properties()
-global_vels_GRX_pops()
+#global_properties()
+#global_vels_GRX_pops()
 #global_properties_GRX_pops()
-#ecc_semi_histogram('GRX')
+ecc_semi_histogram('GRX')
 end_spatial = cpu_time.time()
 print('Plotting time: ', end_spatial - start_spatial, ' seconds')
 STOP
@@ -33,6 +42,11 @@ cls.GW_event_tracker()
 #cls.orbital_hist_plotter()
 end_tgw = cpu_time.time()
 print('Plotting time: ', end_tgw - start_tgw, ' seconds')
+STOP
+
+
+
+
 
 
 print('...sustainable_bintert_plotters...')
@@ -53,15 +67,6 @@ cls = ejection_stats()
 cls.vejec_plotters()
 end_ejec = cpu_time.time()
 print('Plotting time: ', end_ejec - start_ejec, ' seconds')
-STOP
-
-
-print('...steady_plotter...')
-start_steady = cpu_time.time()
-cls = stability_plotters()
-cls.overall_steady_plotter()
-end_steady = cpu_time.time()
-print('Plotting time: ', end_steady - start_steady, ' seconds')
 STOP
 
 
