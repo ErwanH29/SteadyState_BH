@@ -314,8 +314,6 @@ class stability_plotters(object):
         plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
-        print(Nsims)
-
         frange = 0
         for data_ in range(4):
             if data_ == 0:

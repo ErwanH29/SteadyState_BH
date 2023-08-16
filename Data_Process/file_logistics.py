@@ -1,4 +1,4 @@
-#from amuse.lab import *
+from amuse.lab import *
 import numpy as np
 import glob
 import itertools

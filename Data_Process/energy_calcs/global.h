@@ -1,11 +1,14 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-using namespace std;
+inline float hr_secs = 3600;
+inline float cpu_con = 12;  //Watt/hr 
+inline float emiss = 0.283; //kWh/kg
+inline float no_cpu_long = 18;
+inline float no_cpu_med = 6;
 
-float hr_secs = 3600;
-float cpu_con = 12;  //Watt/hr 
-float emiss = 0.283; //kWh/kg
-float no_cpu = 18;
+struct Outputs{
+    float cpu_time, wall_clock_time;
+};
 
 #endif

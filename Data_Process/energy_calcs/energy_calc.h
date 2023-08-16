@@ -5,6 +5,6 @@
 
 using namespace std;
 
-float comp_energy(string file);
+Outputs comp_energy(string file);
 
 #endif
