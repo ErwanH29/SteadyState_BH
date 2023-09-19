@@ -63,10 +63,10 @@ class stability_plotters(object):
         std_max = [[ ], [ ], [ ], [ ]]
         std_min = [[ ], [ ], [ ], [ ]]
 
-        N_parti_med_Nsims = [[ ], [ ], [ ], [ ]]
-        N_parti_std_Nsims = [[ ], [ ], [ ], [ ]]
-        stdmax_Nsims = [[ ], [ ], [ ], [ ]]
-        stdmin_Nsims = [[ ], [ ], [ ], [ ]]
+        N_parti_med_Nsims = [[ ], [ ], [ ], [ ], [ ]]
+        N_parti_std_Nsims = [[ ], [ ], [ ], [ ], [ ]]
+        stdmax_Nsims = [[ ], [ ], [ ], [ ], [ ]]
+        stdmin_Nsims = [[ ], [ ], [ ], [ ], [ ]]
 
         temp_data = [ ]
 
@@ -146,8 +146,8 @@ class stability_plotters(object):
                         print("New time:   ", stab_time[int_][idx_])
                         calib = False
                         
-        data_size = [30, 40, 50]
-        xshift = [-0.75, -0.25, 0.25, 0.75]
+        data_size = [10, 30, 40, 50]
+        xshift = [-0.8, -0.4, 0, 0.4, 0.8]
 
         for int_ in range(4):
             if int_ == 0:
@@ -287,12 +287,12 @@ class stability_plotters(object):
         plt.clf()
 
         ##### GRX vs. Nsims #####
-        labels = [r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$', r'$N_{\rm{sims}} = 60$']
+        labels = [r'$N_{\rm{sims}} = 10$', r'$N_{\rm{sims}} = 30$', r'$N_{\rm{sims}} = 40$', r'$N_{\rm{sims}} = 50$', r'$N_{\rm{sims}} = 60$']
         
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{loss}}$ [Myr]', fontsize = axlabel_size) 
         ax1.set_xlim(5,45)
-        ctemp = ['deepskyblue', 'blueviolet', 'dodgerblue', 'blue']
+        ctemp = ['deepskyblue', 'blueviolet', 'dodgerblue', 'blue', 'purple']
         for rng_ in range(len(data_size)+1):
             for j, xpos in enumerate(pop[1]):
                 pops = [i+xshift[rng_] for i in pop[1]]

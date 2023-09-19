@@ -39,12 +39,13 @@ int main(){
                 }
             }
         }
-        else{
+        else if (fold_ == "rc_0.25_4e5"){
             drange = 1;
-            int frange[2] = {120, 120};
+            int frange[1] = {120};
             string integ[1] = {"GRX"};
 
             for (int i = 0; i < drange; i++){
+                cout << frange[i] << endl;
                 int iter = 0;
                 string path = "/media/erwanh/Elements/"+fold_+"/data/"+integ[i]+"/simulation_stats/";
                 for (const auto & entry : std::filesystem::directory_iterator(path)){
@@ -52,7 +53,27 @@ int main(){
                         result = comp_energy(entry.path().c_str());
                         total_cpu += result.cpu_time;
                         wall_clock_time += result.wall_clock_time;
-                        cout << "Iteration: " << iter << ". File " << entry << ". Usage: " << total_cpu << endl;
+                        cout << "Iteration: " << iter << "/" << frange[i] << ". File " << entry << ". Usage: " << total_cpu << endl;
+                    }
+                    iter++;
+                }
+            }
+        }
+        else{
+            drange = 1;
+            int frange[1] = {40};
+            string integ[1] = {"GRX"};
+
+            for (int i = 0; i < drange; i++){
+                cout << frange[i] << endl;
+                int iter = 0;
+                string path = "/media/erwanh/Elements/"+fold_+"/data/"+integ[i]+"/simulation_stats/";
+                for (const auto & entry : std::filesystem::directory_iterator(path)){
+                    if (iter < frange[i]){
+                        result = comp_energy(entry.path().c_str());
+                        total_cpu += result.cpu_time;
+                        wall_clock_time += result.wall_clock_time;
+                        cout << "Iteration: " << iter << "/" << frange[i] << ". File " << entry << ". Usage: " << total_cpu << endl;
                     }
                     iter++;
                 }

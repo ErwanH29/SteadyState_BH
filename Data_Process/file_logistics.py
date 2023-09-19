@@ -435,7 +435,7 @@ def stats_chaos_extractor(dir):
         
     return fin_parti_data, stab_time_data
 
-print('...Gathering simulation outcomes...')
+"""print('...Gathering simulation outcomes...')
 folders = ['rc_0.25_4e6', 'rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
 integr = ['Hermite', 'GRX', 'GRX', 'GRX', 'GRX']
 data_files = [40, 60, 30, 30]
@@ -447,4 +447,4 @@ for fold_, integ_, nofiles_ in zip(folders, integr, data_files):
     else:
         crop_L = 90
         file_crop = 0
-    simulation_stats_checker(fold_, integ_, nofiles_, file_crop)
+    simulation_stats_checker(fold_, integ_, nofiles_, file_crop)"""

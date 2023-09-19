@@ -395,7 +395,7 @@ class gw_calcs(object):
         """
         Finding the peak harmonic of gravitational frequency for a given eccentric orbit.
         Equation 36 of Wen (2003)
-        """
+        """ 
 
         nharm = 2*(1+ecc)**1.1954/(1-ecc**2)**1.5
         return nharm
@@ -581,7 +581,7 @@ class gw_calcs(object):
                 medH2 = line[5][4:-2]
                 medH_data = np.concatenate([medH.split(), medH2.split()])
                 medH = np.asarray([float(i) for i in medH_data])
-
+            print(medH)
             drange = 2
             integrator = ['Hermite', 'GRX']
             with open('figures/gravitational_waves/output/detectable_events_'+fold_+'.txt', 'w') as file:
@@ -722,23 +722,19 @@ class gw_calcs(object):
                         if max_fnn > 10**(-3.5):
                             if self.fb_nn_SMBH[parti_][idx_snn] < 0:
                                 GW_inclust_arr_Raw[idx] += 0.5
-                            else:
-                                GW_inclust_arr_Raw[idx] += 1
                         elif max_fnn <= 10**(-3.75) and max_snn > 10**(-23.8):
                             if self.fb_nn_SMBH[parti_][idx_snn] < 0:
                                 GW_capture_arr_Raw[idx] += 0.5
-                            else:
-                                GW_capture_arr_Raw[idx] += 1
-                    
-                    IMBH_tot_arr  = [i/(tot_sims*k*1e3) for i, k in zip(IMBH_tot_arr, med_time)]
-                    IMBH_detL_arr = [i/(tot_sims*k*1e3) for i, k in zip(IMBH_detL_arr, med_time)]
-                    IMBH_detA_arr = [i/(tot_sims*k*1e3) for i, k in zip(IMBH_detA_arr, med_time)]
-                    SMBH_tot_arr  = [i/(tot_sims*k*1e3) for i, k in zip(SMBH_tot_arr, med_time)]
-                    SMBH_detL_arr = [i/(tot_sims*k*1e3) for i, k in zip(SMBH_detL_arr, med_time)]
-                    SMBH_detA_arr = [i/(tot_sims*k*1e3) for i, k in zip(SMBH_detA_arr, med_time)]
+                        
+                    IMBH_tot_arr  = [i/(tot_sims*k) for i, k in zip(IMBH_tot_arr, med_time)]
+                    IMBH_detL_arr = [i/(tot_sims*k) for i, k in zip(IMBH_detL_arr, med_time)]
+                    IMBH_detA_arr = [i/(tot_sims*k) for i, k in zip(IMBH_detA_arr, med_time)]
+                    SMBH_tot_arr  = [i/(tot_sims*k) for i, k in zip(SMBH_tot_arr, med_time)]
+                    SMBH_detL_arr = [i/(tot_sims*k) for i, k in zip(SMBH_detL_arr, med_time)]
+                    SMBH_detA_arr = [i/(tot_sims*k) for i, k in zip(SMBH_detA_arr, med_time)]
 
-                    GW_capture_arr = [i/(tot_sims*k*1e3) for i, k in zip(GW_capture_arr, med_time)]
-                    GW_inclust_arr = [i/(tot_sims*k*1e3) for i, k in zip(GW_inclust_arr, med_time)]
+                    GW_capture_arr = [i/(tot_sims*k) for i, k in zip(GW_capture_arr, med_time)]
+                    GW_inclust_arr = [i/(tot_sims*k) for i, k in zip(GW_inclust_arr, med_time)]
 
                     file.write('\n\nFor '+str(integrator[int_])+': \n')
                     file.write('Populations:                             '+str(cluster_pop))
@@ -1089,3 +1085,10 @@ def ecc_mergers():
         plt.clf()
 
             
+swag = gw_calcs()
+
+semi = 10**-5.36 | units.pc
+ecc = 1-10**-0.2
+m1 = 1e3 | units.MSun
+swag.gw_freq(semi, ecc, m1, 4e6 | units.MSun)
+swag.gw_strain(semi, ecc, m1, 4e6 | units.MSun)
