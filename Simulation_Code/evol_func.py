@@ -1,16 +1,9 @@
-from amuse.lab import *
-from amuse.units import units
-from parti_initialiser import *
-from evol_func import *
 import numpy as np
+from amuse.datamodel import Particles
+from amuse.units import units, constants
 
 def calc_momentum(indivp):
-    """
-    Function which calculates the momentum of the particles in collision
-    Inputs:
-    indivp: The colliding particles
-    """
-
+    """Function which calculates the momentum of the particles in collision"""
     return (indivp.mass * indivp.velocity).sum()
 
 def find_nearest(array, value):
@@ -24,7 +17,6 @@ def find_nearest(array, value):
     array = np.asarray(array)
     index = (np.abs(array - value)).argmin()
     return index
-
 
 def indiv_PE_all(indivp, set):
     """
@@ -111,27 +103,4 @@ def nearest_neighbour(indivp, pset):
 
 def SMBH_filter(pset):
     return pset[pset.mass < 5*10**4 | units.MSun]
-
-def tidal_radius(pset):
-    """
-    Function to outline the tidal radius. Uses equation 5.8 and 5.10 of Spitzer 1969.
-    
-    Inputs:
-    pset:  The complete particle set
-    """
-
-    SMBH = MW_SMBH()
-    gc_code = globular_cluster()
-    com_particle = Particles(1)
-    com_particle.mass = SMBH_filter(pset).total_mass()
-    com_particle.radius = 0 | units.RSun
-    com_particle.velocity = SMBH_filter(pset).center_of_mass_velocity()
-    com_particle.position = SMBH_filter(pset).center_of_mass() - pset[0].position
-
-    m1, m2, semimajor, ecc, inc, argp, ascn, tanom = bin_global(pset[0], com_particle)
-    perigal = semimajor*(1-ecc)
-    xe = ((3+ecc)**-1 * (com_particle.mass)/SMBH.mass * (perigal)**3)**(1/3)
-#    xe = ((pset[1].mass)/SMBH.mass * gc_code.gc_dist**3)**(1/3)
-
-    return xe
 
