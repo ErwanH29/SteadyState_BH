@@ -264,17 +264,16 @@ class stability_plotters(object):
         for int_ in range(2):
             int_ += 2
             for j, xpos in enumerate(pop[int_]):
-                pops = [i+1.1*xshift[int_-1] for i in pop[int_]]
                 N_parti_med[int_] = np.array([float(i) for i in N_parti_med[int_]])
                 if j == 0:
-                    ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colours[int_], 
+                    ax1.scatter(pop[int_], np.log10(N_parti_med[int_]), color = colours[int_], 
                                 edgecolor = 'black', zorder = 3, label = labelsD[int_-1])
                 else:
-                    ax1.scatter(pops, np.log10(N_parti_med[int_]), color = colours[int_], 
+                    ax1.scatter(pop[int_], np.log10(N_parti_med[int_]), color = colours[int_], 
                                 edgecolor = 'black', zorder = 3)
-            ax1.scatter(pops, np.log10(std_min[int_]), color = colours[int_], marker = '_', zorder = 3)
-            ax1.scatter(pops, np.log10(std_max[int_]), color = colours[int_], marker = '_', zorder = 3)
-            ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colours[int_], zorder = 2)
+            ax1.scatter(pop[int_], np.log10(std_min[int_]), color = colours[int_], marker = '_', zorder = 3)
+            ax1.scatter(pop[int_], np.log10(std_max[int_]), color = colours[int_], marker = '_', zorder = 3)
+            ax1.plot([pop[int_], pop[int_]], [np.log10(std_min[int_]), np.log10(std_max[int_])], color = colours[int_], zorder = 2)
             params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_med[int_]), p0, maxfev = 10000, method = 'trf')
             slope[int_-1], beta[int_-1], log_c[int_-1] = params
 

@@ -4,9 +4,9 @@ import os
 from amuse.ext.LagrangianRadii import LagrangianRadii as LagRad
 from amuse.ext.orbital_elements import orbital_elements_from_binary
 
-from evol_func import *
-from file_logistics import file_counter
-from parti_initialiser import MW_SMBH
+from src.evol_func import *
+from src.file_logistics import file_counter
+from src.parti_initialiser import MW_SMBH
 
 class DataInitialise(object):
     def __init__(self):
@@ -32,6 +32,7 @@ class DataInitialise(object):
         ejected:        (0 | 1) for not ejected or ejection from cluster
         int_string:     String describing integrator used
         pert:           The PN term simulated
+        kit:            kth simulation iteration
         """
 
         SMBH_code = MW_SMBH()
@@ -73,8 +74,7 @@ class DataInitialise(object):
                                        'Collision Time': 0 | units.s, 
                                        'Et': E0, 'Kinetic E': Ek.in_(units.J),
                                        'Pot. E': Ep.in_(units.J), 'Time': time.in_(units.kyr), 
-                                       'dE': 0, 'dEs': 0, 'Pot. E': Ep.in_(units.J)
-                                        })
+                                       'dE': 0, 'dEs': 0, 'Pot. E': Ep.in_(units.J)})
         energy_tracker = energy_tracker.append(df_energy_tracker, ignore_index=True)
 
         return energy_tracker
@@ -90,7 +90,7 @@ class DataInitialise(object):
         """
 
         IMBH_array = pd.DataFrame()
-        df_IMBH    = pd.DataFrame()
+        df_IMBH = pd.DataFrame()
         for i in range(init_pop):
             semimajor = [ ]
             eccentric = [ ]
@@ -131,12 +131,11 @@ class DataInitialise(object):
        
         return IMBH_array
 
-    def LG_tracker(self, pset, time, gravity):
+    def LG_tracker(self, time, gravity):
         """
         Data set which tracks the Lagrangian radius and tidal radius of the cluster.
         
         Inputs:
-        pset:       The particle set
         time:       The initial time of the simulation
         gravity:    The integrator used for the simulation
         """

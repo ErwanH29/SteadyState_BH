@@ -78,7 +78,7 @@ def ecc_semi_histogram(integrator):
     plot_ini = plotter_setup()
     axlabel_size, tick_size = plot_ini.font_size()
 
-    data = natsort.natsorted(glob.glob('/media/erwanh/Elements1/rc_0.25_4e6/'+integrator+'/particle_trajectory/*'))
+    data = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+integrator+'/particle_trajectory/*'))
 
     SMBH_ecca = [ ]
     SMBH_sema = [ ]
@@ -99,7 +99,7 @@ def ecc_semi_histogram(integrator):
                 ptracker = pkl.load(input_file)
                 col_len = np.shape(ptracker)[1]
                 pop = np.shape(ptracker)[0]
-                print(ptracker.iloc[:,-2:])
+                print(ptracker)
                 STOP
                 if np.shape(ptracker)[0] <= 40:
                     no_samples, process, pop_checker = no_file_tracker(pop_checker, 5*round(0.2*pop), no_files, no_samples)

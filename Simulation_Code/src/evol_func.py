@@ -28,9 +28,7 @@ def indiv_PE_all(indivp, set):
 
     array = []
     for comp_ in set:
-        if indivp == comp_:
-            pass
-        else:
+        if indivp != comp_:
             distance = (indivp.position-comp_.position).length()
             temp_PE = (-constants.G*indivp.mass*comp_.mass)/abs(distance)
             array.append(temp_PE)
@@ -66,7 +64,7 @@ def merge_IMBH(parti, parti_in_enc, tcoll, int_string, code):
     new_particle.coll_events = 1
 
     if int_string != 'Hermite':
-        if new_particle.mass > 1e6 | units.MSun:
+        if new_particle.mass > code.particles.mass.max():
             code.particles.remove_particles(parti_in_enc)
             code.large_particles.add_particles(new_particle)
         else:

@@ -1,6 +1,6 @@
-from parti_initialiser import *
-from file_logistics import *
-from evol import *
+from src.parti_initialiser import *
+from src.file_logistics import *
+from src.evol import *
 
 import os
 import pickle as pkl

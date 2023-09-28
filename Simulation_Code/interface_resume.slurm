@@ -22,10 +22,7 @@ echo "[$SHELL] ## Run script"
 python interface_resume.py
 echo "[$SHELL] ## Script finished"
 echo "[$SHELL] ## Job done "$DATE
-
 echo "[$SHELL] ## Used $SLURM_NTASKS cores"
 echo "[$SHELL] ## Used $SLURM_CPUS_ON_NODE processors/CPUS"
 echo "[$SHELL] ## Used $SLURM_CPUS_PER_TASK processors/CPUS per task"
-
-echo "[$SHELL] #### Finished Python run."
 
