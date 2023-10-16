@@ -12,10 +12,7 @@ eta  = 1e-5
 tend = 100 | units.Myr
 int_string = 'GRX'
 
-seeds = 888888
-
 final_snapshot = (glob.glob('/home/s2009269/data1/GRX_Orbit_Data_rc0.25_m4e7_paused/particle_trajectory/*'))
-
 with open(final_snapshot[0], 'rb') as file_name:
     sim_snap = pkl.load(file_name)
 print('Resuming from file: ', final_snapshot[0])

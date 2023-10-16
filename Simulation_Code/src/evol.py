@@ -17,7 +17,7 @@ from src.file_logistics import file_counter
 
 class EvolveSystem(object):
     def __init__(self, parti, tend, eta, idist, conv, int_str, 
-                 GRX_set, kit, init_time, past_time, no_worker):
+                 GRX_set, kit, past_time, no_worker):
         """Setting up the simulation code
     
            Inputs:
@@ -43,7 +43,7 @@ class EvolveSystem(object):
         self.int_str = int_str
         self.GRX_set = GRX_set
         self.kit = kit
-        self.init_time = init_time
+        self.init_time = cpu_time.time()
         self.past_time = past_time
         self.no_workers = no_worker
 
@@ -70,6 +70,7 @@ class EvolveSystem(object):
         
         else:
             particles = Particles()
+            print(self.GRX_set)
             particles.add_particle(self.GRX_set)
             particles.add_particle(self.parti[1:])
             self.parti = particles
