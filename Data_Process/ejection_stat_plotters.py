@@ -37,7 +37,6 @@ class ejection_stats(object):
                 chaoticG = ['/media/erwanh/Elements/'+fold_+'/data/GRX/chaotic_simulation/'+str(i[59:]) for i in GRX_data]
                 filename, filenameC, integrator, drange = ndata_chaos(iterf, GRX_data, chaoticG, fold_)
                 for int_ in range(drange):
-                    int_ += 1
                     if fold_ == 'rc_0.25_4e6' and int_ == 0:
                         crop_L = 94
                         file_crop = 4
@@ -49,19 +48,20 @@ class ejection_stats(object):
                             with open(filenameC[int_][file_], 'rb') as input_file:
                                 ctracker = pkl.load(input_file)
                                 if ctracker.iloc[0][3].number > 0:
-                                        with open(filename[int_][file_], 'rb') as input_file:
-                                            print('Ejection detected. Reading File :', input_file)
-                                            count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                            ptracker = pkl.load(input_file)
-                                            vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], file_crop)
-                                            if vesc != None:
-                                                stab_tracker = pd.DataFrame()
-                                                df_stabtime = pd.Series({'Integrator': integrator[int_],
-                                                                        'Population': np.shape(ptracker)[0],
-                                                                        'Simulation Time': np.shape(ptracker)[1] * 1e-3,
-                                                                        'vesc': vesc})
-                                                stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                                    with open(filename[int_][file_], 'rb') as input_file:
+                                        print('Ejection detected. Reading File :', input_file)
+                                        count = len(fnmatch.filter(os.listdir(path), '*.*'))
+                                        ptracker = pkl.load(input_file)
+                                        vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], file_crop)
+                                        if vesc != None:
+                                            stab_tracker = pd.DataFrame()
+                                            df_stabtime = pd.Series({'Integrator': integrator[int_],
+                                                                    'Population': np.shape(ptracker)[0],
+                                                                    'Simulation Time': np.shape(ptracker)[1] * 1e-3,
+                                                                    'vesc': vesc})
+                                            stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
+                                            stab_tracker.to_pickle(os.path.join(path, 
+                                                    'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
                                 else:
                                     with open(dir) as f:
                                         line = f.readlines()
@@ -75,7 +75,8 @@ class ejection_stats(object):
                                                 print('Sphere_of_Influence.txt detection')
                                                 
                                                 count = len(fnmatch.filter(os.listdir(path), '*.*'))
-                                                vesc = ejected_extract_final(ptracker, ctracker, filename[int_][file_], file_crop)
+                                                vesc = ejected_extract_final(ptracker, ctracker, 
+                                                                filename[int_][file_], file_crop)
 
                                                 if vesc != None:
                                                     stab_tracker = pd.DataFrame()
@@ -84,7 +85,8 @@ class ejection_stats(object):
                                                                             'Simulation Time': np.shape(ptracker)[1] * 1e-3,
                                                                             'vesc': vesc})
                                                     stab_tracker = stab_tracker.append(df_stabtime, ignore_index = True)
-                                                    stab_tracker.to_pickle(os.path.join(path, 'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
+                                                    stab_tracker.to_pickle(os.path.join(path, 
+                                                            'IMBH_'+str(integrator[int_])+'_ejec_data_indiv_parti_'+str(count)+'.pkl'))
                                             
             iterf += 1
 
@@ -123,7 +125,8 @@ class ejection_stats(object):
         axlabel_size, tick_size = plot_ini.font_size()
         
         MW_code = MWpotentialBovy2015()
-        vesc_MW = (np.sqrt(2)*MW_code.circular_velocity(0.4 | units.parsec) + np.sqrt(2*constants.G*(4e6 | units.MSun)/(0.1 | units.parsec))).value_in(units.kms)
+        vesc_MW = (np.sqrt(2)*MW_code.circular_velocity(0.4 | units.parsec) \
+                  +np.sqrt(2*constants.G*(4e6 | units.MSun)/(0.1 | units.parsec))).value_in(units.kms)
 
         iterf = 0
         for fold_ in self.folders[:self.frange]:
@@ -192,14 +195,17 @@ class ejection_stats(object):
 
                     fig, ax = plt.subplots()   
                     ax.set_ylabel(r'med$(v_{\rm{ejec}})$ [km s$^{-1}$]', fontsize = axlabel_size)
-                    colour_axes = ax.scatter(pops, avg_vesc, edgecolors='black', c = np.log10(avg_surv), norm = normalise, zorder = 3)
+                    colour_axes = ax.scatter(pops, avg_vesc, edgecolors='black', 
+                                             c = np.log10(avg_surv), norm = normalise, zorder = 3)
                     ax.scatter(pops, vesc_low, color = 'black', marker = '_')
                     ax.scatter(pops, vesc_upp, color = 'black', marker = '_')
                     ax.plot([pops, pops], [vesc_low, vesc_upp], color = 'black', zorder = 1)
                     cbar = plt.colorbar(colour_axes, ax=ax)
                     plot_ini.tickers_pop(ax, self.tot_pop[int_], integrator[int_])
-                    cbar.set_label(label = r'$\rm{med}(\log_{10}t_{\rm{ejec}})$ [Myr]', fontsize =  axlabel_size)
-                    plt.savefig('figures/ejection_stats/vejection_scatter_'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
+                    cbar.set_label(label = r'$\rm{med}(\log_{10}t_{\rm{ejec}})$ [Myr]', 
+                                   fontsize =  axlabel_size)
+                    plt.savefig('figures/ejection_stats/vejection_scatter_'+fold_+'_'+str(integrator[int_])+'.pdf', 
+                                dpi = 300, bbox_inches='tight')
                     plt.clf()
 
                     fig, ax = plt.subplots()
@@ -212,10 +218,13 @@ class ejection_stats(object):
                     if max(vesc) > 670:
                         ax.axvline(vesc_MW, linestyle = ':', color = 'black')
                         ax.text(655, 0.2, r'$v_{\rm{esc, MW}}$', rotation = 270, fontsize = axlabel_size+5)
-                    n, bins, patches = ax.hist(vesc, 20, histtype = 'step', color=self.colours[sim_], weights=[1/n1.max()]*len(vesc))
-                    n, bins, patches = ax.hist(vesc, 20, color=self.colours[sim_], alpha = 0.4, weights=[1/n1.max()]*len(vesc))
+                    n, bins, patches = ax.hist(vesc, 20, histtype = 'step', color=self.colours[sim_], 
+                                               weights=[1/n1.max()]*len(vesc))
+                    n, bins, patches = ax.hist(vesc, 20, color=self.colours[sim_], alpha = 0.4, 
+                                               weights=[1/n1.max()]*len(vesc))
                     plot_ini.tickers(ax, 'plot')
-                    plt.savefig('figures/ejection_stats/vejection_histogram_'+fold_+'_'+str(integrator[int_])+'.pdf', dpi = 300, bbox_inches='tight')
+                    plt.savefig('figures/ejection_stats/vejection_histogram_'+fold_+'_'+str(integrator[int_])+'.pdf', 
+                                dpi = 300, bbox_inches='tight')
                     plt.clf()
 
                     file.write('\nData for '+str(integrator[int_]))

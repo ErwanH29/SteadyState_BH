@@ -1083,12 +1083,3 @@ def ecc_mergers():
         ax1.legend(prop={'size': axlabel_size})
         plt.savefig('figures/gravitational_waves/eccentricity_mergers.pdf', dpi=700, bbox_inches='tight')
         plt.clf()
-
-            
-swag = gw_calcs()
-
-semi = 10**-5.36 | units.pc
-ecc = 1-10**-0.2
-m1 = 1e3 | units.MSun
-swag.gw_freq(semi, ecc, m1, 4e6 | units.MSun)
-swag.gw_strain(semi, ecc, m1, 4e6 | units.MSun)

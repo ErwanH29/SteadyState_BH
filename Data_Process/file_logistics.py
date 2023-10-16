@@ -18,6 +18,10 @@ class plotter_setup(object):
     def tickers(self, ax, plot_type):
         """
         Function to setup axis
+
+        Inputs:
+        ax:         Plotting axis
+        plot_type:  String denoting whether 2D histogram or normal plot
         """
         
         axlabel_size, self.tick_size = self.font_size()
@@ -29,15 +33,20 @@ class plotter_setup(object):
         if plot_type == 'plot':
             ax.tick_params(axis="y", which = 'both', direction="in", labelsize = self.tick_size)
             ax.tick_params(axis="x", which = 'both', direction="in", labelsize = self.tick_size)
-        else:
-            ax.tick_params(axis="y", labelsize = self.tick_size)
-            ax.tick_params(axis="x", labelsize = self.tick_size)
-
+            return ax
+            
+        ax.tick_params(axis="y", labelsize = self.tick_size)
+        ax.tick_params(axis="x", labelsize = self.tick_size)
         return ax
 
     def tickers_pop(self, ax, pop, int_str):
         """
         Function to setup axis for population plots
+
+        Inputs:
+        ax:       Plotting axis
+        pop:      Data array cluster population
+        int_str:  String characterising integrator
         """
 
         axlabel_size, self.tick_size = self.font_size()
@@ -46,18 +55,20 @@ class plotter_setup(object):
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
-        ax.tick_params(axis="y", which = 'both', direction="in", labelsize = self.tick_size)
-        ax.tick_params(axis="x", which = 'both', direction="in", labelsize = self.tick_size)    
+        ax.tick_params(axis="y", which = 'both', direction="in", 
+                       labelsize = self.tick_size)
+        ax.tick_params(axis="x", which = 'both', direction="in", 
+                       labelsize = self.tick_size)    
         
         if int_str == 'Hermite':
-            xints = [i for i in range(1+int(max(pop))) if i % 10 == 0 and i > 5]
+            xints = [i for i in range(1+int(max(pop))) if i%10 == 0 and i > 5]
+            ax.set_xticks(xints)
             ax.set_xlim(5, 105)
-        else:
-            xints = [i for i in range(1+int(max(pop))) if i % 5 == 0 and i > 5 and i < 45]
-            ax.set_xlim(5, 45)
- 
-        ax.set_xticks(xints)
+            return ax
 
+        xints = [i for i in range(1+int(max(pop))) if i%5 == 0 and i > 5 and i < 45]
+        ax.set_xlim(5, 45)
+        ax.set_xticks(xints)
         return ax
 
 def bulk_stat_extractor(file_string):
@@ -79,39 +90,6 @@ def bulk_stat_extractor(file_string):
 
     return data
 
-def comp_time():
-    folders = ['rc_0.25_4e5', 'rc_0.25_4e6', 'rc_0.25_4e7']
-
-    total_cpu = 0
-    for fold_ in folders:
-        print('...Analysing folder ', fold_, '...')
-        if fold_ == 'rc_0.25_4e6':
-            drange = 2
-            int_str = ['Hermite', 'GRX']
-        else:
-            drange = 1
-            int_str = ['GRX']
-        #data = glob.glob(os.path.join('/media/erwanh/Elements/'+fold_+'/data/'+int_str+'/simulation_stats/*'))
-
-        for int_ in range(drange):
-            print('Integrator: ', int_str[int_])
-            data = natsort.natsorted(glob.glob(os.path.join('d:/'+fold_+'/data/'+int_str[int_]+'/simulation_stats/*')))
-        
-            for file_ in range(len(data)):
-                with open(data[file_], 'rb') as input_file:
-                    line = input_file.readlines()
-                    total_cpu += float(line[1][16:23].decode("utf-8"))
-    
-    total_cpu += 30*9*3600*24
-                    
-    total_cpu /= 3600
-    print(total_cpu/24)
-    total_con = total_cpu * 12  * 9
-    print(total_con)
-    total_emi = total_con / 0.283
-    print(total_emi)
-                
-
 def ejected_extract_final(pset, ejected, file, crop):
     """
     Extracts the final info on the ejected particle into an array
@@ -122,7 +100,6 @@ def ejected_extract_final(pset, ejected, file, crop):
     file:       File name
     """
     ejec_idx = None
-
     for parti_ in range(len(pset)):
         if pset.iloc[parti_][0][0] == ejected.iloc[0][4]: 
             ejec_idx = parti_
@@ -131,12 +108,10 @@ def ejected_extract_final(pset, ejected, file, crop):
     fixed_crop = 1e6
     dist = -5
     tol = 10**-6
-
     with open(dir) as f:
         line = f.readlines()
         for iter in range(len(line)):
             if iter%3 == 0 and line[iter][90+crop:-3] == file[59+crop:]:
-
                 if line[iter][54:65] == 'rc_0.25_4e5':
                     sim_time = line[iter+1][49:57]
                     fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-3))
@@ -148,8 +123,7 @@ def ejected_extract_final(pset, ejected, file, crop):
                 distance = line[iter+2][48:65]
                 distance = ''.join(chr_ for chr_ in distance if chr_.isdigit())
                 digits = len(distance) - 1
-                distance = float(distance)
-                distance /= 10**digits
+                distance = float(distance)/10**digits
                 print('Target distance: ', distance)
                 
                 ejec_parti = False
@@ -171,7 +145,6 @@ def ejected_extract_final(pset, ejected, file, crop):
                                 ejec_parti = True
                                 ejec_idx = parti_
 
-
         if ejec_idx != None:
             ejec_data = pset.iloc[ejec_idx]
             ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
@@ -179,7 +152,6 @@ def ejected_extract_final(pset, ejected, file, crop):
 
             time_step = min(len(ejec_data), fixed_crop)
             ejec_data = ejec_data.iloc[:time_step]
-            
             if dist < 0:
                 tot_steps = min(time_step, 15)
             else:
@@ -194,8 +166,7 @@ def ejected_extract_final(pset, ejected, file, crop):
             idx = np.where(ejec_vel == np.nanmax(ejec_vel))[0]
             ejec_vel = np.asarray(ejec_vel)
             esc_vel = ejec_vel[idx]
-            print('vesc: ', esc_vel)
-                        
+            print('vesc: ', esc_vel)  
             return esc_vel
         else:
             print('Ejected DNE')
@@ -220,11 +191,11 @@ def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
             process = False
         else:
             process = True
-    else:
-        pop_arr = pop_data
-        no_samples = 1
-        process = True
-    
+        return no_samples, process, pop_arr
+        
+    pop_arr = pop_data
+    no_samples = 1
+    process = True
     return no_samples, process, pop_arr
 
 def folder_loop(iterf):
@@ -235,10 +206,10 @@ def folder_loop(iterf):
     if iterf == 0:
         drange = 2
         integrator = ['Hermite', 'GRX']
-    else:
-        drange = 1
-        integrator = ['GRX']
-
+        return integrator, drange
+        
+    drange = 1
+    integrator = ['GRX']
     return integrator, drange
 
 def folder_data_loop(iterf, int):
@@ -248,9 +219,9 @@ def folder_data_loop(iterf, int):
 
     if iterf == 0:
         sim_ = int
-    else:
-        sim_ = int + (1 + iterf)
+        return sim_
 
+    sim_ = int + (1 + iterf)
     return sim_
 
 def moving_average(array, smoothing):
@@ -258,7 +229,7 @@ def moving_average(array, smoothing):
         Function to remove the large fluctuations in various properties by taking the average
         
         Inputs:
-        array:     Array consisting of variable for which to produce running average of
+        array:     Variable experiencing smoothing
         smoothing: Number of elements to average over
         """
 
@@ -281,13 +252,14 @@ def ndata_chaos(iterf, dataG, chaosG, fold_):
         filename = [natsort.natsorted(Hermite_data), natsort.natsorted(dataG)]
         filenameC = [natsort.natsorted(chaoticH), natsort.natsorted(chaosG)]
         integrator = ['Hermite', 'GRX']
-    else:
-        drange = 1
-        filename = [natsort.natsorted(dataG)] 
-        filenameC = [natsort.natsorted(chaosG)]
-        integrator = ['GRX']
+        return filename, filenameC, integrator, drange
 
+    drange = 1
+    filename = [natsort.natsorted(dataG)] 
+    filenameC = [natsort.natsorted(chaosG)]
+    integrator = ['GRX']
     return filename, filenameC, integrator, drange
+
 
 def simulation_stats_checker(folder, int_string, file_crop, crop):
     """
@@ -342,7 +314,6 @@ def simulation_stats_checker(folder, int_string, file_crop, crop):
                 else:
                     ejection += 1
 
-
     dir = os.path.join('figures/sphere_of_influence.txt')
     with open(dir) as f:
         line = f.readlines()
@@ -359,8 +330,7 @@ def simulation_stats_checker(folder, int_string, file_crop, crop):
                                 None
                             elif ctracker.iloc[0][-2] == 100 | units.Myr :
                                 complete -= 1
-                                ejection += 1
-                        
+                                ejection += 1         
 
     with open('figures/'+int_string+'_'+folder+'_summary.txt', 'w') as file:
         file.write('Simulation outcomes for '+str(int_string))
