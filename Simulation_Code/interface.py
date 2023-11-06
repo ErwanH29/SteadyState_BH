@@ -39,14 +39,13 @@ def run_code(eta, tend, int_string, no_sims, pops, SMBH_mass):
             SMBH.ejection = 0
             SMBH.collision_events = 0
             evolve_system = EvolveSystem(IMBH_parti, tend, eta, SMBH_code.distance, 
-                                         code_conv, int_string, SMBH, k, 0 | units.Myr, 1)
+                                         code_conv, int_string, SMBH, 1)
             evolve_system.initialise_gravity()
             evolve_system.run_code()
 
         else:
             evolve_system = EvolveSystem(IMBH_parti, tend, eta, SMBH_code.distance, 
-                                         code_conv, int_string, None, 18, 0 | units.Myr,
-                                         1)
+                                         code_conv, int_string, None, 1)
             evolve_system.initialise_gravity()
             evolve_system.run_code()
 

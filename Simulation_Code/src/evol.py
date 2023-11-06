@@ -17,7 +17,7 @@ from src.file_logistics import file_counter
 
 class EvolveSystem(object):
     def __init__(self, parti, tend, eta, idist, conv, int_str, 
-                 GRX_set, kit, past_time, no_worker):
+                 GRX_set, no_worker):
         """Setting up the simulation code
     
            Inputs:
@@ -28,9 +28,6 @@ class EvolveSystem(object):
            conv:       Variable used to convert between nbody units and SI
            int_str:    String to dictate whether using Hermite or Hermite GRX
            GRX_set:    SMBH particle class (only if using GRX)
-           kit:        kth iteration of simulation
-           init_time:  Cpu time at beginning of run
-           past_time:  Initial time of simulation 
            no_worker:  Number of workers used
         """
         #NOTE: ENDS ON DATA SET ARE DUE TO CHANGE OF SIMULATION AIM
@@ -42,9 +39,7 @@ class EvolveSystem(object):
         self.conv = conv
         self.int_str = int_str
         self.GRX_set = GRX_set
-        self.kit = kit
         self.init_time = cpu_time.time()
-        self.past_time = past_time
         self.no_workers = no_worker
 
         self.code = None
@@ -208,7 +203,7 @@ class EvolveSystem(object):
                     true_anom = [ ]
                     neigh_key = [ ]
 
-                    if i == 0 and self.Nenc == 0:
+                    if idx1 == 0 and self.Nenc == 0:
                         semimajor = [0, 0, 0]
                         eccentric = [0, 0, 0]
                         inclinate = [0, 0, 0]
