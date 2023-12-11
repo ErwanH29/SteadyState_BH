@@ -1,27 +1,23 @@
-from amuse.lab import *
 import numpy as np
 import glob
 import itertools
-import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import natsort
 import os
 import pickle as pkl
 
+from amuse.lab import units
+
+
 class plotter_setup(object):
     def font_size(self):
         axlabel_size = 16
         tick_size = 14
-
         return axlabel_size, tick_size
 
     def tickers(self, ax, plot_type):
         """
-        Function to setup axis
-
-        Inputs:
-        ax:         Plotting axis
-        plot_type:  String denoting whether 2D histogram or normal plot
+        Setup figure layout
         """
         
         axlabel_size, self.tick_size = self.font_size()
@@ -31,44 +27,37 @@ class plotter_setup(object):
         ax.xaxis.set_minor_locator(mtick.AutoMinorLocator())
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
         if plot_type == 'plot':
-            ax.tick_params(axis="y", which = 'both', direction="in", labelsize = self.tick_size)
-            ax.tick_params(axis="x", which = 'both', direction="in", labelsize = self.tick_size)
-            return ax
-            
-        ax.tick_params(axis="y", labelsize = self.tick_size)
-        ax.tick_params(axis="x", labelsize = self.tick_size)
+            ax.tick_params(axis="y", which='both', direction="in", labelsize=self.tick_size)
+            ax.tick_params(axis="x", which='both', direction="in", labelsize=self.tick_size)
+        else:
+            ax.tick_params(axis="y", labelsize=self.tick_size)
+            ax.tick_params(axis="x", labelsize=self.tick_size)
+
         return ax
 
     def tickers_pop(self, ax, pop, int_str):
         """
         Function to setup axis for population plots
-
-        Inputs:
-        ax:       Plotting axis
-        pop:      Data array cluster population
-        int_str:  String characterising integrator
         """
 
         axlabel_size, self.tick_size = self.font_size()
 
-        ax.set_xlabel(r'$N_{\rm{IMBH}}$', fontsize = axlabel_size)
+        ax.set_xlabel(r'$N_{\rm{IMBH}}$', fontsize=axlabel_size)
         ax.yaxis.set_ticks_position('both')
         ax.xaxis.set_ticks_position('both')
         ax.yaxis.set_minor_locator(mtick.AutoMinorLocator())
-        ax.tick_params(axis="y", which = 'both', direction="in", 
-                       labelsize = self.tick_size)
-        ax.tick_params(axis="x", which = 'both', direction="in", 
-                       labelsize = self.tick_size)    
-        
+        ax.tick_params(axis="y", which='both', direction="in", 
+                       labelsize=self.tick_size)
+        ax.tick_params(axis="x", which='both', direction="in", 
+                       labelsize=self.tick_size)    
         if int_str == 'Hermite':
-            xints = [i for i in range(1+int(max(pop))) if i%10 == 0 and i > 5]
-            ax.set_xticks(xints)
+            xints = [i for i in range(1+int(max(pop))) if i%10 == 0 and i>5]
             ax.set_xlim(5, 105)
-            return ax
-
-        xints = [i for i in range(1+int(max(pop))) if i%5 == 0 and i > 5 and i < 45]
-        ax.set_xlim(5, 45)
+        else:
+            xints = [i for i in range(1+int(max(pop))) if i%5 == 0 and i>5 and i<45]
+            ax.set_xlim(5, 45)
         ax.set_xticks(xints)
+
         return ax
 
 def bulk_stat_extractor(file_string):
@@ -79,8 +68,7 @@ def bulk_stat_extractor(file_string):
     file_string: The directory wished to extract files from
     """
 
-    filename = glob.glob(file_string)
-    filename = natsort.natsorted(filename)
+    filename = natsort.natsorted(glob.glob(file_string))
     data = [ ]
 
     for file_ in range(len(filename)):
@@ -88,42 +76,48 @@ def bulk_stat_extractor(file_string):
             print('Reading file: ', input_file)
             data.append(pkl.load(input_file))
 
-    return data
+    return data 
 
 def ejected_extract_final(pset, ejected, file, crop):
     """
-    Extracts the final info on the ejected particle into an array
+    Store information on ejected particle
     
     Inputs:
-    set:        The complete particle set plotting
-    ejected:    The ejected particle
-    file:       File name
+    pset:     The complete particle set
+    ejected:  The ejected particle
+    file:     File name
+    crop:     Character to crop
     """
+
     ejec_idx = None
+
     for parti_ in range(len(pset)):
         if pset.iloc[parti_][0][0] == ejected.iloc[0][4]: 
             ejec_idx = parti_
     
     dir = os.path.join('figures/sphere_of_influence.txt')
     fixed_crop = 1e6
+    tol = 1e-6
     dist = -5
-    tol = 10**-6
+
     with open(dir) as f:
         line = f.readlines()
         for iter in range(len(line)):
             if iter%3 == 0 and line[iter][90+crop:-3] == file[59+crop:]:
+
                 if line[iter][54:65] == 'rc_0.25_4e5':
                     sim_time = line[iter+1][49:57]
-                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-3))
+                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit()))*10**-3))
 
                 elif line[iter][54:65] == 'rc_0.25_4e6':
                     sim_time = line[iter+1][49:57]
-                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit())) * 10**-3))
+                    fixed_crop = int(round(float(''.join(chr_ for chr_ in sim_time if chr_.isdigit()))*10**-3))
 
                 distance = line[iter+2][48:65]
                 distance = ''.join(chr_ for chr_ in distance if chr_.isdigit())
                 digits = len(distance) - 1
-                distance = float(distance)/10**digits
+                distance = float(distance)
+                distance /= 10**digits
                 print('Target distance: ', distance)
                 
                 ejec_parti = False
@@ -135,9 +129,9 @@ def ejected_extract_final(pset, ejected, file, crop):
                             sim_snap = pset.iloc[parti_][j]
                             SMBH_coords = pset.iloc[0][j]
 
-                            line_x = (sim_snap[2][0] - SMBH_coords[2][0])
-                            line_y = (sim_snap[2][1] - SMBH_coords[2][1])
-                            line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                            line_x = (sim_snap[2][0]-SMBH_coords[2][0])
+                            line_y = (sim_snap[2][1]-SMBH_coords[2][1])
+                            line_z = (sim_snap[2][2]-SMBH_coords[2][2])
                             dist = np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)
 
                             if abs(distance - dist) <= tol:
@@ -148,33 +142,34 @@ def ejected_extract_final(pset, ejected, file, crop):
         if ejec_idx != None:
             ejec_data = pset.iloc[ejec_idx]
             ejec_data = ejec_data.replace(np.NaN, "[Np.NaN, [np.NaN, np.NaN, np.NaN], [np.NaN, np.NaN, np.NaN]")
-            ejec_vel  = []
+            ejec_vel  = [ ]
 
             time_step = min(len(ejec_data), fixed_crop)
             ejec_data = ejec_data.iloc[:time_step]
+            
             if dist < 0:
                 tot_steps = min(time_step, 15)
             else:
                 tot_steps = min(time_step, 45)
             for steps_ in range(tot_steps):
-                vel_ = ejec_data.iloc[(-steps_)][3].value_in(units.kms)
-                vx = vel_[0] - pset.iloc[0][(-steps_)][3][0].value_in(units.kms)
-                vy = vel_[1] - pset.iloc[0][(-steps_)][3][1].value_in(units.kms)
-                vz = vel_[2] - pset.iloc[0][(-steps_)][3][2].value_in(units.kms)
-                ejec_vel.append(np.sqrt(vx**2+vy**2+vz**2))
+                vel_ = ejec_data.iloc[(-steps_)][3]
+                vx = vel_[0] - pset.iloc[0][(-steps_)][3][0]
+                vy = vel_[1] - pset.iloc[0][(-steps_)][3][1]
+                vz = vel_[2] - pset.iloc[0][(-steps_)][3][2]
+                ejec_vel.append(np.sqrt(vx**2+vy**2+vz**2).value_in(units.kms))
                 
             idx = np.where(ejec_vel == np.nanmax(ejec_vel))[0]
             ejec_vel = np.asarray(ejec_vel)
             esc_vel = ejec_vel[idx]
-            print('vesc: ', esc_vel)  
             return esc_vel
+
         else:
             print('Ejected DNE')
             return ejec_idx
 
 def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
     """
-    Function to ensure same # of files are used during data extraction
+    Ensure same # of files are used during data extraction
     comparing algorithms.
 
     Input:
@@ -191,11 +186,11 @@ def no_file_tracker(pop_arr, pop_data, no_files, no_samples):
             process = False
         else:
             process = True
-        return no_samples, process, pop_arr
-        
-    pop_arr = pop_data
-    no_samples = 1
-    process = True
+    else:
+        pop_arr = pop_data
+        no_samples = 1
+        process = True
+    
     return no_samples, process, pop_arr
 
 def folder_loop(iterf):
@@ -206,10 +201,10 @@ def folder_loop(iterf):
     if iterf == 0:
         drange = 2
         integrator = ['Hermite', 'GRX']
-        return integrator, drange
-        
-    drange = 1
-    integrator = ['GRX']
+    else:
+        drange = 1
+        integrator = ['GRX']
+
     return integrator, drange
 
 def folder_data_loop(iterf, int):
@@ -219,17 +214,17 @@ def folder_data_loop(iterf, int):
 
     if iterf == 0:
         sim_ = int
-        return sim_
+    else:
+        sim_ = int+(1+iterf)
 
-    sim_ = int + (1 + iterf)
     return sim_
 
 def moving_average(array, smoothing):
         """
-        Function to remove the large fluctuations in various properties by taking the average
+        Conduct running average of some variable
         
         Inputs:
-        array:     Variable experiencing smoothing
+        array:     Array hosting values
         smoothing: Number of elements to average over
         """
 
@@ -240,8 +235,13 @@ def moving_average(array, smoothing):
 
 def ndata_chaos(iterf, dataG, chaosG, fold_):
     """
-    Function to organise data files for a given directory before extracting
-    them to make new, compressed files.
+    Organise data files for a given directory 
+    before extracting and compressing them.
+
+    Inputs:
+    dataG:   GRX data directory
+    chaosG:  GRX chaos directory
+    fold_:   Simulation configuration 
     """
 
     tcropH = 63
@@ -252,14 +252,13 @@ def ndata_chaos(iterf, dataG, chaosG, fold_):
         filename = [natsort.natsorted(Hermite_data), natsort.natsorted(dataG)]
         filenameC = [natsort.natsorted(chaoticH), natsort.natsorted(chaosG)]
         integrator = ['Hermite', 'GRX']
-        return filename, filenameC, integrator, drange
+    else:
+        drange = 1
+        filename = [natsort.natsorted(dataG)] 
+        filenameC = [natsort.natsorted(chaosG)]
+        integrator = ['GRX']
 
-    drange = 1
-    filename = [natsort.natsorted(dataG)] 
-    filenameC = [natsort.natsorted(chaosG)]
-    integrator = ['GRX']
     return filename, filenameC, integrator, drange
-
 
 def simulation_stats_checker(folder, int_string, file_crop, crop):
     """
@@ -330,7 +329,8 @@ def simulation_stats_checker(folder, int_string, file_crop, crop):
                                 None
                             elif ctracker.iloc[0][-2] == 100 | units.Myr :
                                 complete -= 1
-                                ejection += 1         
+                                ejection += 1
+                        
 
     with open('figures/'+int_string+'_'+folder+'_summary.txt', 'w') as file:
         file.write('Simulation outcomes for '+str(int_string))
@@ -342,7 +342,6 @@ def simulation_stats_checker(folder, int_string, file_crop, crop):
 
 def sphere_of_influence():
     folders = ['rc_0.25_4e6', 'rc_0.25_4e5', 'rc_0.25_4e7']
-    #folders = ['rc_0.25_4e5']
     iterf = 0
     for fold_ in folders:
         if iterf == 0:
@@ -357,28 +356,28 @@ def sphere_of_influence():
             for file_ in range(len(data)):
                 with open(data[file_], 'rb') as input_file:
                     file_size = os.path.getsize(data[file_])
-                    if file_size < 2.9e9:
+                    if file_size < 2.9e9: #Capped otherwise PC crashes
                         print('Reading File ', file_, ' : ', input_file)
                         pset = pkl.load(input_file)
                         distance = [ ]
                         time_snap = [ ]
 
-                        for parti_, j in itertools.product(range(np.shape(pset)[0]), range(np.shape(pset)[1]-1)):
+                        for parti_, dt_ in itertools.product(range(np.shape(pset)[0]), range(np.shape(pset)[1]-1)):
                             if parti_ != 0:
                                 particle = pset.iloc[parti_]
                                 SMBH_data = pset.iloc[0]
 
-                                sim_snap = particle.iloc[j]
-                                SMBH_coords = SMBH_data.iloc[j]
+                                sim_snap = particle.iloc[dt_]
+                                SMBH_coords = SMBH_data.iloc[dt_]
 
-                                line_x = (sim_snap[2][0] - SMBH_coords[2][0])
-                                line_y = (sim_snap[2][1] - SMBH_coords[2][1])
-                                line_z = (sim_snap[2][2] - SMBH_coords[2][2])
+                                line_x = (sim_snap[2][0]-SMBH_coords[2][0])
+                                line_y = (sim_snap[2][1]-SMBH_coords[2][1])
+                                line_z = (sim_snap[2][2]-SMBH_coords[2][2])
                                 dist = np.sqrt(line_x**2+line_y**2+line_z**2).value_in(units.pc)
 
                                 if dist >= 6.00:
                                     distance.append(dist)
-                                    time_snap.append(j*1000)
+                                    time_snap.append(dt_*1e3)
 
                         time_snap = np.asarray([i for i in time_snap])
                         distance = np.asarray([i for i in distance])
@@ -386,7 +385,8 @@ def sphere_of_influence():
                             with open('figures/sphere_of_influence.txt', 'a') as file:
                                 index = np.where(time_snap == np.min(time_snap))
                                 file.write('File '+str(input_file)+'\n')
-                                file.write('Particle reaches beyond sphere of influence at: '+str(time_snap[index])+' (End time: ) '+str(np.shape(pset)[1]-1)+'\n')
+                                file.write('Particle reaches beyond sphere of influence at: '+str(time_snap[index]))
+                                file.write(' (End time: ) '+str(np.shape(pset)[1]-1)+'\n')
                                 file.write('Particle distance:                              '+str(distance[index])+'\n')
         iterf += 1
 

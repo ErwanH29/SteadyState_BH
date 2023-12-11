@@ -1,14 +1,18 @@
+from amuse.lab import *
+from amuse.units import units
+from src.parti_initialiser import *
 import numpy as np
-from amuse.datamodel import Particles
-from amuse.units import units, constants
 
 def calc_momentum(indivp):
-    """Function which calculates the momentum of the particles in collision"""
+    """
+    Calculate momentum of colliding particles
+    """
     return (indivp.mass * indivp.velocity).sum()
 
 def find_nearest(array, value):
     """
     Function to find the nearest value in an array for a particular element.
+
     Inputs:
     array:  The array for which has all the elements
     value:  The value to compare the elements with
@@ -18,26 +22,24 @@ def find_nearest(array, value):
     index = (np.abs(array - value)).argmin()
     return index
 
-def indiv_PE_all(indivp, set):
+def indiv_PE(indivp, pset):
     """
     Finding a particles' individual PE based on its closest binary
+
     Input:
     indivp:  The individual particle computing BE for
-    set:     The complete particle set
+    pset:     The complete particle set
     """
 
-    array = []
-    for comp_ in set:
-        if indivp != comp_:
-            distance = (indivp.position-comp_.position).length()
-            temp_PE = (-constants.G*indivp.mass*comp_.mass)/abs(distance)
-            array.append(temp_PE)
+    PE_all = pset.potential_energy()
+    PE_min = pset[pset.key != indivp.key].potential_energy()
+    indiv_PE = PE_all - PE_min
 
-    return array
+    return indiv_PE
 
 def merge_IMBH(parti, parti_in_enc, tcoll, int_string, code):
     """
-    Function which merges two particles if the collision stopping condition has been met
+    Merges two particles if the collision stopping condition has been met
     
     Inputs:
     parti:          The complete particle set being simulated
@@ -63,8 +65,8 @@ def merge_IMBH(parti, parti_in_enc, tcoll, int_string, code):
     new_particle.collision_radius = 3 * new_particle.radius
     new_particle.coll_events = 1
 
-    if int_string != 'Hermite':
-        if new_particle.mass > code.particles.mass.max():
+    if int_string == "GRX":
+        if new_particle.mass > 1e6 | units.MSun:
             code.particles.remove_particles(parti_in_enc)
             code.large_particles.add_particles(new_particle)
         else:
@@ -85,20 +87,9 @@ def nearest_neighbour(indivp, pset):
     pset:   The complete particle set
     """
 
-    min_dist = [ ]
-    for i in range(len(pset)):
-        if indivp == pset[i]:
-            pass
-        else:
-            rel_pos = indivp.position - pset[i].position
-            min_dist.append(rel_pos.length().value_in(units.parsec))
-            
-    temp = np.sort(min_dist)
-    index = np.where(min_dist == temp[0])[0]
-    index2 = np.where(min_dist == temp[1])[0]
+    rel_pos = [(indivp.position - parti_.position).length().value_in(units.pc) for parti_ in pset]
+    min_dist = np.sort(rel_pos)[1]
+    index = np.where(rel_pos == min_dist)[0]
+    index2 = np.where(rel_pos == np.sort(rel_pos)[2])[0]
 
-    return min(min_dist), pset[index], pset[index2]
-
-def SMBH_filter(pset):
-    return pset[pset.mass < 5*10**4 | units.MSun]
-
+    return min_dist, pset[index], pset[index2]

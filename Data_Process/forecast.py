@@ -19,19 +19,16 @@ def PS_function(zmass, phi0, mc, alpha):
     alpha:  The redshift-dependent power-law mass slope
     """
 
-    ps_func = phi0 * (zmass/mc)**alpha*np.exp(-zmass/mc)
+    ps_func = phi0*(zmass/mc)**alpha*np.exp(-zmass/mc)
     return ps_func
 
 def cmove_dist(z):
     """
-    The distance based on redshift. The constants are taken from Planck 2018.
-    Value is in Mpc.
-    
-    Inputs:
-    z:      The redshift to integrate over
+    The distance [Mpc] based on redshift. 
+    The constants are taken from arXiv:1807.06209
     """
 
-    H0 = 67.4 #From arXiv:1807.06209
+    H0 = 67.4
     c = constants.c.value_in(units.kms)
     omegaL = 0.685
     omegaM = 0.315
@@ -46,7 +43,7 @@ def plotter():
         
 
     # Data from Furlong et al. (2015)
-    merger_rate = np.linspace(1e-3, 1, 100) #0.9/7 -> 7 / 0.9 merge per Myr
+    merger_rate = np.linspace(1e-3, 1, 100)
     mrate_fixed = [1e-3, 1e-2, 1e-1, 1]
     zrange = [0, 0.5, 1, 2, 3.5]
     phi0 = np.asarray([8.4, 8.4, 7.4, 4.5, 2.2]) 
@@ -65,10 +62,10 @@ def plotter():
     xtext = r'$\Gamma_{\rm{infall}}$ [Myr$^{-1}$]'
     
     fig, ax = plt.subplots()
-    ax.set_ylabel(r'$\log_{10}$'+ytext, fontsize = axlabel_size)
-    ax.set_xlabel(r'$\log_{10}$'+xtext, fontsize = axlabel_size)
+    ax.set_ylabel(r'$\log_{10}$'+ytext, fontsize=axlabel_size)
+    ax.set_xlabel(r'$\log_{10}$'+xtext, fontsize=axlabel_size)
     ax.tick_params(axis="y", direction="in", labelcolor='black')
-    ax.set_ylim(0.0,4.6)
+    ax.set_ylim(0.0, 4.6)
     plot_ini.tickers(ax, 'plot')
 
     cum_merger = [ ]
@@ -112,6 +109,5 @@ def plotter():
 
     for i in range(3):
         ps_int.append(quad(PS_function, 1e8, 1e12, args=(phi0[i], mcluster[i], alpha[i]))[0] * 4/3*np.pi*(10**3) * 10**-9)
-    print(ps_int)
-    
+
 plotter()
