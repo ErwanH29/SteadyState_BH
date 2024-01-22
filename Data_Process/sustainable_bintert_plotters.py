@@ -768,21 +768,21 @@ class sustainable_sys(object):
 
         for int_ in range(1):
             int_ += 1
-            fig, ax = plt.subplots()
+            fig, ax = plt.subplots(figsize=(6, 4))
             ax.plot(np.log10(x_temp), np.log10(np.sqrt(x_temp*Sn)), 
                     color = 'slateblue', zorder = 1)
             ax.plot(np.log10(Ares_freq), np.log10(np.sqrt(Ares_freq*Ares_strain)), 
                     linewidth='1.5', color='red', zorder = 3)
             ax.plot(np.log10(SKA_freq), np.log10(np.sqrt(SKA_freq*SKA_strain)), 
                     linewidth='1.5', color='orangered', zorder = 4)
-            ax.text(-9, -15.9, 'SKA', fontsize = axlabel_size, 
-                    rotation = 280, color = 'orangered')
-            ax.text(-3.7, -18.2, 'LISA', fontsize = axlabel_size, 
-                    rotation = 280, color = 'slateblue')
-            ax.text(-5, -19, r'$\mu$Ares', fontsize = axlabel_size, 
-                    rotation = 280, color = 'red')
+            ax.text(-9.7, -16.1, 'SKA', fontsize = axlabel_size, 
+                    rotation=310, color = 'orangered')
+            ax.text(-4.7, -18.2, 'LISA', fontsize = axlabel_size, 
+                    rotation = 300, color = 'slateblue')
+            ax.text(-6.5, -19, r'$\mu$Ares', fontsize = axlabel_size, 
+                    rotation = 300, color = 'red')
 
-            idx = [7, 134]  #Hardcoded values
+            idx = [7, 19]  #Hardcoded values
             GWfreq_binIMBH = self.array_rewrite(self.GWfreq_binIMBH[int_][idx[int_]], 'not', False)
             GWstra_binIMBH = self.array_rewrite(self.GWstra_binIMBH[int_][idx[int_]], 'not', False)
             GWfreq_terIMBH = self.array_rewrite(self.GWfreq_terIMBH[int_][idx[int_]], 'not', False)
@@ -800,8 +800,10 @@ class sustainable_sys(object):
             ax.set_xlabel(r'$\log_{10}f$ [Hz]', fontsize = axlabel_size)
             ax.set_ylabel(r'$\log_{10}h$', fontsize = axlabel_size)
             plot_ini.tickers(ax, 'plot')
-            ax.set_ylim(-27.8, -12.2)
-            ax.set_xlim(-13, 0.4)
+            ax.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+            ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.1f'))
+            ax.set_ylim(-28.5, -12.2)
+            ax.set_xlim(-13.8, 0.2)
             plt.savefig('figures/binary_hierarchical/'+str(integrators[int_])+'GW_single_streak_diagram.pdf', dpi = 500, bbox_inches='tight')
             plt.clf()
     
@@ -860,3 +862,4 @@ class sustainable_sys(object):
             cbar.set_label(label=r'$\mathrm{med}(N_{\rm{sys}})$ ', fontsize= axlabel_size)
             cbar.ax.tick_params(labelsize=axlabel_size)
             plt.savefig('figures/binary_hierarchical/sys_form_m4e6.pdf', dpi=300, bbox_inches='tight')
+

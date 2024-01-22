@@ -36,6 +36,9 @@ class stability_plotters(object):
         def log_fit(xval, slope, beta, log_c):
             return slope*(xval*np.log(log_c*xval))**beta
 
+        def log_fit_classic(xval, slope, beta):
+            return slope*(xval*np.log(0.11*xval))**beta
+
         plt.rcParams["font.family"] = "Times New Roman"
         plt.rcParams["mathtext.fontset"] = "cm"
         plot_ini = plotter_setup()
@@ -94,7 +97,7 @@ class stability_plotters(object):
         sim_times = [[ ], [ ], [ ], [ ]]
         pops_temp = [[ ], [ ], [ ], [ ]]
 
-        dir = os.path.join('figures/sphere_of_influence.txt')
+        dir = os.path.join('Data_Process/figures/sphere_of_influence.txt')
         with open(dir) as f:
             line = f.readlines()
             for iter in range(len(line)):
@@ -202,9 +205,20 @@ class stability_plotters(object):
         stdmin_Nsims[-1] = [i for i in std_min[1]]
 
         ##### GRX vs. Hermite #####
+        curve = [[ ], [ ]]
+        slope = [[ ], [ ]]
+        beta = [[ ], [ ]]
+        log_c = [[ ], [ ]]
+        slope_err = [[ ], [ ]]
+        beta_err = [[ ], [ ]]
+        log_c_err = [[ ], [ ]]
+        p0 = [np.asarray([40, -1, 0.11], dtype=float), np.asarray([40, -1, 0.11], dtype=float)]
+        xtemp = [np.linspace(10, 100, 1000), np.linspace(10, 100, 1000)]
+
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{loss}}$ [Myr]', fontsize=axlabel_size) 
         ax1.set_xlim(5,105)
+        ax1.set_ylim(-0.7,2.4)
         for int_ in range(2):
             for j, xpos in enumerate(pop[int_]):
                 N_parti_med[int_] = np.array([float(i) for i in N_parti_med[int_]])
@@ -220,38 +234,54 @@ class stability_plotters(object):
                         color=colours[int_], marker='_')
             ax1.scatter(pop[int_], np.log10(std_max[int_]), 
                         color=colours[int_], marker='_')
+            for val_ in range(len(std_max[int_])):
+                if std_max[int_][val_]>99:
+                    ax1.arrow(pop[int_][val_], np.log10(std_max[int_][val_]),
+                              dx=0, dy=0.2, head_width=1.2, head_length=0.05,
+                              color=colours[int_])
             ax1.plot([pop[int_], pop[int_]], 
                      [np.log10(std_min[int_]), np.log10(std_max[int_])], 
                      color=colours[int_], zorder=1)
-        
-        p0 = np.asarray([40, -1, 0.11], dtype=float)
-        xtemp = np.linspace(10, 100, 1000)
 
-        slope = [[ ], [ ], [ ]]
-        beta  = [[ ], [ ], [ ]]
-        log_c = [[ ], [ ], [ ]]
-        slope_err = [[ ], [ ], [ ]]
-        beta_err  = [[ ], [ ], [ ]]
-        log_c_err = [[ ], [ ], [ ]]
-        curve = [[ ], [ ], [ ]]
-
-        pop[1] = np.asarray(pop[1], dtype=float)
-        N_parti_med[1] = np.asarray(N_parti_med[1], dtype=float)
+            pops = np.asarray(pop[int_], dtype=float)
+            if int_==0:
+                med_time = N_parti_med[int_][1:]
+                sigma = std_max[int_][1:]-N_parti_med[int_][1:]
+                pops = pops[1:]
+            else:
+                med_time = N_parti_med[int_]
+                sigma = std_max[int_]-N_parti_med[int_]
+            med_time = np.asarray(med_time, dtype=float)
+            params, cv = scipy.optimize.curve_fit(log_fit, pops, med_time, maxfev=10000)
+            slope[int_], beta[int_], log_c[int_] = params
+            slope_err[int_], beta_err[int_], log_c_err[int_] = np.sqrt(np.diag(cv))
+            curve[int_] = [(log_fit(i, slope[int_], beta[int_], log_c[int_])) for i in xtemp[int_]]
         
-        params, cv = scipy.optimize.curve_fit(log_fit, pop[1], N_parti_med[1])
-        slope[0], beta[0], log_c[0] = params
-        slope_err[0], beta_err[0], log_c_err[0] = np.sqrt(np.diag(cv))
-        curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
-        ax1.plot(xtemp, np.log10(curve[0]), zorder=1, color='black', ls='-.')
+        params, cv = scipy.optimize.curve_fit(log_fit_classic, pop[0][1:], 
+                                              N_parti_med[0][1:], 
+                                              p0=[400, -1], 
+                                              sigma=N_parti_std[0][1:],
+                                              maxfev=70000)
+        slope[0], beta[0] = params
+        slope_err[0], beta_err[0] = np.sqrt(np.diag(cv))
+        curve[0] = [(log_fit_classic(i, slope[0], beta[0])) for i in xtemp[0]]
+        
+        for k_ in range(2):
+            print("Vals slope: ", slope[k_], "Beta: ", beta[k_], "Coulomb: ", log_c[k_])
+            print("Err slope: ", slope_err[k_], "Beta: ", beta_err[k_], "Coulomb: ", log_c_err[k_])
+        ax1.plot(xtemp[0], np.log10(curve[0]), zorder=1, color='red', ls='-.')
+        ax1.plot(xtemp[1], np.log10(curve[1]), zorder=1, color='blue', ls='-.')
         ax1.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax1, pop[0], 'Hermite')
-        plt.savefig('figures/steady_time/stab_time_mean_HermGRX.pdf', dpi=300, bbox_inches='tight')
+        plt.savefig('Data_Process/figures/steady_time/stab_time_mean_HermGRX.pdf', dpi=300, bbox_inches='tight')
         plt.clf()
+        #STOP
 
         ##### Only GRX #####
         fig, ax1 = plt.subplots()
         ax1.set_ylabel(r'$\log_{10} t_{\rm{loss}}$ [Myr]', fontsize=axlabel_size)
         ax1.set_xlim(5,105)
+        ax1.set_ylim(-1.8,2.4)
         for int_ in range(2):
             int_ += 2
             for j, xpos in enumerate(pop[int_]):
@@ -271,17 +301,21 @@ class stability_plotters(object):
             ax1.scatter(pops, np.log10(std_max[int_]), 
                         color=colours[int_], marker='_', 
                         zorder=3)
+            for val_ in range(len(std_max[int_])):
+                if std_max[int_][val_]>99:
+                    ax1.arrow(pops[val_], np.log10(std_max[int_][val_]),
+                              dx=0, dy=0.2, head_width=0.5, head_length=0.05,
+                              color=colours[int_])
+                    
             ax1.plot([pops, pops], [np.log10(std_min[int_]), np.log10(std_max[int_])], 
                      color=colours[int_], zorder=2)
-            params, cv = scipy.optimize.curve_fit(log_fit, pop[int_], (N_parti_med[int_]), p0, maxfev=10000, method='trf')
-            slope[int_-1], beta[int_-1], log_c[int_-1] = params
 
         xtemp = np.linspace(10, 40)
-        curve[0] = [(log_fit(i, slope[0], beta[0], log_c[0])) for i in xtemp]
-        ax1.plot(xtemp, np.log10(curve[0]), zorder=1, color='black', ls='-.', label=labelsD[0])
+        GRX_fit = [(log_fit(i, slope[1], beta[0], log_c[1])) for i in xtemp]
+        ax1.plot(xtemp, np.log10(GRX_fit), zorder=1, color='blue', ls='-.', label=labelsD[0])
         ax1.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax1, pop[1], 'GRX')
-        plt.savefig('figures/steady_time/stab_time_mean_GRX.pdf', dpi = 300, bbox_inches='tight')
+        plt.savefig('Data_Process/figures/steady_time/stab_time_mean_GRX.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
         ##### GRX vs. Nsims #####
@@ -313,7 +347,7 @@ class stability_plotters(object):
                       color = ctemp[rng_], zorder = 1)
         ax1.legend(prop={'size': axlabel_size})
         plot_ini.tickers_pop(ax1, pop[1], 'GRX')
-        plt.savefig('figures/steady_time/stab_time_mean_GRX_Nsims.pdf', dpi = 300, bbox_inches='tight')
+        plt.savefig('Data_Process/figures/steady_time/stab_time_mean_GRX_Nsims.pdf', dpi = 300, bbox_inches='tight')
         plt.clf()
 
         frange = 0
@@ -324,17 +358,17 @@ class stability_plotters(object):
                 integ = 'GRX'
             if data_ > 1:
                 frange += 1
-            with open('figures/steady_time/Sim_summary_'+self.folders[frange]+'_'+str(integ)+'.txt', 'w') as file:
+            with open('Data_Process/figures/steady_time/Sim_summary_'+self.folders[frange]+'_'+str(integ)+'.txt', 'w') as file:
                 file.write('For '+str(integ)+', # of full simulations per population:       '+str(pop[data_].flatten()))
                 file.write('\n                                                     '+str(full_simul[data_]))
                 file.write('\nNumber of samples:                                   '+str(psamp[data_].flatten()))
-                if data_ > 0:
-                    file.write('\nThe slope of the curve goes as:                      '+str(slope[data_-1]))
-                    file.write('\nThe err. of slope goes as:                           '+str(slope_err[data_-1]))
-                    file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_-1]))
-                    file.write('\nThe err. of the power-law goes as:                   '+str(beta_err[data_-1]))
-                    file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_-1]))
-                    file.write('\nThe err. of the logarithmic factor goes as:          '+str(log_c_err[data_-1]))
+                if data_<2:
+                    file.write('\nThe slope of the curve goes as:                      '+str(slope[data_]))
+                    file.write('\nThe err. of slope goes as:                           '+str(slope_err[data_]))
+                    file.write('\nThe power-law of the lnN goes as:                    '+str(beta[data_]))
+                    file.write('\nThe err. of the power-law goes as:                   '+str(beta_err[data_]))
+                    file.write('\nThe logarithmic factor goes as:                      '+str(log_c[data_]))
+                    file.write('\nThe err. of the logarithmic factor goes as:          '+str(log_c_err[data_]))
                 file.write('\nThe final raw data:                                  '+str(pop[data_][pop[data_] > 5].flatten()))
                 file.write('\nSimulated time [Myr]                                 '+str(N_parti_med[data_][pop[data_] > 5].flatten()))
                 file.write('\nAvg. simulated time [Myr]                            '+str(N_parti_avg[data_][pop[data_] > 5].flatten())+'\n\n')

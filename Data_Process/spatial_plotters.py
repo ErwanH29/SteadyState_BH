@@ -7,7 +7,8 @@ import natsort
 import numpy as np
 import os
 import pickle as pkl
-import scipy.stats as st
+import scipy.optimize
+from scipy import stats
 import statsmodels.api as sm
 import warnings
 
@@ -17,7 +18,6 @@ from amuse.units import units
 from matplotlib.pyplot import hist2d
 
 from file_logistics import moving_average, no_file_tracker, plotter_setup
-from scipy import stats
 
 np.seterr(divide='ignore')
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
@@ -575,6 +575,79 @@ def lagrangian_tracker():
     plot_ini.tickers(ax, 'plot')
     plt.savefig('figures/system_evolution/GRX_Lagrangians_Evolution.pdf', dpi=300, bbox_inches='tight')
 
+def velocity_plotter():
+    """
+    Function to plot the velocity distribution after one relaxation time
+    """
+    
+    def maxwell_boltzmann(vel, slope, sigma):
+        return slope*(vel**2/sigma**3)*np.exp(-(vel)**2/(2*sigma**2))
+
+    labels = ["Hermite", "GRX"]
+    rad_vel = [[ ], [ ]]
+    iter = 0
+    for int_ in labels:
+        ptracker = natsort.natsorted(glob.glob('/media/erwanh/Elements/rc_0.25_4e6/'+(int_)+'/particle_trajectory_c/*'))
+        for f_ in ptracker:
+            with open(f_, 'rb') as input_file:
+                file_size = os.path.getsize(f_)
+                if file_size < 2.9e9:
+                    print('Reading:', f_)
+                    ptracker = pkl.load(input_file)
+                    simsnap = ptracker.iloc[:,1200]
+                    for parti_ in range(np.shape(ptracker)[0]):
+                        psnap = simsnap.iloc[parti_]
+                        if parti_==0:
+                            smbh_vx = psnap[3][0]
+                            smbh_vy = psnap[3][1]
+                            smbh_vz = psnap[3][2]
+                        if parti_ != 0:
+                            dvx = (psnap[3][0]-smbh_vx).value_in(units.kms)
+                            dvy = (psnap[3][1]-smbh_vy).value_in(units.kms)
+                            dvz = (psnap[3][2]-smbh_vz).value_in(units.kms)
+                            dv = np.sqrt((dvx**2+dvy**2+dvz**2))+100
+                            rad_vel[iter].append(dv)
+        iter+=1
+    
+    c = colour_picker()
+
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.rcParams["mathtext.fontset"] = "cm"
+    plot_ini = plotter_setup()
+    axlabel_size, tick_size = plot_ini.font_size()
+
+    fig, ax = plt.subplots()
+    plot_ini.tickers(ax, 'plot') 
+    ax.set_ylim(0,1.04)
+    ax.set_xlim(0,1150)
+    ax.set_xlabel(r"$|{v}_{\mathrm{SMBH}}|$ [km s$^{-1}$]", fontsize=tick_size)
+    ax.set_ylabel(r"$\rho/\rho_{\mathrm{max}}$", fontsize=tick_size)
+    for int_ in range(2):
+        kdef_SMBH = sm.nonparametric.KDEUnivariate((rad_vel[int_]))
+        kdef_SMBH.fit(kernel="gau")
+        kdef_SMBH.density = (kdef_SMBH.density/max(kdef_SMBH.density))
+        ax.plot(kdef_SMBH.support, kdef_SMBH.density, 
+                color=c[int_], label=labels[int_])
+        ax.fill_between(kdef_SMBH.support, kdef_SMBH.density, 
+                        alpha=0.35, color=c[int_])
+        xtemp = np.linspace(min(kdef_SMBH.support), max(kdef_SMBH.support), 1100)
+        params, cv = scipy.optimize.curve_fit(maxwell_boltzmann, 
+                                              kdef_SMBH.support, 
+                                              kdef_SMBH.density,
+                                              maxfev=70000,
+                                              p0=[200,150])
+        slope, beta = params
+        print("Slope: ", slope, "Sigma: ", beta)
+        slope_err, beta_err = np.sqrt(np.diag(cv))
+        print("Slope Err: ", slope_err, "Sigma ERr: ", beta_err)
+        curve = np.asarray([(maxwell_boltzmann(i, slope, beta-5)) for i in xtemp])
+        curve *= max(kdef_SMBH.density)/max(curve)
+        ax.plot(xtemp, curve, color=c[int_], ls=":", lw=3)
+    ax.legend(prop={'size': axlabel_size})
+    ax.tick_params(axis="y", which='both', labelsize=tick_size)
+    ax.tick_params(axis="x", which='both', labelsize=tick_size)
+    plt.savefig("figures/vel_disp.pdf", dpi=300, bbox_inches='tight')
+
 def spatial_plotter():
     """
     Function to plot the evolution of the system
@@ -605,8 +678,8 @@ def spatial_plotter():
             bool = chaos_data.iloc[0][merger_idx].number
         
         if bool > 0:
-            with open(ptracker_files[file_], 'rb') as input_file:
-                file_size = os.path.getsize(ptracker_files[file_])
+            with open(ptracker, 'rb') as input_file:
+                file_size = os.path.getsize(ptracker)
                 if file_size < 2e9:
                     print('Reading File ', file_, ' : ', input_file)
                     ptracker = pkl.load(input_file)

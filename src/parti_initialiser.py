@@ -79,6 +79,7 @@ class IMBH_init(object):
             for parti_ in particles[1:]:
                 parti_.vx += (constants.G*SMBH_mass * (abs(parti_.y)/parti_.position.length()**2)).sqrt()
                 parti_.vy += (constants.G*SMBH_mass * (abs(parti_.x)/parti_.position.length()**2)).sqrt()
+                parti_.vz += (constants.G*SMBH_mass * (abs(parti_.z)/parti_.position.length()**2)).sqrt()
         else:
             self.N -= 1
             particles = new_plummer_model(self.N, convert_nbody=self.code_conv)

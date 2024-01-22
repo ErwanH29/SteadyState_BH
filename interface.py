@@ -14,7 +14,7 @@ SMBH_code = MW_SMBH(mass=4e6 | units.MSun,
 tend = 100 | units.Myr
 eta = 1e-5
 cluster_pop = 10
-int_string = 'Hermite'
+int_string = 'GRX'
 
 init_time = cpu_time.time()
 
@@ -38,6 +38,10 @@ for Nsim in range(10):
         SMBH.radius = IMBH_parti[0].radius
         SMBH.ejection = 0
         SMBH.collision_events = 0
+        print("Q=", IMBH_parti.kinetic_energy()/IMBH_parti.potential_energy())
+        print("Q=", IMBH_parti[IMBH_parti.mass<(1e6|units.MSun)].kinetic_energy()/IMBH_parti[IMBH_parti.mass<(1e6|units.MSun)].potential_energy())
+        print(IMBH_parti)
+        STOP
         failed_simul = evolve_system(IMBH_parti, tend, eta, SMBH_code.rvir,
                                      code_conv, int_string, SMBH, Nsim, 
                                      init_time, 0 | units.Myr)
